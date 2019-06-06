@@ -224,11 +224,11 @@ disqus:
     username: ityouknow
 # https://imsun.net/posts/gitment-introduction/
 gitment:
-    owner: ityouknow
-    repo: blog-comments
+    owner: Hu-Wentao
+    repo: blog-comments # ... 不知道这个要不要修改
     oauth:
-        client_id: 61bfc53d957e74e78f8f
-        client_secret: 31c61e66cdcc9ada8db2267ee779d0bdafac434c
+        client_id: 5821f7904b6e2d3c0f50
+        client_secret: 21d26fc886decf21b1679022cf388a4860568938
 # https://github.com/gitalk/gitalk#install
 gitalk:
     owner: ityouknow
