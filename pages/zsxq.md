@@ -1,8 +1,8 @@
 ---
 layout: page
-title: 知识星球
+title: 标题
 titlebar: zsxq
-subtitle: <span class="mega-octicon octicon-keyboard"></span>&nbsp;&nbsp;探索创业、黑客增长、营销策略、创意分享、商业案例等。>&nbsp;&nbsp;>&nbsp;&nbsp;<a href ="https://t.zsxq.com/iYZ3zrR" target="_blank" ><font color="#EB9439">点我直达</font></a>
+subtitle: <span class="mega-octicon octicon-keyboard"></span>子标题....
 menu: zsxq
 css: ['blog-page.css']
 permalink: /zsxq
