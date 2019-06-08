@@ -1,4 +1,4 @@
----
+---9
 layout: post
 title: 发布文章的步骤
 date: 2019-6-8
@@ -38,12 +38,7 @@ tag: tag标签的分类，如：tag: 随笔
 #### 添加图片
 * 示例
 ![](/images/posts/article/test.jpg)
-```text
 
-* 示例
-![](/images/posts/article/test.jpg)
-
-```
 
 ### 发布文章
 
