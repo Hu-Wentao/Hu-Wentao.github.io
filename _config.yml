@@ -1,239 +1,84 @@
-# Welcome to Jekyll!
-#
-# This config file is meant for settings that affect your whole blog, values
-# which you are expected to set up once and rarely need to edit after that.
-# For technical reasons, this file is *NOT* reloaded automatically when you use
-# 'jekyll serve'. If you change this file, please restart the server process.
+# Basic
 
+## 头像里面的标题
+avatarTitle: 点击进入文章列表
+## 头像里面的描述
+avatarDesc: CodeZero荣誉出品
 # Site settings
-title:  Donove 分享区
+title:  Donove 成员交流区
+
 subtitle: 分享技术, 共同进步
-name: Donove 分享区
-email: hu.wentao@outlook.com
-description: 本站用于Donove 组员的技术分享
+#name: Donove 组员交流分享区
+#email: hu.wentao@outlook.com
+description: 本站用于 Donove 组员的技术分享
 keywords:
 encoding: "utf-8"
-favicon: favicon.ico 
-
-repository: Hu-Wentao/Hu-Wentao.github.io
-github_url: https://github.com/Hu-Wentao
-#url: http://www.codezero.com.cn
-url: https://hu-wentao.github.io/
-#enforce_ssl: .codezero.com.cn
-
-## Gem
-plugins:
-  - jekyll-paginate
-  - jekyll-geo-pattern
-  - rouge
-  - kramdown
-  - jekyll-github-metadata
-  - jekyll-octicons
-  
-# Build settings
-markdown: kramdown
-highlighter: rouge
-lsi:         false
-excerpt_separator: "\n\n"
-
-source:      .
-destination: ./_site
-
-quiet:    false
-defaults: []
-
-kramdown:
-  input: GFM
-  enable_coderay: true
-  syntax_highlighter: rouge
-
-syntax_highlighter_opts:
-   coderay_line_numbers:  nil
-
-# Pagination
-paginate: 12
-paginate_path: 'page:num'
-
-# Navigation. top menu list 导航菜单
-menus:
-
-  -
-    href: /zsxq.html
-    label: 星球
-    target: _self
-
-  -
-    href: /gitchat.html
-    label: Chat
-    target: _self
-
-  -
-    href: http://gk.link/a/103Gb
-    label: 极客
-    target: _blank
-
-  -
-    href: /life.html
-    label: 故事
-    target: _self
-
-  -
-    href: /arch.html
-    label: 架构
-    target: _self
-
-  -
-    href: /link.html
-    label: 友链
-    target: _self
+favicon: favicon.ico
+#url: https://hu-wentao.github.io/      ## 本行是上一版本的样式 (没有引号)
+#url: "http://hu-wentao.github.io"                ## todo 本行是当前版本的样式
 
 
+# Comment
+comment:
+    disqus: leopard
+    # gitment: xxx // 需要修改 comments.html中的client_id和client_secret
+    # uyan: 2143225  # 有言id,登录有言官网申请
 
-# Navigation. main menu list
-navs:
-
-  -
-    href: /
-    label: Home
-
-  -
-    href: /spring-boot.html
-    label: Spring Boot
-    target: _self
-    subnav:
-
-      -
-        subHref: /spring-boot.html
-        subLabel: Spring Boot
-
-      -
-        subHref: /spring-cloud.html
-        subLabel: Spring Cloud
-
-  -
-    href: /spring-cloud.html
-    label: Spring Cloud
-    target: _self
-
-  -
-    
-    href: http://www.justdojava.com
-    label: Java
-    target: _blank
-
-  -
-    href: /archives.html
-    label: Archives
-    target: _self
-
-  -
-    href: /about.html
-    label: About
-    target: _self
+# Social
+#social:
+#    weibo: 5366874726
+#    github: leopardpan
+#    # zhihu: panpanleopard
+#    # juejin: xxx
+#    jianshu: 2ada30d8d0f7
+#    # twitter:
+#    mail: leopardpan@icloud.com
 
 
-# labels. my blog key words
-labels:
-
-  -
-    href: /payment.html
-    label: 支付     
-    target: _self
-
-  -
-    href: /fastdfs.html
-    label: FastDFS
-    target: _blank
-
-  -
-    href: /mongodb.html
-    label: MongoDB
-    target: _blank
-
-  -
-    href: /docker.html
-    label: Docker
-    target: _blank
-
-  -
-    href: /open-source.html
-    label: Code  
-    target: _blank
-
-  -
-    href: /it.html
-    label: IT 
-    target: _blank
-
-  -
-    href: /python.html
-    label: Python  
-    target: _blank
-
-
-# selected articles
-classes:
-
-  -
-    href: /life.html
-    name: 我的故事
-    describe: 生活就是故事，故事就是生活
-
-  -
-    href: /arch.html
-    name: 架构师之路
-    describe: 一个架构师的自我修养
-
-  -
-    href: /java.html
-    name: Java 系列文章
-    describe: Java 之根基，Java 程序员必学
-
-
-# ---------------- #
-#       RSS        #
-# ---------------- #
-subscribe_rss: /feed.xml
-
-# Sidebar to show popular repo
-side_bar_repo_limit: 6 # Number of repos to show
+## 百度统计
+## 使用博客模板请去掉或者更换 id
+#baidu:
+#    id: xxxx
 
 # Google Analytics
-# analytics :
-# provider : google
-#   google :
-#     tracking_id : ''  # ex. UA-72165600-X
+# 使用博客模板请去掉或者更换 id
+#ga:
+#    id: xxxx
+#    host: auto
 
 
-# For about.html. Fell free to create your own!
-skill_software_keywords: [Java, MySQL, Oracle, Design Patterns]
-skill_j2ee_keywords: [Spring, Struct, Hibernet, MyBatis, JSP]
-skill_web_keywords: [HTML, CSS, JS, JQuery, Ajax, NodeJS, ExpressJS, MongoDB, Redis, PHP,  Boostrap]
-skill_mobile_app_keywords: [vuejs, hyhird app]
+# 《----------------- 以上配置 按需修改 --------------------------》
+#
+#
+#  _post/  下存放文章
+#
+#
+# 《----------------- 以下配置  酌情修改 -------------------------》
 
 
-# ---------------- #
-#      Comments    #
-# ---------------- #
-# support provider: disqus, gitment, gitalk
-comments_provider: gitalk
-# !!!重要!!! 请修改下面这些信息为你自己申请的
-# !!!Important!!! Please modify infos below to yours
-# https://disqus.com
-disqus:
-    username: Hu-Wentao
-# https://imsun.net/posts/gitment-introduction/
-gitment:
-    owner: Hu-Wentao
-    repo: blog-comments # ... 不知道这个要不要修改
-    oauth:
-        client_id: 5821f7904b6e2d3c0f50
-        client_secret: 21d26fc886decf21b1679022cf388a4860568938
-# https://github.com/gitalk/gitalk#install
-gitalk:
-    owner: Hu-Wentao
-    repo: blog-comments
-    clientID: 5821f7904b6e2d3c0f50
-    clientSecret: 21d26fc886decf21b1679022cf388a4860568938
-# 在使用其它评论组件时可点击显示 Disqus
-lazy_load_disqus : true
+permalink: /:year/:month/:title/
+# Format
+highlighter: rouge
+
+textColor: #FF0000
+
+# supported colors: blue, green, purple, red, orange or slate. If you need clear, leave it empty.
+cover_color: clear
+
+# The blog button should not be removed.
+blog_button:
+    title: 主页
+
+# 导航栏(左侧)
+nav:
+    - {title: 所有文章, description: archive, url: '/archive'}   
+    - {title: 标签, description: tags, url: '/tags'}      
+    - {title: 关于我们, description: about, url: '/about'}
+    
+
+# Pagination
+plugins: [jekyll-paginate,jekyll-sitemap]
+paginate: 20
+paginate_path: "page/:num/"
+
+

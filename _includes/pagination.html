@@ -1,37 +1,16 @@
-{% if paginator.total_pages > 1 %}
-<div class="pagination text-align">
-    <div class="btn-group">
+<hr class="post-list__divider " />
 
-        {% if paginator.previous_page %}
-        {% if paginator.previous_page == 1 %}
-        <a href="/" class="btn btn-outline">&laquo;</a>
-        {% else %}
-        <a href="/page{{paginator.previous_page}}" class="btn btn-outline">&laquo;</a>
-        {% endif %}
-        {% else %}
-        <button disabled="disabled" href="javascript:;" class="btn btn-outline">&laquo;</button>
-        {% endif %}
+<nav class="pagination" role="navigation">
 
-        {% if paginator.page == 1 %}
-        <a href="javascript:;" class="active btn btn-outline">1</a>
-        {% else %}
-        <a href="/" class="btn btn-outline">1</a>
-        {% endif %}
-
-        {% for count in (2..paginator.total_pages) %}
-        {% if count == paginator.page %}
-        <a href="javascript:;" class="active btn btn-outline">{{count}}</a>
-        {% else %}
-        <a href="/page{{count}}" class="btn btn-outline">{{count}}</a>
-        {% endif %}
-        {% endfor %}
-
-        {% if paginator.next_page %}
-        <a href="/page{{paginator.next_page}}" class="btn btn-outline">&raquo;</a>
-        {% else %}
-        <button disabled="disabled" href="javascript:;" class="btn btn-outline">&raquo;</button>
-        {% endif %}
-
-    </div>
-</div>
-{% endif %}
+	<!-- 百度搜索 -->
+	<script type="text/javascript">(function(){document.write(unescape('%3Cdiv id="bdcs"%3E%3C/div%3E'));var bdcs = document.createElement('script');bdcs.type = 'text/javascript';bdcs.async = true;bdcs.src = 'http://znsv.baidu.com/customer_search/api/js?sid=12441349038163667913' + '&plate_url=' + encodeURIComponent(window.location.href) + '&t=' + Math.ceil(new Date()/3600000);var s = document.getElementsByTagName('script')[0];s.parentNode.insertBefore(bdcs, s);})();
+	</script>
+	
+    {% if paginator.previous_page %}
+        <a class="newer-posts pagination__newer btn btn-small btn-tertiary" href="{{ paginator.previous_page_path }}#blog">&larr; 最近</a>
+    {% endif %}
+    <span class="pagination__page-number">{{ paginator.page }} / {{ paginator.total_pages }}</span>
+    {% if paginator.next_page %}
+        <a class="older-posts pagination__older btn btn-small btn-tertiary" href="{{ paginator.next_page_path }}#blog">更早 &rarr;</a>
+    {% endif %}
+</nav>
