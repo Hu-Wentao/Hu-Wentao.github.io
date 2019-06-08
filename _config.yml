@@ -9,7 +9,7 @@
 title:  Donove 分享区
 subtitle: 分享技术, 共同进步
 name: Donove 分享区
-email: ityouknow@126.com
+email: hu.wentao@outlook.com
 description: 本站用于Donove 组员的技术分享
 keywords:
 encoding: "utf-8"
@@ -221,7 +221,7 @@ comments_provider: gitalk
 # !!!Important!!! Please modify infos below to yours
 # https://disqus.com
 disqus:
-    username: ityouknow
+    username: Hu-Wentao
 # https://imsun.net/posts/gitment-introduction/
 gitment:
     owner: Hu-Wentao
@@ -231,9 +231,9 @@ gitment:
         client_secret: 21d26fc886decf21b1679022cf388a4860568938
 # https://github.com/gitalk/gitalk#install
 gitalk:
-    owner: ityouknow
+    owner: Hu-Wentao
     repo: blog-comments
-    clientID: 61bfc53d957e74e78f8f
-    clientSecret: 31c61e66cdcc9ada8db2267ee779d0bdafac434c
+    clientID: 5821f7904b6e2d3c0f50
+    clientSecret: 21d26fc886decf21b1679022cf388a4860568938
 # 在使用其它评论组件时可点击显示 Disqus
 lazy_load_disqus : true
