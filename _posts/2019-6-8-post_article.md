@@ -13,7 +13,7 @@ tags: 博客
 　　所有的文章都是 _posts 目录下面，文章格式为 mardown 格式，文章文件名可以是 .mardown 或者 .md。
 
 　　编写一篇新文章很简单，直接从 _posts/ 目录下复制 `2019-6-8-post_article.md` ，修改名字为 2019-6-8-my_article.md ，注意：文章名的格式前面必须为 2016-6-8- ，日期可以修改，但必须为 年-月-日- 格式，后面的 article1 是整个文章的连接 URL，文章名最好是英文的或者阿拉伯数字。
-```
+```text
 
 ---
 layout: post
@@ -38,7 +38,8 @@ tag: tag标签的分类，如：tag: 随笔
 #### 添加图片
 * 示例
 ![](/images/posts/article/test.jpg)
-```
+```text
+
 * 示例
 ![](/images/posts/article/test.jpg)
 
