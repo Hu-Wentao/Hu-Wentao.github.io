@@ -1,38 +1,36 @@
 # Basic
 
 ## 头像里面的标题
-avatarTitle: 点击进入文章列表
+avatarTitle: 点击进入
 ## 头像里面的描述
-avatarDesc: CodeZero荣誉出品
+avatarDesc: 讨论区
 # Site settings
 title:  Donove 成员交流区
 
 subtitle: 分享技术, 共同进步
 #name: Donove 组员交流分享区
 #email: hu.wentao@outlook.com
-description: 本站用于 Donove 组员的技术分享
+#description: 本站用于 Donove 组员的技术分享
 keywords:
 encoding: "utf-8"
 favicon: favicon.ico
 #url: https://hu-wentao.github.io/      ## 本行是上一版本的样式 (没有引号)
 #url: "http://hu-wentao.github.io"                ## todo 本行是当前版本的样式
 
-
 # Comment
 comment:
-    disqus: leopard
+#    disqus: xxx
     # gitment: xxx // 需要修改 comments.html中的client_id和client_secret
-    # uyan: 2143225  # 有言id,登录有言官网申请
 
 # Social
 #social:
-#    weibo: 5366874726
-#    github: leopardpan
-#    # zhihu: panpanleopard
-#    # juejin: xxx
-#    jianshu: 2ada30d8d0f7
+#    weibo:
+#    github: Hu-Wentao
+#    # zhihu:
+#    # juejin:
+#    jianshu:
 #    # twitter:
-#    mail: leopardpan@icloud.com
+#    mail: hu.wentao@outlook.com
 
 
 ## 百度统计
