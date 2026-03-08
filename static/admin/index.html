@@ -4,35 +4,31 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>博客后台管理</title>
-    <!-- 直接将配置写入内存，跳过 config.yml 文件加载步骤 -->
-    <script>
-      window.CMS_CONFIG = {
-        backend: {
-          name: "github",
-          repo: "hu-wentao/hu-wentao.github.io",
-          branch: "main",
-          use_pkce: true,
-          client_id: "Iv23lidlc79zvEHQy5rn"
-        },
-        media_folder: "static/images",
-        public_folder: "/images",
-        collections: [
-          {
-            name: "posts",
-            label: "文章",
-            folder: "content/posts",
-            create: true,
-            slug: "{{year}}-{{month}}-{{day}}-{{slug}}",
-            fields: [
-              { label: "标题", name: "title", widget: "string" },
-              { label: "日期", name: "date", widget: "datetime" },
-              { label: "正文", name: "body", widget: "markdown" }
-            ]
-          }
-        ]
-      };
+    <!-- 使用内联 YAML 配置，直接阻断任何外部加载或默认 Netlify 行为 -->
+    <script type="text/yaml">
+      backend:
+        name: github
+        repo: hu-wentao/hu-wentao.github.io
+        branch: main
+        use_pkce: true
+        client_id: Iv23lidlc79zvEHQy5rn
+      
+      media_folder: "static/images"
+      public_folder: "/images"
+
+      collections:
+        - name: "posts"
+          label: "文章"
+          folder: "content/posts"
+          create: true
+          slug: "{{year}}-{{month}}-{{day}}-{{slug}}"
+          fields:
+            - { label: "标题", name: "title", widget: "string" }
+            - { label: "日期", name: "date", widget: "datetime" }
+            - { label: "正文", name: "body", widget: "markdown" }
     </script>
-    <script src="https://unpkg.com/@sveltia/cms/dist/sveltia-cms.js" type="module"></script>
+    <!-- 使用特定版本的脚本，防止缓存 -->
+    <script src="https://unpkg.com/@sveltia/cms@0.47.0/dist/sveltia-cms.js" type="module"></script>
   </head>
   <body></body>
 </html>
