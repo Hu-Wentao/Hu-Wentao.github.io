@@ -4,14 +4,15 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>博客后台管理</title>
-    <!-- 使用内联 YAML 配置，直接阻断任何外部加载或默认 Netlify 行为 -->
+    <!-- 使用内联配置，显式指定 auth_type 为 pkce -->
     <script type="text/yaml">
       backend:
         name: github
         repo: hu-wentao/hu-wentao.github.io
         branch: main
-        use_pkce: true
+        auth_type: pkce # 显式指定 PKCE 流程
         client_id: Iv23lidlc79zvEHQy5rn
+        site_domain: wyattcoder.top # 明确指定域名，防止 fallback 到 netlify
       
       media_folder: "static/images"
       public_folder: "/images"
@@ -27,8 +28,8 @@
             - { label: "日期", name: "date", widget: "datetime" }
             - { label: "正文", name: "body", widget: "markdown" }
     </script>
-    <!-- 使用特定版本的脚本，防止缓存 -->
-    <script src="https://unpkg.com/@sveltia/cms@0.47.0/dist/sveltia-cms.js" type="module"></script>
+    <!-- 使用 jsdelivr CDN 避开 unpkg 可能存在的缓存 -->
+    <script src="https://cdn.jsdelivr.net/npm/@sveltia/cms/dist/sveltia-cms.js" type="module"></script>
   </head>
   <body></body>
 </html>
