@@ -2,8 +2,7 @@ backend:
   name: github
   repo: hu-wentao/hu-wentao.github.io
   branch: main
-  # Sveltia CMS 默认会使用其内置的授权服务，你只需要在后台配置一次 GitHub App。
-  # 我们先保留最简配置。
+  app_id: 3037472 # 您的 GitHub App ID
 
 media_folder: "static/images"
 public_folder: "/images"
