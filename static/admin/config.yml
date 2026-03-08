@@ -1,0 +1,20 @@
+backend:
+  name: github
+  repo: hu-wentao/hu-wentao.github.io
+  branch: main
+  # Sveltia CMS 默认会使用其内置的授权服务，你只需要在后台配置一次 GitHub App。
+  # 我们先保留最简配置。
+
+media_folder: "static/images"
+public_folder: "/images"
+
+collections:
+  - name: "posts"
+    label: "文章"
+    folder: "content/posts"
+    create: true
+    slug: "{{year}}-{{month}}-{{day}}-{{slug}}"
+    fields:
+      - { label: "标题", name: "title", widget: "string" }
+      - { label: "日期", name: "date", widget: "datetime" }
+      - { label: "正文", name: "body", widget: "markdown" }
