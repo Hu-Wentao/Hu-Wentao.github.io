@@ -4,8 +4,34 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>博客后台管理</title>
-    <!-- 显式指定配置文件路径，使用相对路径确保准确性 -->
-    <link rel="cms-config-url" type="text/yaml" href="config.yml" />
+    <!-- 直接将配置写入内存，跳过 config.yml 文件加载步骤 -->
+    <script>
+      window.CMS_CONFIG = {
+        backend: {
+          name: "github",
+          repo: "hu-wentao/hu-wentao.github.io",
+          branch: "main",
+          use_pkce: true,
+          client_id: "Iv23lidlc79zvEHQy5rn"
+        },
+        media_folder: "static/images",
+        public_folder: "/images",
+        collections: [
+          {
+            name: "posts",
+            label: "文章",
+            folder: "content/posts",
+            create: true,
+            slug: "{{year}}-{{month}}-{{day}}-{{slug}}",
+            fields: [
+              { label: "标题", name: "title", widget: "string" },
+              { label: "日期", name: "date", widget: "datetime" },
+              { label: "正文", name: "body", widget: "markdown" }
+            ]
+          }
+        ]
+      };
+    </script>
     <script src="https://unpkg.com/@sveltia/cms/dist/sveltia-cms.js" type="module"></script>
   </head>
   <body></body>
