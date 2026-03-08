@@ -2,9 +2,8 @@ backend:
   name: github
   repo: hu-wentao/hu-wentao.github.io
   branch: main
-  app_id: 3037472
-  base_url: https://api.sveltia.org # 强制使用 Sveltia 的验证网关
-  auth_endpoint: auth
+  use_pkce: true
+  client_id: Iv23lidlc79zvEHQy5rn
 
 media_folder: "static/images"
 public_folder: "/images"
