@@ -4,7 +4,8 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>博客后台管理</title>
-    <!-- 使用 Sveltia CMS，它支持无需配置的 GitHub 登录 -->
+    <!-- 强制指向配置文件，防止读取缓存或默认配置 -->
+    <link rel="cms-config-url" type="text/yaml" href="/admin/config.yml" />
     <script src="https://unpkg.com/@sveltia/cms/dist/sveltia-cms.js" type="module"></script>
   </head>
   <body></body>
