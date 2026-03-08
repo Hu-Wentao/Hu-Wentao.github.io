@@ -1,4 +1,4 @@
-baseURL = 'https://hu-wentao.github.io/'
+baseURL = 'https://wyattcoder.top/'
 languageCode = 'zh-cn'
 title = 'Hu-Wentao 的个人博客'
 theme = 'PaperMod'
@@ -10,6 +10,8 @@ theme = 'PaperMod'
     ShowPostNavLinks = true
     ShowBreadCrumbs = true
     ShowCodeCopyButtons = true
+    languageName = "Chinese"
+    contentLanguage = "zh"
 
 [menu]
     [[menu.main]]
