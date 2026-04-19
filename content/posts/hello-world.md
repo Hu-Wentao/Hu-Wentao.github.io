@@ -4,5 +4,5 @@ date: 2026-03-08T12:00:00Z
 draft: false
 ---
 
-这是基于 **Hugo** 和 **Decap CMS** 构建的第一篇博文。
-你可以通过访问 `/admin/` 来管理你的内容。
+这是基于 **Hugo** 和 **PaperMod** 构建的第一篇博文。
+之后可以通过 Git 提交 Markdown 文件来发布新的文章。
