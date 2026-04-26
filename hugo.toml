@@ -12,6 +12,9 @@ theme = 'PaperMod'
     ShowCodeCopyButtons = true
     languageName = "Chinese"
     contentLanguage = "zh"
+    [[params.author]]
+        name = "Hu Wentao"
+        email = "hu.wentao@outlook.com"
 
 [menu]
     [[menu.main]]
@@ -24,6 +27,11 @@ theme = 'PaperMod'
         name = "标签"
         url = "/tags"
         weight = 20
+    [[menu.main]]
+        identifier = "projects"
+        name = "项目"
+        url = "/projects"
+        weight = 25
     [[menu.main]]
         identifier = "archives"
         name = "归档"
