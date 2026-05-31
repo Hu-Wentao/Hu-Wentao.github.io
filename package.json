@@ -1,0 +1,25 @@
+{
+  "name": "infamous-bobcat",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@10.33.2",
+  "scripts": {
+    "publish:setup": "tsx scripts/publisher/src/cli.ts publish:setup",
+    "publish:article": "tsx scripts/publisher/src/cli.ts publish:article",
+    "publish:social": "tsx scripts/publisher/src/cli.ts publish:social",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@wechatsync/cli": "^1.1.0",
+    "gray-matter": "^4.0.3",
+    "playwright-core": "^1.60.0",
+    "smol-toml": "^1.6.1"
+  },
+  "devDependencies": {
+    "@types/node": "^24.10.1",
+    "tsx": "^4.22.4",
+    "typescript": "^5.9.3",
+    "vitest": "^4.0.7"
+  }
+}
