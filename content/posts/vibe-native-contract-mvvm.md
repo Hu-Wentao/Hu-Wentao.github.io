@@ -75,6 +75,26 @@ xxx_page/
 - 改业务行为, 优先看 `.vm.dart`.
 - 改页面整体语义, 先更新 contract 注释.
 
+## Flutter开发者快速体验Skill
+
+如果你已经在本地安装了 Codex CLI, 可以执行下面的命令, 将 `/path/to/flutter_project` 替换为你的Flutter项目路径. 命令会通过Vercel的 `skills` CLI把 `fr-mvvm-contract` 安装到指定项目, 然后让Agent选择一个低风险页面迁移为 Contract MVVM:
+
+```bash
+PROJECT=/path/to/flutter_project && \
+(cd "$PROJECT" && \
+  npx --yes skills add https://github.com/Hu-Wentao/flowr/tree/main/skills/fr-mvvm-contract \
+    --agent codex \
+    --yes) && \
+codex --cd "$PROJECT" "请使用 fr-mvvm-contract skill, 选择一个低风险 Flutter 页面, 将它重构为 Contract MVVM 结构. 修改前先检查 git status; 保留现有行为; Dart/Flutter 命令使用 fvm; 完成后运行 fvm dart format 和 fvm flutter analyze."
+```
+
+这条命令做三件事:
+
+- 将skill安装到指定项目的Codex技能目录.
+- 启动Codex并明确要求它使用 `fr-mvvm-contract` skill执行页面迁移.
+- 要求Agent在修改前检查git状态, 并在修改后运行格式化和静态分析.
+
+第一次体验时, 不建议直接让AI全量重构整个项目. 更好的方式是先选择一个独立页面, 观察contract文件是否能准确描述页面结构, 再逐步扩大迁移范围. Contract MVVM 的目标不是一次性完成所有重构, 而是让每一次AI改动都留下人类开发者可以理解和接管的结构.
 
 ## 结语
 AI 可以更快地产生代码, 也可以更快地产生偏差.VibeCoding的趋势不可阻挡, 人类开发者需要做的不是原地等待, 而是驾驭AI写出可维护, 可理解的代码.
