@@ -1,5 +1,5 @@
 ---
-title: "契约驱动编程与Vibe原生架构"
+title: "ACDD：面向 Agent 的契约驱动开发"
 date: 2026-05-31T00:00:00+08:00
 draft: false
 summary: "contract-MVVM, 人与Agent协作的契约架构, 让Agent走的更远"
@@ -10,7 +10,7 @@ categories: ["Artifacts"]
 Vibe Coding在企业项目中的核心痛点是开发者无法放手让Agent自主工作. 想要保证质量, 就必须频繁介入AI操作行为; 想要AI自动实现, 就意味着未来要面对 AI生成的无法维护且不可理解的巨型屎山.
 [fr-mvvm-contract](https://github.com/Hu-Wentao/flowr/blob/main/skills/fr-mvvm-contract/SKILL.md) skill将核心元素集中到contract文件中, 力求开发者在90%的情况下, 只需要查看一个contract文件就能了解页面的功能,依赖,表现与逻辑. 让开发者可以零门槛理解并接管AI生成的代码, 解决VibeCode无法理解的问题.
 
-## 契约驱动编程
+## 契约驱动编程Agentic Contract-Driven Development(ACDD)
 
 开发团队写注释和文档, 不仅仅是因为注释带来额外工作, 更因为注释经常滞后于代码, 反而造成误解. 在Contract-MVVM 中, 注释就是一种驱动Agent编程的代码, 是人与AI之间的核心契约. 人类开发者将项目所需要的特定约束写在contract中, 要求AI遵循特定范式,引用特定组件实现功能.
 
@@ -82,19 +82,15 @@ xxx_page/
 ```bash
 PROJECT=/path/to/flutter_project && \
 (cd "$PROJECT" && \
-  npx --yes skills add https://github.com/Hu-Wentao/flowr/tree/main/skills/fr-mvvm-contract \
+  npx --yes skills add Hu-Wentao/flowr \
+    --skill flowr-dart-usage \
+    --skill flowr-usage \
+    --skill fr-mvvm-contract \
     --agent codex \
+    --agent claude-code \
     --yes) && \
-codex --cd "$PROJECT" "请使用 fr-mvvm-contract skill, 选择一个低风险 Flutter 页面, 将它重构为 Contract MVVM 结构. 修改前先检查 git status; 保留现有行为; Dart/Flutter 命令使用 fvm; 完成后运行 fvm dart format 和 fvm flutter analyze."
+codex --cd "$PROJECT" "请使用 fr-mvvm-contract skill, 选择一个低风险 Flutter 页面, 将它重构为 Contract MVVM 结构. 修改前先检查 git status; 保留现有行为; 完成后运行 dart format 和 flutter analyze."
 ```
-
-这条命令做三件事:
-
-- 将skill安装到指定项目的Codex技能目录.
-- 启动Codex并明确要求它使用 `fr-mvvm-contract` skill执行页面迁移.
-- 要求Agent在修改前检查git状态, 并在修改后运行格式化和静态分析.
-
-第一次体验时, 不建议直接让AI全量重构整个项目. 更好的方式是先选择一个独立页面, 观察contract文件是否能准确描述页面结构, 再逐步扩大迁移范围. Contract MVVM 的目标不是一次性完成所有重构, 而是让每一次AI改动都留下人类开发者可以理解和接管的结构.
 
 ## 结语
 AI 可以更快地产生代码, 也可以更快地产生偏差.VibeCoding的趋势不可阻挡, 人类开发者需要做的不是原地等待, 而是驾驭AI写出可维护, 可理解的代码.
