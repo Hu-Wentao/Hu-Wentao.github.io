@@ -8,9 +8,10 @@ categories: ["Artifacts"]
 ---
 
 Vibe Coding在企业项目中的核心痛点是开发者无法放手让Agent自主工作. 想要保证质量, 就必须频繁介入AI操作行为; 想要AI自动实现, 就意味着未来要面对 AI生成的无法维护且不可理解的巨型屎山.
-[fr-mvvm-contract](https://github.com/Hu-Wentao/flowr/blob/main/skills/fr-mvvm-contract/SKILL.md) skill将核心元素集中到contract文件中, 力求开发者在90%的情况下, 只需要查看一个contract文件就能了解页面的功能,依赖,表现与逻辑. 让开发者可以零门槛理解并接管AI生成的代码, 解决VibeCode无法理解的问题.
 
-## 契约驱动编程Agentic Contract-Driven Development(ACDD)
+为了在减少人工干预的情况下约束AI代码生成行为, 本文提出一种代码与文档结合的AI辅助编程方案, 即契约驱动编程(Agentic Contract-Driven Development).
+
+## 契约驱动编程 Agentic Contract-Driven Development
 
 开发团队写注释和文档, 不仅仅是因为注释带来额外工作, 更因为注释经常滞后于代码, 反而造成误解. 在Contract-MVVM 中, 注释就是一种驱动Agent编程的代码, 是人与AI之间的核心契约. 人类开发者将项目所需要的特定约束写在contract中, 要求AI遵循特定范式,引用特定组件实现功能.
 
@@ -76,6 +77,8 @@ xxx_page/
 - 改页面整体语义, 先更新 contract 注释.
 
 ## Flutter开发者快速体验Skill
+
+[fr-mvvm-contract](https://github.com/Hu-Wentao/flowr/blob/main/skills/fr-mvvm-contract/SKILL.md) skill将核心元素集中到contract文件中, 力求开发者在90%的情况下, 只需要查看一个contract文件就能了解页面的功能,依赖,表现与逻辑. 让开发者可以零门槛理解并接管AI生成的代码, 解决VibeCode无法理解的问题.
 
 如果你已经在本地安装了 Codex CLI, 可以执行下面的命令, 将 `/path/to/flutter_project` 替换为你的Flutter项目路径. 命令会通过Vercel的 `skills` CLI把 `fr-mvvm-contract` 安装到指定项目, 然后让Agent选择一个低风险页面迁移为 Contract MVVM:
 
