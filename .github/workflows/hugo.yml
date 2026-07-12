@@ -31,19 +31,19 @@ jobs:
           tar -xzf ${{ runner.temp }}/hugo.tar.gz -C ${{ runner.temp }}
           sudo mv ${{ runner.temp }}/hugo /usr/local/bin/hugo
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           submodules: recursive
           fetch-depth: 0
       - name: Setup Pages
         id: pages
-        uses: actions/configure-pages@v4
+        uses: actions/configure-pages@v6
       - name: Setup pnpm
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@v6
         with:
           package_json_file: package.json
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version-file: .nvmrc
       - name: Build with Hugo
@@ -68,7 +68,7 @@ jobs:
               --out "../../public/slides/$slug"
           done < <(find slides -mindepth 2 -maxdepth 2 -name package.json -print0 | sort -z)
       - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@v5
         with:
           path: ./public
 
@@ -81,4 +81,4 @@ jobs:
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5
