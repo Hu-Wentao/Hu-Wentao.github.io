@@ -1,0 +1,4 @@
+interface:
+  display_name: "Blog Slidev Workflow"
+  short_description: "Create and publish Slidev decks inside this Hugo blog"
+  default_prompt: "Use $blog-slidev to create and publish a new Slidev deck for this blog."

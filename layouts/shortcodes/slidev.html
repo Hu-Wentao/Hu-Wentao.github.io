@@ -1,0 +1,12 @@
+{{- $slug := .Get "slug" -}}
+{{- $title := .Get "title" | default "Slidev presentation" -}}
+{{- if not (findRE `^[a-z0-9]+(?:-[a-z0-9]+)*$` $slug) -}}
+  {{- errorf "slidev shortcode requires a lowercase kebab-case slug: %q" $slug -}}
+{{- end -}}
+<iframe
+  src="{{ printf "/slides/%s/" $slug | relURL }}"
+  title="{{ $title }}"
+  loading="lazy"
+  allowfullscreen
+  style="width:100%;aspect-ratio:16/9;border:0"
+></iframe>

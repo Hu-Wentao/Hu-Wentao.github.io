@@ -38,12 +38,35 @@ jobs:
       - name: Setup Pages
         id: pages
         uses: actions/configure-pages@v4
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          package_json_file: package.json
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
       - name: Build with Hugo
         run: |
           hugo \
             --gc \
             --minify \
             --baseURL "${{ steps.pages.outputs.base_url }}/"
+      - name: Build Slidev decks
+        run: |
+          if [[ ! -d slides ]]; then
+            exit 0
+          fi
+
+          while IFS= read -r -d '' package_json; do
+            deck_dir="$(dirname "$package_json")"
+            slug="$(basename "$deck_dir")"
+
+            pnpm --dir "$deck_dir" install --frozen-lockfile
+            pnpm --dir "$deck_dir" exec slidev build \
+              --base "/slides/$slug/" \
+              --out "../../public/slides/$slug"
+          done < <(find slides -mindepth 2 -maxdepth 2 -name package.json -print0 | sort -z)
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
