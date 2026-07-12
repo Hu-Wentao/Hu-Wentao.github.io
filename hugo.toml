@@ -3,6 +3,13 @@ languageCode = 'zh-cn'
 title = 'Hu-Wentao 的个人博客'
 theme = 'PaperMod'
 
+[markup.goldmark.extensions.passthrough]
+    enable = true
+
+[markup.goldmark.extensions.passthrough.delimiters]
+    block = [['\[', '\]'], ['$$', '$$']]
+    inline = [['\(', '\)']]
+
 [params]
     defaultTheme = "auto"
     showReadingTime = true

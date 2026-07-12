@@ -1,0 +1,12 @@
+{{- $opts := dict
+  "displayMode" (eq .Type "block")
+  "output" "htmlAndMathml"
+-}}
+{{- with try (transform.ToMath .Inner $opts) }}
+  {{- with .Err }}
+    {{- errorf "Unable to render mathematical markup: %s: see %s" . $.Position }}
+  {{- else }}
+    {{- .Value }}
+    {{- $.Page.Store.Set "hasMath" true }}
+  {{- end }}
+{{- end -}}
