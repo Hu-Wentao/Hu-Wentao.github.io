@@ -1,0 +1,882 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="auto">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <title>Vibe Coding 沟通模式耗时模拟器</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f7f8fa;
+      --surface: #ffffff;
+      --surface-soft: #f0f3f7;
+      --text: #172033;
+      --muted: #657086;
+      --border: #dbe1ea;
+      --accent: #3859d9;
+      --accent-soft: #e8edff;
+      --instant: #7357c8;
+      --email: #c77a17;
+      --document: #16856b;
+      --focus: #315fe8;
+      --shadow: 0 12px 30px rgb(23 32 51 / 8%);
+    }
+
+    html[data-theme="dark"] {
+      color-scheme: dark;
+      --bg: #15171a;
+      --surface: #202327;
+      --surface-soft: #292d32;
+      --text: #e6e8ec;
+      --muted: #a6aebb;
+      --border: #3b414a;
+      --accent: #8da4ff;
+      --accent-soft: #29345f;
+      --instant: #b19aef;
+      --email: #efb15e;
+      --document: #5ac9ad;
+      --focus: #9aafff;
+      --shadow: 0 14px 34px rgb(0 0 0 / 24%);
+    }
+
+    @media (prefers-color-scheme: dark) {
+      html[data-theme="auto"] {
+        color-scheme: dark;
+        --bg: #15171a;
+        --surface: #202327;
+        --surface-soft: #292d32;
+        --text: #e6e8ec;
+        --muted: #a6aebb;
+        --border: #3b414a;
+        --accent: #8da4ff;
+        --accent-soft: #29345f;
+        --instant: #b19aef;
+        --email: #efb15e;
+        --document: #5ac9ad;
+        --focus: #9aafff;
+        --shadow: 0 14px 34px rgb(0 0 0 / 24%);
+      }
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      background: transparent;
+      font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-variant-numeric: tabular-nums;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.55;
+    }
+
+    button,
+    input,
+    select {
+      font: inherit;
+    }
+
+    .app {
+      width: 100%;
+      padding: 18px;
+    }
+
+    .hero,
+    .panel,
+    .result-card {
+      border: 1px solid var(--border);
+      background: var(--surface);
+      box-shadow: var(--shadow);
+    }
+
+    .hero {
+      padding: 22px;
+      border-radius: 18px 18px 10px 10px;
+      background:
+        radial-gradient(circle at 92% 10%, color-mix(in srgb, var(--accent) 18%, transparent), transparent 42%),
+        var(--surface);
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      min-height: 28px;
+      margin: 0 0 8px;
+      padding: 3px 10px;
+      border-radius: 999px;
+      background: var(--accent-soft);
+      color: var(--accent);
+      font-size: 12px;
+      font-weight: 750;
+      letter-spacing: .04em;
+    }
+
+    h1,
+    h2,
+    h3,
+    p {
+      margin-top: 0;
+    }
+
+    h1 {
+      margin-bottom: 8px;
+      font-size: clamp(23px, 4vw, 32px);
+      line-height: 1.2;
+      letter-spacing: -.025em;
+    }
+
+    h2 {
+      margin-bottom: 4px;
+      font-size: 18px;
+    }
+
+    .hero p,
+    .section-copy,
+    .scope-note {
+      color: var(--muted);
+    }
+
+    .hero p {
+      max-width: 64ch;
+      margin-bottom: 0;
+      font-size: 14px;
+    }
+
+    .panel {
+      margin-top: 14px;
+      padding: 18px;
+      border-radius: 10px;
+    }
+
+    .section-copy {
+      margin-bottom: 16px;
+      font-size: 13px;
+    }
+
+    .controls-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .control {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 8px 12px;
+      align-items: center;
+      min-width: 0;
+      padding: 12px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: var(--surface-soft);
+    }
+
+    .control > span:first-child {
+      min-width: 0;
+      font-size: 13px;
+      font-weight: 680;
+    }
+
+    .control output {
+      min-width: 62px;
+      color: var(--accent);
+      font-size: 13px;
+      font-weight: 760;
+      text-align: right;
+    }
+
+    .control input[type="range"] {
+      grid-column: 1 / -1;
+      width: 100%;
+      min-height: 26px;
+      margin: 0;
+      accent-color: var(--accent);
+      cursor: pointer;
+    }
+
+    .control input:disabled {
+      cursor: not-allowed;
+      opacity: .45;
+    }
+
+    .select-control {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(145px, auto);
+      gap: 12px;
+      align-items: center;
+      margin-top: 12px;
+      padding: 12px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: var(--surface-soft);
+    }
+
+    .select-control label {
+      font-size: 13px;
+      font-weight: 680;
+    }
+
+    select {
+      min-height: 44px;
+      padding: 8px 34px 8px 10px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--surface);
+      color: var(--text);
+    }
+
+    input:focus-visible,
+    select:focus-visible,
+    summary:focus-visible {
+      outline: 3px solid var(--focus);
+      outline-offset: 2px;
+    }
+
+    .round-summary {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .summary-chip {
+      padding: 10px;
+      border-radius: 9px;
+      background: var(--accent-soft);
+      color: var(--accent);
+      text-align: center;
+    }
+
+    .summary-chip small {
+      display: block;
+      color: var(--text);
+      font-size: 11px;
+    }
+
+    .summary-chip strong {
+      display: block;
+      margin-top: 2px;
+      font-size: 16px;
+    }
+
+    .placement-note {
+      margin: 10px 0 0;
+      color: var(--muted);
+      font-size: 12px;
+      overflow-wrap: anywhere;
+    }
+
+    .results {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    .result-card {
+      position: relative;
+      min-width: 0;
+      padding: 16px;
+      border-radius: 12px;
+      box-shadow: none;
+      overflow: hidden;
+    }
+
+    .result-card::before {
+      position: absolute;
+      inset: 0 auto 0 0;
+      width: 4px;
+      background: var(--mode-color);
+      content: "";
+    }
+
+    .result-card[data-mode="instant"] { --mode-color: var(--instant); }
+    .result-card[data-mode="email"] { --mode-color: var(--email); }
+    .result-card[data-mode="document"] { --mode-color: var(--document); }
+
+    .result-heading {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+
+    .result-heading h3 {
+      margin: 0;
+      font-size: 15px;
+    }
+
+    .winner {
+      display: none;
+      padding: 2px 7px;
+      border: 1px solid var(--mode-color);
+      border-radius: 999px;
+      background: color-mix(in srgb, var(--mode-color) 24%, var(--surface));
+      color: var(--text);
+      font-size: 10px;
+      font-weight: 760;
+    }
+
+    .result-card[data-winner="true"] .winner {
+      display: inline-flex;
+    }
+
+    .total-time {
+      margin-bottom: 12px;
+      color: var(--mode-color);
+      line-height: 1;
+    }
+
+    .total-time strong {
+      font-size: clamp(29px, 6vw, 42px);
+      letter-spacing: -.04em;
+    }
+
+    .total-time span {
+      margin-left: 3px;
+      color: var(--text);
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .metrics {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 6px 8px;
+      margin: 0;
+      font-size: 12px;
+    }
+
+    .metrics dt {
+      color: var(--muted);
+    }
+
+    .metrics dd {
+      margin: 0;
+      font-weight: 700;
+      text-align: right;
+    }
+
+    .comparison-list {
+      display: grid;
+      gap: 13px;
+      margin-top: 16px;
+    }
+
+    .bar-row {
+      display: grid;
+      grid-template-columns: 76px minmax(0, 1fr) 72px;
+      gap: 9px;
+      align-items: center;
+      font-size: 12px;
+    }
+
+    .bar-label {
+      font-weight: 680;
+    }
+
+    .bar-track {
+      height: 13px;
+      border-radius: 999px;
+      background: var(--surface-soft);
+      overflow: hidden;
+    }
+
+    .bar-fill {
+      width: 0;
+      height: 100%;
+      border-radius: inherit;
+      background: var(--mode-color);
+      transition: width 180ms ease-out;
+    }
+
+    .bar-row[data-mode="instant"] { --mode-color: var(--instant); }
+    .bar-row[data-mode="email"] { --mode-color: var(--email); }
+    .bar-row[data-mode="document"] { --mode-color: var(--document); }
+
+    .bar-value {
+      font-weight: 700;
+      text-align: right;
+    }
+
+    details {
+      margin-top: 14px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: var(--surface);
+    }
+
+    summary {
+      min-height: 48px;
+      padding: 13px 16px;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 720;
+    }
+
+    .details-body {
+      padding: 0 16px 16px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .details-body p:last-child,
+    .details-body ul:last-child {
+      margin-bottom: 0;
+    }
+
+    .formula {
+      display: block;
+      margin: 8px 0;
+      padding: 10px;
+      border-radius: 8px;
+      background: var(--surface-soft);
+      color: var(--text);
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      line-height: 1.5;
+      overflow-wrap: anywhere;
+    }
+
+    .scope-note {
+      margin: 12px 2px 0;
+      font-size: 11px;
+      text-align: center;
+    }
+
+    @media (max-width: 620px) {
+      .app {
+        padding: 10px;
+      }
+
+      .hero,
+      .panel {
+        padding: 15px;
+      }
+
+      .controls-grid,
+      .results {
+        grid-template-columns: 1fr;
+      }
+
+      .round-summary {
+        grid-template-columns: 1fr;
+      }
+
+      .select-control {
+        grid-template-columns: 1fr;
+      }
+
+      .bar-row {
+        grid-template-columns: 68px minmax(0, 1fr) 62px;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *,
+      *::before,
+      *::after {
+        scroll-behavior: auto !important;
+        transition-duration: .01ms !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <header class="hero">
+      <div class="eyebrow">SPEC 协作阶段</div>
+      <h1>三种沟通模式耗时模拟器</h1>
+      <p>三种模式使用完全相同的 SPEC、沟通轮数和单位耗时，只改变任务的调度方式。结果是模型估算，不包含最终代码落地和运行检查。</p>
+    </header>
+
+    <section class="panel" aria-labelledby="workload-heading">
+      <h2 id="workload-heading">任务与资源</h2>
+      <p class="section-copy">所有时间单位均为分钟。AI 时间指一个 SPEC 在一轮中的分析与修改时间。</p>
+      <div class="controls-grid">
+        <label class="control" for="spec-count">
+          <span>SPEC 数量</span>
+          <output id="spec-count-output" for="spec-count">4 个</output>
+          <input id="spec-count" data-input type="range" min="1" max="12" step="1" value="4">
+        </label>
+        <label class="control" for="ai-concurrency">
+          <span>AI 并发数</span>
+          <output id="ai-concurrency-output" for="ai-concurrency">4 个</output>
+          <input id="ai-concurrency" data-input type="range" min="1" max="12" step="1" value="4">
+        </label>
+        <label class="control" for="initial-edit">
+          <span>首轮编辑 / SPEC</span>
+          <output id="initial-edit-output" for="initial-edit">5 分钟</output>
+          <input id="initial-edit" data-input type="range" min="0" max="30" step="1" value="5">
+        </label>
+        <label class="control" for="rework-edit">
+          <span>返工编辑 / SPEC</span>
+          <output id="rework-edit-output" for="rework-edit">5 分钟</output>
+          <input id="rework-edit" data-input type="range" min="0" max="30" step="1" value="5">
+        </label>
+        <label class="control" for="ai-time">
+          <span>AI 处理 / SPEC-round</span>
+          <output id="ai-time-output" for="ai-time">8 分钟</output>
+          <input id="ai-time" data-input type="range" min="1" max="60" step="1" value="8">
+        </label>
+        <label class="control" for="review-time">
+          <span>人工审查 / SPEC-round</span>
+          <output id="review-time-output" for="review-time">3 分钟</output>
+          <input id="review-time" data-input type="range" min="0" max="30" step="1" value="3">
+        </label>
+      </div>
+    </section>
+
+    <section class="panel" aria-labelledby="rounds-heading">
+      <h2 id="rounds-heading">返工分布</h2>
+      <p class="section-copy">第 1 轮始终包含全部 SPEC；后续轮次填写“仍需继续沟通”的 SPEC 数量。这样可以准确表达平均 1.5 轮，而不是把整批时间直接乘以 1.5。</p>
+      <div class="controls-grid">
+        <label class="control" for="round-2">
+          <span>第 2 轮仍需沟通</span>
+          <output id="round-2-output" for="round-2">2 个</output>
+          <input id="round-2" data-round data-input type="range" min="0" max="4" step="1" value="2">
+        </label>
+        <label class="control" for="round-3">
+          <span>第 3 轮仍需沟通</span>
+          <output id="round-3-output" for="round-3">0 个</output>
+          <input id="round-3" data-round data-input type="range" min="0" max="2" step="1" value="0">
+        </label>
+        <label class="control" for="round-4">
+          <span>第 4 轮仍需沟通</span>
+          <output id="round-4-output" for="round-4">0 个</output>
+          <input id="round-4" data-round data-input type="range" min="0" max="0" step="1" value="0" disabled>
+        </label>
+      </div>
+
+      <div class="select-control">
+        <label for="rework-placement">返工 SPEC 在编辑顺序中的位置</label>
+        <select id="rework-placement" data-input>
+          <option value="spread" selected>均匀分布</option>
+          <option value="early">集中在较早 SPEC</option>
+          <option value="late">集中在较晚 SPEC</option>
+        </select>
+      </div>
+
+      <div class="round-summary" aria-live="polite">
+        <div class="summary-chip"><small>每轮活跃 SPEC</small><strong id="round-counts">4 → 2</strong></div>
+        <div class="summary-chip"><small>总 SPEC-round</small><strong id="spec-rounds">6</strong></div>
+        <div class="summary-chip"><small>平均轮数 / SPEC</small><strong id="average-rounds">1.50</strong></div>
+      </div>
+      <p class="placement-note" id="placement-note"></p>
+    </section>
+
+    <div id="result-output" role="status" aria-live="polite">
+      <section class="results" aria-label="三种模式的模拟结果">
+        <article class="result-card" data-mode="instant">
+          <div class="result-heading"><h3>即时沟通</h3><span class="winner">最快</span></div>
+          <div class="total-time"><strong data-total>0</strong><span>分钟</span></div>
+          <dl class="metrics">
+            <dt>开发者主动</dt><dd data-active>0 分钟</dd>
+            <dt>开发者等待</dt><dd data-wait>0 分钟</dd>
+            <dt>首个可审查结果</dt><dd data-first>0 分钟</dd>
+          </dl>
+        </article>
+        <article class="result-card" data-mode="email">
+          <div class="result-heading"><h3>邮件沟通</h3><span class="winner">最快</span></div>
+          <div class="total-time"><strong data-total>0</strong><span>分钟</span></div>
+          <dl class="metrics">
+            <dt>开发者主动</dt><dd data-active>0 分钟</dd>
+            <dt>开发者等待</dt><dd data-wait>0 分钟</dd>
+            <dt>首个可审查结果</dt><dd data-first>0 分钟</dd>
+          </dl>
+        </article>
+        <article class="result-card" data-mode="document">
+          <div class="result-heading"><h3>文档协作</h3><span class="winner">最快</span></div>
+          <div class="total-time"><strong data-total>0</strong><span>分钟</span></div>
+          <dl class="metrics">
+            <dt>开发者主动</dt><dd data-active>0 分钟</dd>
+            <dt>开发者等待</dt><dd data-wait>0 分钟</dd>
+            <dt>首个可审查结果</dt><dd data-first>0 分钟</dd>
+          </dl>
+        </article>
+      </section>
+    </div>
+
+    <section class="panel" aria-labelledby="comparison-heading">
+      <h2 id="comparison-heading">端到端耗时对比</h2>
+      <p class="section-copy">条形图使用同一时间尺度；“开发者等待”是端到端时间减去相同的主动工作时间。</p>
+      <div class="comparison-list">
+        <div class="bar-row" data-mode="instant"><span class="bar-label">即时沟通</span><div class="bar-track"><div class="bar-fill"></div></div><span class="bar-value">0 分钟</span></div>
+        <div class="bar-row" data-mode="email"><span class="bar-label">邮件沟通</span><div class="bar-track"><div class="bar-fill"></div></div><span class="bar-value">0 分钟</span></div>
+        <div class="bar-row" data-mode="document"><span class="bar-label">文档协作</span><div class="bar-track"><div class="bar-fill"></div></div><span class="bar-value">0 分钟</span></div>
+      </div>
+    </section>
+
+    <details>
+      <summary>查看公式、调度策略与边界</summary>
+      <div class="details-body">
+        <p>令 <strong>nᵣ</strong> 为第 r 轮仍需沟通的 SPEC 数，<strong>eᵣ</strong> 为该轮编辑时间，<strong>a</strong> 为单个 AI 任务时间，<strong>v</strong> 为审查时间，<strong>C</strong> 为 AI 并发数。</p>
+        <span class="formula">即时：T = Σᵣ nᵣ(eᵣ + a + v)</span>
+        <span class="formula">邮件：T = Σᵣ [nᵣ(eᵣ + v) + ⌈nᵣ / C⌉a]</span>
+        <span class="formula">文档：makespan{ 编辑ᵢ,ᵣ → AIᵢ,ᵣ → 审查ᵢ,ᵣ → 下一轮编辑ᵢ,ᵣ₊₁ }</span>
+        <p>文档模式先连续完成所有首轮编辑，同时把修改交给最早空闲的 AI；之后优先审查最早完成的结果，需要返工时立即编辑并再次提交，不等待其他 SPEC 组成整批。</p>
+        <ul>
+          <li>开发者只有一个执行槽，编辑和审查不能并行。</li>
+          <li>AI 任务相互独立、耗时相同，共用 C 个执行槽。</li>
+          <li>三种模式使用相同的逐 SPEC 轮数；返工位置只影响文档模式的关键路径。</li>
+          <li>不计交接、共享文件冲突、最终代码落地与运行检查。</li>
+        </ul>
+      </div>
+    </details>
+
+    <p class="scope-note">该工具比较的是 SPEC 协作阶段的确定性调度结果，而不是对所有团队和任务都成立的性能承诺。</p>
+  </main>
+
+  <script>
+    (() => {
+      const inputIds = [
+        "spec-count",
+        "ai-concurrency",
+        "initial-edit",
+        "rework-edit",
+        "ai-time",
+        "review-time",
+        "round-2",
+        "round-3",
+        "round-4",
+        "rework-placement"
+      ];
+      const inputs = Object.fromEntries(inputIds.map((id) => [id, document.getElementById(id)]));
+      const roundInputs = [inputs["round-2"], inputs["round-3"], inputs["round-4"]];
+
+      const numberValue = (input) => Number(input.value);
+      const formatMinutes = (value) => {
+        const rounded = Math.round(value * 10) / 10;
+        return Number.isInteger(rounded) ? String(rounded) : rounded.toFixed(1);
+      };
+
+      function updateOutputs() {
+        const minuteIds = ["initial-edit", "rework-edit", "ai-time", "review-time"];
+        document.getElementById("spec-count-output").textContent = `${numberValue(inputs["spec-count"])} 个`;
+        document.getElementById("ai-concurrency-output").textContent = `${numberValue(inputs["ai-concurrency"])} 个`;
+        minuteIds.forEach((id) => {
+          document.getElementById(`${id}-output`).textContent = `${formatMinutes(numberValue(inputs[id]))} 分钟`;
+        });
+        roundInputs.forEach((input) => {
+          document.getElementById(`${input.id}-output`).textContent = `${numberValue(input)} 个`;
+        });
+      }
+
+      function normalizeRoundInputs() {
+        let previous = numberValue(inputs["spec-count"]);
+        roundInputs.forEach((input) => {
+          input.max = String(previous);
+          const next = Math.max(0, Math.min(previous, numberValue(input)));
+          input.value = String(next);
+          input.disabled = previous === 0;
+          previous = next;
+        });
+      }
+
+      function pickSpecs(specs, count, placement) {
+        if (count <= 0) return [];
+        if (count >= specs.length) return [...specs];
+        if (placement === "early") return specs.slice(0, count);
+        if (placement === "late") return specs.slice(specs.length - count);
+        if (count === 1) return [specs[Math.floor(specs.length / 2)]];
+
+        const picked = [];
+        for (let index = 0; index < count; index += 1) {
+          const sourceIndex = Math.floor(((index + 1) * specs.length) / (count + 1));
+          picked.push(specs[sourceIndex]);
+        }
+        return [...new Set(picked)];
+      }
+
+      function buildRoundPlan(specCount, counts, placement) {
+        const roundsPerSpec = Array(specCount).fill(1);
+        let activeSpecs = Array.from({ length: specCount }, (_, index) => index);
+
+        counts.slice(1).forEach((count) => {
+          activeSpecs = pickSpecs(activeSpecs, count, placement);
+          activeSpecs.forEach((specIndex) => {
+            roundsPerSpec[specIndex] += 1;
+          });
+        });
+
+        return roundsPerSpec;
+      }
+
+      function scheduleAi(aiSlots, dispatchAt, aiTime) {
+        let slotIndex = 0;
+        for (let index = 1; index < aiSlots.length; index += 1) {
+          if (aiSlots[index] < aiSlots[slotIndex]) slotIndex = index;
+        }
+        const start = Math.max(dispatchAt, aiSlots[slotIndex]);
+        const ready = start + aiTime;
+        aiSlots[slotIndex] = ready;
+        return ready;
+      }
+
+      function calculateDocument(state, roundsPerSpec, activeTime) {
+        const aiSlots = Array(state.concurrency).fill(0);
+        const pendingResults = [];
+        let humanAt = 0;
+        let firstFeedback = Number.POSITIVE_INFINITY;
+
+        for (let spec = 0; spec < state.specCount; spec += 1) {
+          humanAt += state.initialEdit;
+          const ready = scheduleAi(aiSlots, humanAt, state.aiTime);
+          firstFeedback = Math.min(firstFeedback, ready);
+          pendingResults.push({ spec, round: 1, ready });
+        }
+
+        while (pendingResults.length > 0) {
+          pendingResults.sort((left, right) => left.ready - right.ready || left.spec - right.spec || left.round - right.round);
+          const result = pendingResults.shift();
+          humanAt = Math.max(humanAt, result.ready);
+          humanAt += state.reviewTime;
+
+          if (result.round < roundsPerSpec[result.spec]) {
+            humanAt += state.reworkEdit;
+            const ready = scheduleAi(aiSlots, humanAt, state.aiTime);
+            pendingResults.push({ spec: result.spec, round: result.round + 1, ready });
+          }
+        }
+
+        return {
+          total: humanAt,
+          active: activeTime,
+          wait: Math.max(0, humanAt - activeTime),
+          first: firstFeedback
+        };
+      }
+
+      function calculate() {
+        normalizeRoundInputs();
+        updateOutputs();
+
+        const state = {
+          specCount: numberValue(inputs["spec-count"]),
+          concurrency: numberValue(inputs["ai-concurrency"]),
+          initialEdit: numberValue(inputs["initial-edit"]),
+          reworkEdit: numberValue(inputs["rework-edit"]),
+          aiTime: numberValue(inputs["ai-time"]),
+          reviewTime: numberValue(inputs["review-time"]),
+          placement: inputs["rework-placement"].value
+        };
+        const roundCounts = [state.specCount, ...roundInputs.map(numberValue)].filter((count, index, list) => index === 0 || count > 0 || list.slice(index + 1).some((later) => later > 0));
+        const roundsPerSpec = buildRoundPlan(state.specCount, roundCounts, state.placement);
+        const totalSpecRounds = roundsPerSpec.reduce((sum, rounds) => sum + rounds, 0);
+        const reworkSpecRounds = totalSpecRounds - state.specCount;
+        const activeTime =
+          state.specCount * state.initialEdit +
+          reworkSpecRounds * state.reworkEdit +
+          totalSpecRounds * state.reviewTime;
+
+        const instant = {
+          total: activeTime + totalSpecRounds * state.aiTime,
+          active: activeTime,
+          wait: totalSpecRounds * state.aiTime,
+          first: state.initialEdit + state.aiTime
+        };
+
+        let emailTotal = 0;
+        roundCounts.forEach((count, index) => {
+          if (count === 0) return;
+          const editTime = index === 0 ? state.initialEdit : state.reworkEdit;
+          emailTotal += count * (editTime + state.reviewTime) + Math.ceil(count / state.concurrency) * state.aiTime;
+        });
+        const email = {
+          total: emailTotal,
+          active: activeTime,
+          wait: Math.max(0, emailTotal - activeTime),
+          first: state.specCount * state.initialEdit + Math.ceil(state.specCount / state.concurrency) * state.aiTime
+        };
+
+        const documentMode = calculateDocument(state, roundsPerSpec, activeTime);
+        const results = { instant, email, document: documentMode };
+
+        document.getElementById("round-counts").textContent = roundCounts.filter((count) => count > 0).join(" → ");
+        document.getElementById("spec-rounds").textContent = String(totalSpecRounds);
+        document.getElementById("average-rounds").textContent = (totalSpecRounds / state.specCount).toFixed(2);
+
+        const reworked = roundsPerSpec
+          .map((rounds, index) => ({ rounds, spec: index + 1 }))
+          .filter(({ rounds }) => rounds > 1)
+          .map(({ rounds, spec }) => `SPEC ${spec}（${rounds} 轮）`);
+        document.getElementById("placement-note").textContent = reworked.length > 0
+          ? `本次返工分配：${reworked.join("、")}。改变位置只会影响文档协作的增量关键路径。`
+          : "本次没有返工；所有 SPEC 都只沟通 1 轮。";
+
+        const fastest = Math.min(...Object.values(results).map((result) => result.total));
+        Object.entries(results).forEach(([mode, result]) => {
+          const card = document.querySelector(`.result-card[data-mode="${mode}"]`);
+          card.dataset.winner = String(Math.abs(result.total - fastest) < 0.001);
+          card.querySelector("[data-total]").textContent = formatMinutes(result.total);
+          card.querySelector("[data-active]").textContent = `${formatMinutes(result.active)} 分钟`;
+          card.querySelector("[data-wait]").textContent = `${formatMinutes(result.wait)} 分钟`;
+          card.querySelector("[data-first]").textContent = `${formatMinutes(result.first)} 分钟`;
+        });
+
+        const maximum = Math.max(...Object.values(results).map((result) => result.total), 1);
+        Object.entries(results).forEach(([mode, result]) => {
+          const row = document.querySelector(`.bar-row[data-mode="${mode}"]`);
+          row.querySelector(".bar-fill").style.width = `${(result.total / maximum) * 100}%`;
+          row.querySelector(".bar-value").textContent = `${formatMinutes(result.total)} 分钟`;
+        });
+
+        const fastestModes = Object.entries(results)
+          .filter(([, result]) => Math.abs(result.total - fastest) < 0.001)
+          .map(([mode]) => ({ instant: "即时沟通", email: "邮件沟通", document: "文档协作" })[mode]);
+        document.getElementById("result-output").setAttribute(
+          "aria-label",
+          `模拟完成：${fastestModes.join("和")}最快，总耗时${formatMinutes(fastest)}分钟。`
+        );
+
+        requestResize();
+      }
+
+      let resizeFrame = 0;
+      function requestResize() {
+        cancelAnimationFrame(resizeFrame);
+        resizeFrame = requestAnimationFrame(() => {
+          if (window.parent === window) return;
+          window.parent.postMessage(
+            {
+              type: "collaboration-time-simulator:resize",
+              height: Math.ceil(Math.max(
+                document.body.scrollHeight,
+                document.body.offsetHeight,
+                document.body.getBoundingClientRect().height
+              ))
+            },
+            window.location.origin
+          );
+        });
+      }
+
+      document.querySelectorAll("[data-input]").forEach((input) => {
+        input.addEventListener("input", calculate);
+        input.addEventListener("change", calculate);
+      });
+
+      window.addEventListener("message", (event) => {
+        if (event.origin !== window.location.origin || event.source !== window.parent) return;
+        if (event.data?.type !== "collaboration-time-simulator:theme") return;
+        const theme = ["light", "dark"].includes(event.data.theme) ? event.data.theme : "auto";
+        document.documentElement.dataset.theme = theme;
+        requestResize();
+      });
+
+      if ("ResizeObserver" in window) {
+        new ResizeObserver(requestResize).observe(document.body);
+      }
+      window.addEventListener("load", requestResize);
+      calculate();
+    })();
+  </script>
+</body>
+</html>
