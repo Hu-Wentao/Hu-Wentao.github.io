@@ -480,7 +480,7 @@
       }
 
       .bar-row {
-        grid-template-columns: 68px minmax(0, 1fr) 62px;
+        grid-template-columns: 82px minmax(0, 1fr) 62px;
       }
     }
 
@@ -507,7 +507,7 @@
       <p class="section-copy">所有时间单位均为分钟。AI 时间指一个 SPEC 在一轮中的分析与修改时间。</p>
       <div class="controls-grid">
         <label class="control" for="spec-count">
-          <span class="tooltip-label" tabindex="0" data-tooltip="一个需求拆分出的独立方案细节数量。">SPEC 数量<span class="tooltip-icon" aria-hidden="true">?</span></span>
+          <span class="tooltip-label" tabindex="0" data-tooltip="代表一个需求中包含的实施细节数量。">SPEC 数量<span class="tooltip-icon" aria-hidden="true">?</span></span>
           <output id="spec-count-output" for="spec-count">4 个</output>
           <input id="spec-count" data-input type="range" min="1" max="12" step="1" value="4">
         </label>
@@ -560,30 +560,30 @@
     <div id="result-output" role="status" aria-live="polite">
       <section class="results" aria-label="三种协作模式的模拟结果">
         <article class="result-card" data-mode="instant">
-          <div class="result-heading"><h3>即时通讯</h3><span class="winner">最快</span></div>
-          <div class="total-time"><strong data-total>0</strong><span>分钟</span></div>
+          <div class="result-heading"><h3><span class="tooltip-label" tabindex="0" data-tooltip="逐个处理 SPEC；每次等待 AI 返回并审查后，再开始下一个任务。">即时通讯<span class="tooltip-icon" aria-hidden="true">?</span></span></h3><span class="winner">最快</span></div>
+          <div class="total-time tooltip-label" tabindex="0" data-tooltip="从开始编辑第一个 SPEC 到完成最后一次审查的平均总耗时。"><strong data-total>0</strong><span>分钟</span><span class="tooltip-icon" aria-hidden="true">?</span></div>
           <dl class="metrics">
-            <dt>开发者主动</dt><dd data-active>0 分钟</dd>
-            <dt>开发者等待</dt><dd data-wait>0 分钟</dd>
-            <dt>首个可审查结果</dt><dd data-first>0 分钟</dd>
+            <dt><span class="tooltip-label" tabindex="0" data-tooltip="开发者用于编辑 SPEC 和审查结果的平均总时间。">开发者主动<span class="tooltip-icon" aria-hidden="true">?</span></span></dt><dd data-active>0 分钟</dd>
+            <dt><span class="tooltip-label" tabindex="0" data-tooltip="端到端耗时减去开发者主动时间，主要是等待 AI 处理的时间。">开发者等待<span class="tooltip-icon" aria-hidden="true">?</span></span></dt><dd data-wait>0 分钟</dd>
+            <dt><span class="tooltip-label" tabindex="0" data-tooltip="从开始协作到第一个 AI 结果可供开发者审查的平均时间。">首个可审查结果<span class="tooltip-icon" aria-hidden="true">?</span></span></dt><dd data-first>0 分钟</dd>
           </dl>
         </article>
         <article class="result-card" data-mode="email">
-          <div class="result-heading"><h3>邮件通讯</h3><span class="winner">最快</span></div>
-          <div class="total-time"><strong data-total>0</strong><span>分钟</span></div>
+          <div class="result-heading"><h3><span class="tooltip-label" tabindex="0" data-tooltip="把一轮中的 SPEC 整批提交，等待整批返回并审查后，再组织下一轮。">邮件通讯<span class="tooltip-icon" aria-hidden="true">?</span></span></h3><span class="winner">最快</span></div>
+          <div class="total-time tooltip-label" tabindex="0" data-tooltip="从开始编辑第一个 SPEC 到完成最后一次审查的平均总耗时。"><strong data-total>0</strong><span>分钟</span><span class="tooltip-icon" aria-hidden="true">?</span></div>
           <dl class="metrics">
-            <dt>开发者主动</dt><dd data-active>0 分钟</dd>
-            <dt>开发者等待</dt><dd data-wait>0 分钟</dd>
-            <dt>首个可审查结果</dt><dd data-first>0 分钟</dd>
+            <dt><span class="tooltip-label" tabindex="0" data-tooltip="开发者用于编辑 SPEC 和审查结果的平均总时间。">开发者主动<span class="tooltip-icon" aria-hidden="true">?</span></span></dt><dd data-active>0 分钟</dd>
+            <dt><span class="tooltip-label" tabindex="0" data-tooltip="端到端耗时减去开发者主动时间，主要是等待 AI 处理的时间。">开发者等待<span class="tooltip-icon" aria-hidden="true">?</span></span></dt><dd data-wait>0 分钟</dd>
+            <dt><span class="tooltip-label" tabindex="0" data-tooltip="从开始协作到第一个 AI 结果可供开发者审查的平均时间。">首个可审查结果<span class="tooltip-icon" aria-hidden="true">?</span></span></dt><dd data-first>0 分钟</dd>
           </dl>
         </article>
         <article class="result-card" data-mode="document">
-          <div class="result-heading"><h3>文档协作</h3><span class="winner">最快</span></div>
-          <div class="total-time"><strong data-total>0</strong><span>分钟</span></div>
+          <div class="result-heading"><h3><span class="tooltip-label" tabindex="0" data-tooltip="逐个增量提交 SPEC，让 AI 在后台并行处理，并按结果到达顺序审查和返工。">文档协作<span class="tooltip-icon" aria-hidden="true">?</span></span></h3><span class="winner">最快</span></div>
+          <div class="total-time tooltip-label" tabindex="0" data-tooltip="从开始编辑第一个 SPEC 到完成最后一次审查的平均总耗时。"><strong data-total>0</strong><span>分钟</span><span class="tooltip-icon" aria-hidden="true">?</span></div>
           <dl class="metrics">
-            <dt>开发者主动</dt><dd data-active>0 分钟</dd>
-            <dt>开发者等待</dt><dd data-wait>0 分钟</dd>
-            <dt>首个可审查结果</dt><dd data-first>0 分钟</dd>
+            <dt><span class="tooltip-label" tabindex="0" data-tooltip="开发者用于编辑 SPEC 和审查结果的平均总时间。">开发者主动<span class="tooltip-icon" aria-hidden="true">?</span></span></dt><dd data-active>0 分钟</dd>
+            <dt><span class="tooltip-label" tabindex="0" data-tooltip="端到端耗时减去开发者主动时间，主要是等待 AI 处理的时间。">开发者等待<span class="tooltip-icon" aria-hidden="true">?</span></span></dt><dd data-wait>0 分钟</dd>
+            <dt><span class="tooltip-label" tabindex="0" data-tooltip="从开始协作到第一个 AI 结果可供开发者审查的平均时间。">首个可审查结果<span class="tooltip-icon" aria-hidden="true">?</span></span></dt><dd data-first>0 分钟</dd>
           </dl>
         </article>
       </section>
@@ -593,9 +593,9 @@
       <h2 id="comparison-heading">端到端耗时对比</h2>
       <p class="section-copy">条形图使用同一时间尺度；“开发者等待”是端到端时间减去相同的主动工作时间。</p>
       <div class="comparison-list">
-        <div class="bar-row" data-mode="instant"><span class="bar-label">即时通讯</span><div class="bar-track"><div class="bar-fill"></div></div><span class="bar-value">0 分钟</span></div>
-        <div class="bar-row" data-mode="email"><span class="bar-label">邮件通讯</span><div class="bar-track"><div class="bar-fill"></div></div><span class="bar-value">0 分钟</span></div>
-        <div class="bar-row" data-mode="document"><span class="bar-label">文档协作</span><div class="bar-track"><div class="bar-fill"></div></div><span class="bar-value">0 分钟</span></div>
+        <div class="bar-row" data-mode="instant"><span class="bar-label tooltip-label" tabindex="0" data-tooltip="即时通讯模式的平均端到端耗时。">即时通讯<span class="tooltip-icon" aria-hidden="true">?</span></span><div class="bar-track"><div class="bar-fill"></div></div><span class="bar-value">0 分钟</span></div>
+        <div class="bar-row" data-mode="email"><span class="bar-label tooltip-label" tabindex="0" data-tooltip="邮件通讯模式的平均端到端耗时。">邮件通讯<span class="tooltip-icon" aria-hidden="true">?</span></span><div class="bar-track"><div class="bar-fill"></div></div><span class="bar-value">0 分钟</span></div>
+        <div class="bar-row" data-mode="document"><span class="bar-label tooltip-label" tabindex="0" data-tooltip="文档协作模式的平均端到端耗时。">文档协作<span class="tooltip-icon" aria-hidden="true">?</span></span><div class="bar-track"><div class="bar-fill"></div></div><span class="bar-value">0 分钟</span></div>
       </div>
     </section>
 
