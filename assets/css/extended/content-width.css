@@ -1,5 +1,9 @@
+:root[data-content-width="narrow"] {
+    --main-width: 780px;
+}
+
 :root[data-content-width="medium"] {
-    --main-width: 960px;
+    --main-width: 1024px;
 }
 
 :root[data-content-width="wide"] {
