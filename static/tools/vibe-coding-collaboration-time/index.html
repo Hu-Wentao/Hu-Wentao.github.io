@@ -511,11 +511,6 @@
           <output id="spec-count-output" for="spec-count">4 个</output>
           <input id="spec-count" data-input type="range" min="1" max="12" step="1" value="4">
         </label>
-        <label class="control" for="ai-concurrency">
-          <span class="tooltip-label" tabindex="0" data-tooltip="同一时间最多可以处理的 SPEC 任务数量。">AI 并发数<span class="tooltip-icon" aria-hidden="true">?</span></span>
-          <output id="ai-concurrency-output" for="ai-concurrency">4 个</output>
-          <input id="ai-concurrency" data-input type="range" min="1" max="12" step="1" value="4">
-        </label>
         <label class="control" for="initial-edit">
           <span class="tooltip-label" tabindex="0" data-tooltip="开发者首次编辑一个 SPEC 的平均耗时。">首轮编辑 / SPEC<span class="tooltip-icon" aria-hidden="true">?</span></span>
           <output id="initial-edit-output" for="initial-edit">5 分钟</output>
@@ -602,14 +597,14 @@
     <details>
       <summary>查看公式、调度策略与边界</summary>
       <div class="details-body">
-        <p>令 <strong>N</strong> 为 SPEC 数，<strong>p</strong> 为平均返工率，<strong>e₁/e₂</strong> 为首轮/返工编辑时间，<strong>a</strong> 为单个 AI 任务时间，<strong>v</strong> 为审查时间，<strong>C</strong> 为 AI 并发数。</p>
+        <p>令 <strong>N</strong> 为 SPEC 数，<strong>p</strong> 为平均返工率，<strong>e₁/e₂</strong> 为首轮/返工编辑时间，<strong>a</strong> 为单个 AI 任务时间，<strong>v</strong> 为审查时间。</p>
         <span class="formula">平均返工 SPEC = Np；平均 SPEC-round = N(1 + p)</span>
         <span class="formula">即时：E[T] = N(e₁ + a + v) + Np(e₂ + a + v)</span>
         <span class="formula">邮件与文档：对每个 SPEC 独立以概率 p 返工一次，并对所有组合的调度结果加权取平均</span>
         <p>文档协作先连续完成所有首轮编辑，同时把修改交给最早空闲的 AI；之后优先审查最早完成的结果，需要返工时立即编辑并再次提交，不等待其他 SPEC 组成整批。</p>
         <ul>
           <li>开发者只有一个执行槽，编辑和审查不能并行。</li>
-          <li>AI 任务相互独立、耗时相同，共用 C 个执行槽。</li>
+          <li>AI 任务相互独立、耗时相同，且不限制同时处理的任务数量。</li>
           <li>每个 SPEC 最多返工一次；三种协作模式使用相同的返工概率和期望工作量。</li>
           <li>不计交接、共享文件冲突、最终代码落地与运行检查。</li>
         </ul>
@@ -625,7 +620,6 @@
     (() => {
       const inputIds = [
         "spec-count",
-        "ai-concurrency",
         "initial-edit",
         "rework-edit",
         "ai-time",
@@ -643,33 +637,20 @@
       function updateOutputs() {
         const minuteIds = ["initial-edit", "rework-edit", "ai-time", "review-time"];
         document.getElementById("spec-count-output").textContent = `${numberValue(inputs["spec-count"])} 个`;
-        document.getElementById("ai-concurrency-output").textContent = `${numberValue(inputs["ai-concurrency"])} 个`;
         document.getElementById("rework-rate-output").textContent = `${numberValue(inputs["rework-rate"])}%`;
         minuteIds.forEach((id) => {
           document.getElementById(`${id}-output`).textContent = `${formatMinutes(numberValue(inputs[id]))} 分钟`;
         });
       }
 
-      function scheduleAi(aiSlots, dispatchAt, aiTime) {
-        let slotIndex = 0;
-        for (let index = 1; index < aiSlots.length; index += 1) {
-          if (aiSlots[index] < aiSlots[slotIndex]) slotIndex = index;
-        }
-        const start = Math.max(dispatchAt, aiSlots[slotIndex]);
-        const ready = start + aiTime;
-        aiSlots[slotIndex] = ready;
-        return ready;
-      }
-
       function calculateDocument(state, roundsPerSpec, activeTime) {
-        const aiSlots = Array(state.concurrency).fill(0);
         const pendingResults = [];
         let humanAt = 0;
         let firstFeedback = Number.POSITIVE_INFINITY;
 
         for (let spec = 0; spec < state.specCount; spec += 1) {
           humanAt += state.initialEdit;
-          const ready = scheduleAi(aiSlots, humanAt, state.aiTime);
+          const ready = humanAt + state.aiTime;
           firstFeedback = Math.min(firstFeedback, ready);
           pendingResults.push({ spec, round: 1, ready });
         }
@@ -682,7 +663,7 @@
 
           if (result.round < roundsPerSpec[result.spec]) {
             humanAt += state.reworkEdit;
-            const ready = scheduleAi(aiSlots, humanAt, state.aiTime);
+            const ready = humanAt + state.aiTime;
             pendingResults.push({ spec: result.spec, round: result.round + 1, ready });
           }
         }
@@ -700,7 +681,6 @@
 
         const state = {
           specCount: numberValue(inputs["spec-count"]),
-          concurrency: numberValue(inputs["ai-concurrency"]),
           initialEdit: numberValue(inputs["initial-edit"]),
           reworkEdit: numberValue(inputs["rework-edit"]),
           aiTime: numberValue(inputs["ai-time"]),
@@ -741,12 +721,12 @@
             email: {
               total:
                 state.specCount * (state.initialEdit + state.reviewTime) +
-                Math.ceil(state.specCount / state.concurrency) * state.aiTime +
+                state.aiTime +
                 (reworkCount === 0 ? 0 :
                   reworkCount * (state.reworkEdit + state.reviewTime) +
-                  Math.ceil(reworkCount / state.concurrency) * state.aiTime),
+                  state.aiTime),
               active: activeTime,
-              first: state.specCount * state.initialEdit + Math.ceil(state.specCount / state.concurrency) * state.aiTime
+              first: state.specCount * state.initialEdit + state.aiTime
             },
             document: calculateDocument(state, roundsPerSpec, activeTime)
           };
