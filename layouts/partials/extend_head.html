@@ -7,3 +7,18 @@
   crossorigin="anonymous"
 >
 {{- end }}
+<script>
+  (() => {
+    const widths = ["narrow", "medium", "wide"];
+    let width = "narrow";
+
+    try {
+      const savedWidth = localStorage.getItem("content-width");
+      if (widths.includes(savedWidth)) width = savedWidth;
+    } catch (_) {
+      // Keep the default when storage is unavailable.
+    }
+
+    document.documentElement.dataset.contentWidth = width;
+  })();
+</script>

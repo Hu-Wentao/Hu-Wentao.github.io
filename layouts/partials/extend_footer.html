@@ -1,0 +1,45 @@
+<script>
+  (() => {
+    const host = document.querySelector(".logo-switches");
+    if (!host || document.getElementById("content-width-switch")) return;
+
+    const options = [
+      { value: "narrow", label: "窄", title: "窄版：720px" },
+      { value: "medium", label: "中", title: "中版：960px" },
+      { value: "wide", label: "宽", title: "宽版：接近全屏" },
+    ];
+    const switcher = document.createElement("div");
+    switcher.id = "content-width-switch";
+    switcher.className = "content-width-switch";
+    switcher.setAttribute("role", "group");
+    switcher.setAttribute("aria-label", "内容宽度");
+
+    const applyWidth = (width, persist = true) => {
+      document.documentElement.dataset.contentWidth = width;
+      switcher.querySelectorAll("button").forEach((button) => {
+        button.setAttribute("aria-pressed", String(button.dataset.width === width));
+      });
+
+      if (persist) {
+        try {
+          localStorage.setItem("content-width", width);
+        } catch (_) {
+          // The selection still works for the current page.
+        }
+      }
+    };
+
+    options.forEach(({ value, label, title }) => {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.dataset.width = value;
+      button.textContent = label;
+      button.title = title;
+      button.addEventListener("click", () => applyWidth(value));
+      switcher.appendChild(button);
+    });
+
+    host.prepend(switcher);
+    applyWidth(document.documentElement.dataset.contentWidth || "narrow", false);
+  })();
+</script>
