@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="light dark">
-  <title>Vibe Coding 沟通模式耗时模拟器</title>
+  <title>Vibe Coding 交互模式耗时模拟</title>
   <style>
     :root {
       color-scheme: light;
@@ -205,34 +205,7 @@
       opacity: .45;
     }
 
-    .select-control {
-      display: grid;
-      grid-template-columns: minmax(0, 1fr) minmax(145px, auto);
-      gap: 12px;
-      align-items: center;
-      margin-top: 12px;
-      padding: 12px;
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      background: var(--surface-soft);
-    }
-
-    .select-control label {
-      font-size: 13px;
-      font-weight: 680;
-    }
-
-    select {
-      min-height: 44px;
-      padding: 8px 34px 8px 10px;
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      background: var(--surface);
-      color: var(--text);
-    }
-
     input:focus-visible,
-    select:focus-visible,
     summary:focus-visible {
       outline: 3px solid var(--focus);
       outline-offset: 2px;
@@ -263,13 +236,6 @@
       display: block;
       margin-top: 2px;
       font-size: 16px;
-    }
-
-    .placement-note {
-      margin: 10px 0 0;
-      color: var(--muted);
-      font-size: 12px;
-      overflow-wrap: anywhere;
     }
 
     .results {
@@ -470,10 +436,6 @@
         grid-template-columns: 1fr;
       }
 
-      .select-control {
-        grid-template-columns: 1fr;
-      }
-
       .bar-row {
         grid-template-columns: 68px minmax(0, 1fr) 62px;
       }
@@ -535,41 +497,21 @@
     </section>
 
     <section class="panel" aria-labelledby="rounds-heading">
-      <h2 id="rounds-heading">返工分布</h2>
-      <p class="section-copy">第 1 轮始终包含全部 SPEC；后续轮次填写“仍需继续沟通”的 SPEC 数量。这样可以准确表达平均 1.5 轮，而不是把整批时间直接乘以 1.5。</p>
+      <h2 id="rounds-heading">平均返工率</h2>
+      <p class="section-copy">返工率表示一个 SPEC 在首轮后仍需再沟通一次的平均概率。无需指定返工发生在哪个 SPEC，模拟结果会对所有可能组合加权取平均。</p>
       <div class="controls-grid">
-        <label class="control" for="round-2">
-          <span>第 2 轮仍需沟通</span>
-          <output id="round-2-output" for="round-2">2 个</output>
-          <input id="round-2" data-round data-input type="range" min="0" max="4" step="1" value="2">
+        <label class="control" for="rework-rate">
+          <span>平均返工率</span>
+          <output id="rework-rate-output" for="rework-rate">50%</output>
+          <input id="rework-rate" data-input type="range" min="0" max="100" step="5" value="50">
         </label>
-        <label class="control" for="round-3">
-          <span>第 3 轮仍需沟通</span>
-          <output id="round-3-output" for="round-3">0 个</output>
-          <input id="round-3" data-round data-input type="range" min="0" max="2" step="1" value="0">
-        </label>
-        <label class="control" for="round-4">
-          <span>第 4 轮仍需沟通</span>
-          <output id="round-4-output" for="round-4">0 个</output>
-          <input id="round-4" data-round data-input type="range" min="0" max="0" step="1" value="0" disabled>
-        </label>
-      </div>
-
-      <div class="select-control">
-        <label for="rework-placement">返工 SPEC 在编辑顺序中的位置</label>
-        <select id="rework-placement" data-input>
-          <option value="spread" selected>均匀分布</option>
-          <option value="early">集中在较早 SPEC</option>
-          <option value="late">集中在较晚 SPEC</option>
-        </select>
       </div>
 
       <div class="round-summary" aria-live="polite">
-        <div class="summary-chip"><small>每轮活跃 SPEC</small><strong id="round-counts">4 → 2</strong></div>
-        <div class="summary-chip"><small>总 SPEC-round</small><strong id="spec-rounds">6</strong></div>
+        <div class="summary-chip"><small>平均返工 SPEC</small><strong id="rework-specs">2.00</strong></div>
+        <div class="summary-chip"><small>平均 SPEC-round</small><strong id="spec-rounds">6.00</strong></div>
         <div class="summary-chip"><small>平均轮数 / SPEC</small><strong id="average-rounds">1.50</strong></div>
       </div>
-      <p class="placement-note" id="placement-note"></p>
     </section>
 
     <div id="result-output" role="status" aria-live="polite">
@@ -617,15 +559,15 @@
     <details>
       <summary>查看公式、调度策略与边界</summary>
       <div class="details-body">
-        <p>令 <strong>nᵣ</strong> 为第 r 轮仍需沟通的 SPEC 数，<strong>eᵣ</strong> 为该轮编辑时间，<strong>a</strong> 为单个 AI 任务时间，<strong>v</strong> 为审查时间，<strong>C</strong> 为 AI 并发数。</p>
-        <span class="formula">即时：T = Σᵣ nᵣ(eᵣ + a + v)</span>
-        <span class="formula">邮件：T = Σᵣ [nᵣ(eᵣ + v) + ⌈nᵣ / C⌉a]</span>
-        <span class="formula">文档：makespan{ 编辑ᵢ,ᵣ → AIᵢ,ᵣ → 审查ᵢ,ᵣ → 下一轮编辑ᵢ,ᵣ₊₁ }</span>
+        <p>令 <strong>N</strong> 为 SPEC 数，<strong>p</strong> 为平均返工率，<strong>e₁/e₂</strong> 为首轮/返工编辑时间，<strong>a</strong> 为单个 AI 任务时间，<strong>v</strong> 为审查时间，<strong>C</strong> 为 AI 并发数。</p>
+        <span class="formula">平均返工 SPEC = Np；平均 SPEC-round = N(1 + p)</span>
+        <span class="formula">即时：E[T] = N(e₁ + a + v) + Np(e₂ + a + v)</span>
+        <span class="formula">邮件与文档：对每个 SPEC 独立以概率 p 返工一次，并对所有组合的调度结果加权取平均</span>
         <p>文档模式先连续完成所有首轮编辑，同时把修改交给最早空闲的 AI；之后优先审查最早完成的结果，需要返工时立即编辑并再次提交，不等待其他 SPEC 组成整批。</p>
         <ul>
           <li>开发者只有一个执行槽，编辑和审查不能并行。</li>
           <li>AI 任务相互独立、耗时相同，共用 C 个执行槽。</li>
-          <li>三种模式使用相同的逐 SPEC 轮数；返工位置只影响文档模式的关键路径。</li>
+          <li>每个 SPEC 最多返工一次；三种模式使用相同的返工概率和期望工作量。</li>
           <li>不计交接、共享文件冲突、最终代码落地与运行检查。</li>
         </ul>
       </div>
@@ -643,13 +585,9 @@
         "rework-edit",
         "ai-time",
         "review-time",
-        "round-2",
-        "round-3",
-        "round-4",
-        "rework-placement"
+        "rework-rate"
       ];
       const inputs = Object.fromEntries(inputIds.map((id) => [id, document.getElementById(id)]));
-      const roundInputs = [inputs["round-2"], inputs["round-3"], inputs["round-4"]];
 
       const numberValue = (input) => Number(input.value);
       const formatMinutes = (value) => {
@@ -661,52 +599,10 @@
         const minuteIds = ["initial-edit", "rework-edit", "ai-time", "review-time"];
         document.getElementById("spec-count-output").textContent = `${numberValue(inputs["spec-count"])} 个`;
         document.getElementById("ai-concurrency-output").textContent = `${numberValue(inputs["ai-concurrency"])} 个`;
+        document.getElementById("rework-rate-output").textContent = `${numberValue(inputs["rework-rate"])}%`;
         minuteIds.forEach((id) => {
           document.getElementById(`${id}-output`).textContent = `${formatMinutes(numberValue(inputs[id]))} 分钟`;
         });
-        roundInputs.forEach((input) => {
-          document.getElementById(`${input.id}-output`).textContent = `${numberValue(input)} 个`;
-        });
-      }
-
-      function normalizeRoundInputs() {
-        let previous = numberValue(inputs["spec-count"]);
-        roundInputs.forEach((input) => {
-          input.max = String(previous);
-          const next = Math.max(0, Math.min(previous, numberValue(input)));
-          input.value = String(next);
-          input.disabled = previous === 0;
-          previous = next;
-        });
-      }
-
-      function pickSpecs(specs, count, placement) {
-        if (count <= 0) return [];
-        if (count >= specs.length) return [...specs];
-        if (placement === "early") return specs.slice(0, count);
-        if (placement === "late") return specs.slice(specs.length - count);
-        if (count === 1) return [specs[Math.floor(specs.length / 2)]];
-
-        const picked = [];
-        for (let index = 0; index < count; index += 1) {
-          const sourceIndex = Math.floor(((index + 1) * specs.length) / (count + 1));
-          picked.push(specs[sourceIndex]);
-        }
-        return [...new Set(picked)];
-      }
-
-      function buildRoundPlan(specCount, counts, placement) {
-        const roundsPerSpec = Array(specCount).fill(1);
-        let activeSpecs = Array.from({ length: specCount }, (_, index) => index);
-
-        counts.slice(1).forEach((count) => {
-          activeSpecs = pickSpecs(activeSpecs, count, placement);
-          activeSpecs.forEach((specIndex) => {
-            roundsPerSpec[specIndex] += 1;
-          });
-        });
-
-        return roundsPerSpec;
       }
 
       function scheduleAi(aiSlots, dispatchAt, aiTime) {
@@ -755,7 +651,6 @@
       }
 
       function calculate() {
-        normalizeRoundInputs();
         updateOutputs();
 
         const state = {
@@ -765,51 +660,64 @@
           reworkEdit: numberValue(inputs["rework-edit"]),
           aiTime: numberValue(inputs["ai-time"]),
           reviewTime: numberValue(inputs["review-time"]),
-          placement: inputs["rework-placement"].value
+          reworkRate: numberValue(inputs["rework-rate"]) / 100
         };
-        const roundCounts = [state.specCount, ...roundInputs.map(numberValue)].filter((count, index, list) => index === 0 || count > 0 || list.slice(index + 1).some((later) => later > 0));
-        const roundsPerSpec = buildRoundPlan(state.specCount, roundCounts, state.placement);
-        const totalSpecRounds = roundsPerSpec.reduce((sum, rounds) => sum + rounds, 0);
-        const reworkSpecRounds = totalSpecRounds - state.specCount;
-        const activeTime =
-          state.specCount * state.initialEdit +
-          reworkSpecRounds * state.reworkEdit +
-          totalSpecRounds * state.reviewTime;
+        const results = Object.fromEntries(["instant", "email", "document"].map((mode) => [mode, {
+          total: 0,
+          active: 0,
+          wait: 0,
+          first: 0
+        }]));
+        const scenarioCount = 2 ** state.specCount;
 
-        const instant = {
-          total: activeTime + totalSpecRounds * state.aiTime,
-          active: activeTime,
-          wait: totalSpecRounds * state.aiTime,
-          first: state.initialEdit + state.aiTime
-        };
+        for (let mask = 0; mask < scenarioCount; mask += 1) {
+          const roundsPerSpec = Array.from(
+            { length: state.specCount },
+            (_, spec) => ((mask >> spec) & 1) + 1
+          );
+          const reworkCount = roundsPerSpec.reduce((sum, rounds) => sum + rounds - 1, 0);
+          const probability =
+            state.reworkRate ** reworkCount *
+            (1 - state.reworkRate) ** (state.specCount - reworkCount);
+          if (probability === 0) continue;
 
-        let emailTotal = 0;
-        roundCounts.forEach((count, index) => {
-          if (count === 0) return;
-          const editTime = index === 0 ? state.initialEdit : state.reworkEdit;
-          emailTotal += count * (editTime + state.reviewTime) + Math.ceil(count / state.concurrency) * state.aiTime;
-        });
-        const email = {
-          total: emailTotal,
-          active: activeTime,
-          wait: Math.max(0, emailTotal - activeTime),
-          first: state.specCount * state.initialEdit + Math.ceil(state.specCount / state.concurrency) * state.aiTime
-        };
+          const totalSpecRounds = state.specCount + reworkCount;
+          const activeTime =
+            state.specCount * state.initialEdit +
+            reworkCount * state.reworkEdit +
+            totalSpecRounds * state.reviewTime;
+          const scenarioResults = {
+            instant: {
+              total: activeTime + totalSpecRounds * state.aiTime,
+              active: activeTime,
+              wait: totalSpecRounds * state.aiTime,
+              first: state.initialEdit + state.aiTime
+            },
+            email: {
+              total:
+                state.specCount * (state.initialEdit + state.reviewTime) +
+                Math.ceil(state.specCount / state.concurrency) * state.aiTime +
+                (reworkCount === 0 ? 0 :
+                  reworkCount * (state.reworkEdit + state.reviewTime) +
+                  Math.ceil(reworkCount / state.concurrency) * state.aiTime),
+              active: activeTime,
+              first: state.specCount * state.initialEdit + Math.ceil(state.specCount / state.concurrency) * state.aiTime
+            },
+            document: calculateDocument(state, roundsPerSpec, activeTime)
+          };
+          scenarioResults.email.wait = Math.max(0, scenarioResults.email.total - activeTime);
 
-        const documentMode = calculateDocument(state, roundsPerSpec, activeTime);
-        const results = { instant, email, document: documentMode };
+          Object.entries(scenarioResults).forEach(([mode, result]) => {
+            Object.keys(results[mode]).forEach((metric) => {
+              results[mode][metric] += probability * result[metric];
+            });
+          });
+        }
 
-        document.getElementById("round-counts").textContent = roundCounts.filter((count) => count > 0).join(" → ");
-        document.getElementById("spec-rounds").textContent = String(totalSpecRounds);
-        document.getElementById("average-rounds").textContent = (totalSpecRounds / state.specCount).toFixed(2);
-
-        const reworked = roundsPerSpec
-          .map((rounds, index) => ({ rounds, spec: index + 1 }))
-          .filter(({ rounds }) => rounds > 1)
-          .map(({ rounds, spec }) => `SPEC ${spec}（${rounds} 轮）`);
-        document.getElementById("placement-note").textContent = reworked.length > 0
-          ? `本次返工分配：${reworked.join("、")}。改变位置只会影响文档协作的增量关键路径。`
-          : "本次没有返工；所有 SPEC 都只沟通 1 轮。";
+        const expectedReworks = state.specCount * state.reworkRate;
+        document.getElementById("rework-specs").textContent = expectedReworks.toFixed(2);
+        document.getElementById("spec-rounds").textContent = (state.specCount + expectedReworks).toFixed(2);
+        document.getElementById("average-rounds").textContent = (1 + state.reworkRate).toFixed(2);
 
         const fastest = Math.min(...Object.values(results).map((result) => result.total));
         Object.entries(results).forEach(([mode, result]) => {
