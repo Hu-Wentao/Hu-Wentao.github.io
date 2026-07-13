@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="light dark">
-  <title>Vibe Coding 交互模式耗时模拟</title>
+  <title>Vibe Coding 协作模式耗时模拟</title>
   <style>
     :root {
       color-scheme: light;
@@ -189,6 +189,49 @@
       font-size: 13px;
       font-weight: 760;
       text-align: right;
+    }
+
+    .tooltip-label {
+      display: inline-flex;
+      gap: 5px;
+      align-items: center;
+      border-radius: 4px;
+      cursor: help;
+    }
+
+    .tooltip-label:focus-visible {
+      outline: 3px solid var(--focus);
+      outline-offset: 2px;
+    }
+
+    .tooltip-icon {
+      display: inline-grid;
+      width: 16px;
+      height: 16px;
+      place-items: center;
+      border: 1px solid currentColor;
+      border-radius: 50%;
+      color: var(--muted);
+      font-size: 10px;
+      font-weight: 760;
+      line-height: 1;
+    }
+
+    .field-tooltip {
+      position: fixed;
+      z-index: 20;
+      width: max-content;
+      max-width: min(280px, calc(100vw - 24px));
+      padding: 8px 10px;
+      border: 1px solid var(--border-strong);
+      border-radius: 8px;
+      background: var(--text);
+      color: var(--surface);
+      box-shadow: 0 8px 24px var(--shadow);
+      font-size: 12px;
+      font-weight: 500;
+      line-height: 1.5;
+      pointer-events: none;
     }
 
     .control input[type="range"] {
@@ -455,8 +498,8 @@
   <main class="app">
     <header class="hero">
       <div class="eyebrow">SPEC 协作阶段</div>
-      <h1>三种沟通模式耗时模拟器</h1>
-      <p>三种模式使用完全相同的 SPEC、沟通轮数和单位耗时，只改变任务的调度方式。结果是模型估算，不包含最终代码落地和运行检查。</p>
+      <h1>三种协作模式耗时模拟器</h1>
+      <p>三种协作模式使用完全相同的 SPEC、沟通轮数和单位耗时，只改变任务的调度方式。结果是模型估算，不包含最终代码落地和运行检查。</p>
     </header>
 
     <section class="panel" aria-labelledby="workload-heading">
@@ -464,32 +507,32 @@
       <p class="section-copy">所有时间单位均为分钟。AI 时间指一个 SPEC 在一轮中的分析与修改时间。</p>
       <div class="controls-grid">
         <label class="control" for="spec-count">
-          <span>SPEC 数量</span>
+          <span class="tooltip-label" tabindex="0" data-tooltip="一个需求拆分出的独立方案细节数量。">SPEC 数量<span class="tooltip-icon" aria-hidden="true">?</span></span>
           <output id="spec-count-output" for="spec-count">4 个</output>
           <input id="spec-count" data-input type="range" min="1" max="12" step="1" value="4">
         </label>
         <label class="control" for="ai-concurrency">
-          <span>AI 并发数</span>
+          <span class="tooltip-label" tabindex="0" data-tooltip="同一时间最多可以处理的 SPEC 任务数量。">AI 并发数<span class="tooltip-icon" aria-hidden="true">?</span></span>
           <output id="ai-concurrency-output" for="ai-concurrency">4 个</output>
           <input id="ai-concurrency" data-input type="range" min="1" max="12" step="1" value="4">
         </label>
         <label class="control" for="initial-edit">
-          <span>首轮编辑 / SPEC</span>
+          <span class="tooltip-label" tabindex="0" data-tooltip="开发者首次编辑一个 SPEC 的平均耗时。">首轮编辑 / SPEC<span class="tooltip-icon" aria-hidden="true">?</span></span>
           <output id="initial-edit-output" for="initial-edit">5 分钟</output>
           <input id="initial-edit" data-input type="range" min="0" max="30" step="1" value="5">
         </label>
         <label class="control" for="rework-edit">
-          <span>返工编辑 / SPEC</span>
+          <span class="tooltip-label" tabindex="0" data-tooltip="首轮结果未达预期时，再次编辑一个 SPEC 的平均耗时。">返工编辑 / SPEC<span class="tooltip-icon" aria-hidden="true">?</span></span>
           <output id="rework-edit-output" for="rework-edit">5 分钟</output>
           <input id="rework-edit" data-input type="range" min="0" max="30" step="1" value="5">
         </label>
         <label class="control" for="ai-time">
-          <span>AI 处理 / SPEC-round</span>
+          <span class="tooltip-label" tabindex="0" data-tooltip="AI 完成一个 SPEC 一轮分析与修改的平均耗时。">AI 处理 / SPEC-round<span class="tooltip-icon" aria-hidden="true">?</span></span>
           <output id="ai-time-output" for="ai-time">8 分钟</output>
           <input id="ai-time" data-input type="range" min="1" max="60" step="1" value="8">
         </label>
         <label class="control" for="review-time">
-          <span>人工审查 / SPEC-round</span>
+          <span class="tooltip-label" tabindex="0" data-tooltip="开发者审查一个 SPEC 一轮处理结果的平均耗时。">人工审查 / SPEC-round<span class="tooltip-icon" aria-hidden="true">?</span></span>
           <output id="review-time-output" for="review-time">3 分钟</output>
           <input id="review-time" data-input type="range" min="0" max="30" step="1" value="3">
         </label>
@@ -501,23 +544,23 @@
       <p class="section-copy">返工率表示一个 SPEC 在首轮后仍需再沟通一次的平均概率。无需指定返工发生在哪个 SPEC，模拟结果会对所有可能组合加权取平均。</p>
       <div class="controls-grid">
         <label class="control" for="rework-rate">
-          <span>平均返工率</span>
+          <span class="tooltip-label" tabindex="0" data-tooltip="一个 SPEC 在首轮后仍需再沟通一次的概率。0.5 即 50%。">平均返工率<span class="tooltip-icon" aria-hidden="true">?</span></span>
           <output id="rework-rate-output" for="rework-rate">50%</output>
           <input id="rework-rate" data-input type="range" min="0" max="100" step="5" value="50">
         </label>
       </div>
 
       <div class="round-summary" aria-live="polite">
-        <div class="summary-chip"><small>平均返工 SPEC</small><strong id="rework-specs">2.00</strong></div>
-        <div class="summary-chip"><small>平均 SPEC-round</small><strong id="spec-rounds">6.00</strong></div>
-        <div class="summary-chip"><small>平均轮数 / SPEC</small><strong id="average-rounds">1.50</strong></div>
+        <div class="summary-chip"><small><span class="tooltip-label" tabindex="0" data-tooltip="数值代表平均有多少个 SPEC 需要沟通两次才能达到预期。">平均返工 SPEC<span class="tooltip-icon" aria-hidden="true">?</span></span></small><strong id="rework-specs">2.00</strong></div>
+        <div class="summary-chip"><small><span class="tooltip-label" tabindex="0" data-tooltip="首轮处理次数与平均返工次数之和。">平均 SPEC-round<span class="tooltip-icon" aria-hidden="true">?</span></span></small><strong id="spec-rounds">6.00</strong></div>
+        <div class="summary-chip"><small><span class="tooltip-label" tabindex="0" data-tooltip="每个 SPEC 从首轮到达到预期，平均需要沟通的轮数。">平均轮数 / SPEC<span class="tooltip-icon" aria-hidden="true">?</span></span></small><strong id="average-rounds">1.50</strong></div>
       </div>
     </section>
 
     <div id="result-output" role="status" aria-live="polite">
-      <section class="results" aria-label="三种模式的模拟结果">
+      <section class="results" aria-label="三种协作模式的模拟结果">
         <article class="result-card" data-mode="instant">
-          <div class="result-heading"><h3>即时沟通</h3><span class="winner">最快</span></div>
+          <div class="result-heading"><h3>即时通讯</h3><span class="winner">最快</span></div>
           <div class="total-time"><strong data-total>0</strong><span>分钟</span></div>
           <dl class="metrics">
             <dt>开发者主动</dt><dd data-active>0 分钟</dd>
@@ -526,7 +569,7 @@
           </dl>
         </article>
         <article class="result-card" data-mode="email">
-          <div class="result-heading"><h3>邮件沟通</h3><span class="winner">最快</span></div>
+          <div class="result-heading"><h3>邮件通讯</h3><span class="winner">最快</span></div>
           <div class="total-time"><strong data-total>0</strong><span>分钟</span></div>
           <dl class="metrics">
             <dt>开发者主动</dt><dd data-active>0 分钟</dd>
@@ -550,8 +593,8 @@
       <h2 id="comparison-heading">端到端耗时对比</h2>
       <p class="section-copy">条形图使用同一时间尺度；“开发者等待”是端到端时间减去相同的主动工作时间。</p>
       <div class="comparison-list">
-        <div class="bar-row" data-mode="instant"><span class="bar-label">即时沟通</span><div class="bar-track"><div class="bar-fill"></div></div><span class="bar-value">0 分钟</span></div>
-        <div class="bar-row" data-mode="email"><span class="bar-label">邮件沟通</span><div class="bar-track"><div class="bar-fill"></div></div><span class="bar-value">0 分钟</span></div>
+        <div class="bar-row" data-mode="instant"><span class="bar-label">即时通讯</span><div class="bar-track"><div class="bar-fill"></div></div><span class="bar-value">0 分钟</span></div>
+        <div class="bar-row" data-mode="email"><span class="bar-label">邮件通讯</span><div class="bar-track"><div class="bar-fill"></div></div><span class="bar-value">0 分钟</span></div>
         <div class="bar-row" data-mode="document"><span class="bar-label">文档协作</span><div class="bar-track"><div class="bar-fill"></div></div><span class="bar-value">0 分钟</span></div>
       </div>
     </section>
@@ -563,11 +606,11 @@
         <span class="formula">平均返工 SPEC = Np；平均 SPEC-round = N(1 + p)</span>
         <span class="formula">即时：E[T] = N(e₁ + a + v) + Np(e₂ + a + v)</span>
         <span class="formula">邮件与文档：对每个 SPEC 独立以概率 p 返工一次，并对所有组合的调度结果加权取平均</span>
-        <p>文档模式先连续完成所有首轮编辑，同时把修改交给最早空闲的 AI；之后优先审查最早完成的结果，需要返工时立即编辑并再次提交，不等待其他 SPEC 组成整批。</p>
+        <p>文档协作先连续完成所有首轮编辑，同时把修改交给最早空闲的 AI；之后优先审查最早完成的结果，需要返工时立即编辑并再次提交，不等待其他 SPEC 组成整批。</p>
         <ul>
           <li>开发者只有一个执行槽，编辑和审查不能并行。</li>
           <li>AI 任务相互独立、耗时相同，共用 C 个执行槽。</li>
-          <li>每个 SPEC 最多返工一次；三种模式使用相同的返工概率和期望工作量。</li>
+          <li>每个 SPEC 最多返工一次；三种协作模式使用相同的返工概率和期望工作量。</li>
           <li>不计交接、共享文件冲突、最终代码落地与运行检查。</li>
         </ul>
       </div>
@@ -575,6 +618,8 @@
 
     <p class="scope-note">该工具比较的是 SPEC 协作阶段的确定性调度结果，而不是对所有团队和任务都成立的性能承诺。</p>
   </main>
+
+  <div class="field-tooltip" id="field-tooltip" role="tooltip" hidden></div>
 
   <script>
     (() => {
@@ -738,7 +783,7 @@
 
         const fastestModes = Object.entries(results)
           .filter(([, result]) => Math.abs(result.total - fastest) < 0.001)
-          .map(([mode]) => ({ instant: "即时沟通", email: "邮件沟通", document: "文档协作" })[mode]);
+          .map(([mode]) => ({ instant: "即时通讯", email: "邮件通讯", document: "文档协作" })[mode]);
         document.getElementById("result-output").setAttribute(
           "aria-label",
           `模拟完成：${fastestModes.join("和")}最快，总耗时${formatMinutes(fastest)}分钟。`
@@ -770,6 +815,64 @@
         input.addEventListener("input", calculate);
         input.addEventListener("change", calculate);
       });
+
+      const fieldTooltip = document.getElementById("field-tooltip");
+      const tooltipLabels = document.querySelectorAll(".tooltip-label");
+      let activeTooltipLabel = null;
+
+      function showFieldTooltip(label) {
+        activeTooltipLabel = label;
+        fieldTooltip.textContent = label.dataset.tooltip;
+        fieldTooltip.hidden = false;
+        label.setAttribute("aria-describedby", fieldTooltip.id);
+
+        const labelRect = label.getBoundingClientRect();
+        const tooltipRect = fieldTooltip.getBoundingClientRect();
+        const gap = 8;
+        const left = Math.max(
+          8,
+          Math.min(
+            window.innerWidth - tooltipRect.width - 8,
+            labelRect.left + labelRect.width / 2 - tooltipRect.width / 2
+          )
+        );
+        const above = labelRect.top - tooltipRect.height - gap;
+        const top = above >= 8 ? above : labelRect.bottom + gap;
+        fieldTooltip.style.left = `${left}px`;
+        fieldTooltip.style.top = `${top}px`;
+      }
+
+      function hideFieldTooltip(label) {
+        if (label.matches(":hover") || document.activeElement === label) return;
+        label.removeAttribute("aria-describedby");
+        activeTooltipLabel = null;
+        fieldTooltip.hidden = true;
+      }
+
+      function closeFieldTooltip() {
+        activeTooltipLabel?.removeAttribute("aria-describedby");
+        activeTooltipLabel = null;
+        fieldTooltip.hidden = true;
+      }
+
+      tooltipLabels.forEach((label) => {
+        label.addEventListener("mouseenter", () => showFieldTooltip(label));
+        label.addEventListener("mouseleave", () => hideFieldTooltip(label));
+        label.addEventListener("focus", () => showFieldTooltip(label));
+        label.addEventListener("blur", () => hideFieldTooltip(label));
+      });
+
+      window.addEventListener("keydown", (event) => {
+        if (event.key !== "Escape") return;
+        closeFieldTooltip();
+        document.activeElement?.blur();
+      });
+      window.addEventListener("resize", () => {
+        if (activeTooltipLabel) showFieldTooltip(activeTooltipLabel);
+      });
+      window.addEventListener("scroll", () => {
+        if (activeTooltipLabel) showFieldTooltip(activeTooltipLabel);
+      }, { passive: true });
 
       window.addEventListener("message", (event) => {
         if (event.origin !== window.location.origin || event.source !== window.parent) return;
