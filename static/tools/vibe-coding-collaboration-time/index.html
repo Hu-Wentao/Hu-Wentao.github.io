@@ -511,15 +511,10 @@
           <output id="spec-count-output" for="spec-count">4 个</output>
           <input id="spec-count" data-input type="range" min="1" max="12" step="1" value="4">
         </label>
-        <label class="control" for="initial-edit">
-          <span class="tooltip-label" tabindex="0" data-tooltip="开发者首次编辑一个 SPEC 的平均耗时。">首轮编辑 / SPEC<span class="tooltip-icon" aria-hidden="true">?</span></span>
-          <output id="initial-edit-output" for="initial-edit">5 分钟</output>
-          <input id="initial-edit" data-input type="range" min="0" max="30" step="1" value="5">
-        </label>
-        <label class="control" for="rework-edit">
-          <span class="tooltip-label" tabindex="0" data-tooltip="首轮结果未达预期时，再次编辑一个 SPEC 的平均耗时。">返工编辑 / SPEC<span class="tooltip-icon" aria-hidden="true">?</span></span>
-          <output id="rework-edit-output" for="rework-edit">5 分钟</output>
-          <input id="rework-edit" data-input type="range" min="0" max="30" step="1" value="5">
+        <label class="control" for="spec-edit">
+          <span class="tooltip-label" tabindex="0" data-tooltip="开发者编辑一个 SPEC 一次的平均耗时，首轮和返工使用相同数值。">SPEC 编辑<span class="tooltip-icon" aria-hidden="true">?</span></span>
+          <output id="spec-edit-output" for="spec-edit">5 分钟</output>
+          <input id="spec-edit" data-input type="range" min="0" max="30" step="1" value="5">
         </label>
         <label class="control" for="ai-time">
           <span class="tooltip-label" tabindex="0" data-tooltip="AI 完成一个 SPEC 一轮分析与修改的平均耗时。">AI 处理 / SPEC-round<span class="tooltip-icon" aria-hidden="true">?</span></span>
@@ -597,9 +592,9 @@
     <details>
       <summary>查看公式、调度策略与边界</summary>
       <div class="details-body">
-        <p>令 <strong>N</strong> 为 SPEC 数，<strong>p</strong> 为平均返工率，<strong>e₁/e₂</strong> 为首轮/返工编辑时间，<strong>a</strong> 为单个 AI 任务时间，<strong>v</strong> 为审查时间。</p>
+        <p>令 <strong>N</strong> 为 SPEC 数，<strong>p</strong> 为平均返工率，<strong>e</strong> 为单次 SPEC 编辑时间，<strong>a</strong> 为单个 AI 任务时间，<strong>v</strong> 为审查时间。</p>
         <span class="formula">平均返工 SPEC = Np；平均 SPEC-round = N(1 + p)</span>
-        <span class="formula">即时：E[T] = N(e₁ + a + v) + Np(e₂ + a + v)</span>
+        <span class="formula">即时：E[T] = N(1 + p)(e + a + v)</span>
         <span class="formula">邮件与文档：对每个 SPEC 独立以概率 p 返工一次，并对所有组合的调度结果加权取平均</span>
         <p>文档协作先连续完成所有首轮编辑，同时把修改交给最早空闲的 AI；之后优先审查最早完成的结果，需要返工时立即编辑并再次提交，不等待其他 SPEC 组成整批。</p>
         <ul>
@@ -620,8 +615,7 @@
     (() => {
       const inputIds = [
         "spec-count",
-        "initial-edit",
-        "rework-edit",
+        "spec-edit",
         "ai-time",
         "review-time",
         "rework-rate"
@@ -635,7 +629,7 @@
       };
 
       function updateOutputs() {
-        const minuteIds = ["initial-edit", "rework-edit", "ai-time", "review-time"];
+        const minuteIds = ["spec-edit", "ai-time", "review-time"];
         document.getElementById("spec-count-output").textContent = `${numberValue(inputs["spec-count"])} 个`;
         document.getElementById("rework-rate-output").textContent = `${numberValue(inputs["rework-rate"])}%`;
         minuteIds.forEach((id) => {
@@ -649,7 +643,7 @@
         let firstFeedback = Number.POSITIVE_INFINITY;
 
         for (let spec = 0; spec < state.specCount; spec += 1) {
-          humanAt += state.initialEdit;
+          humanAt += state.editTime;
           const ready = humanAt + state.aiTime;
           firstFeedback = Math.min(firstFeedback, ready);
           pendingResults.push({ spec, round: 1, ready });
@@ -662,7 +656,7 @@
           humanAt += state.reviewTime;
 
           if (result.round < roundsPerSpec[result.spec]) {
-            humanAt += state.reworkEdit;
+            humanAt += state.editTime;
             const ready = humanAt + state.aiTime;
             pendingResults.push({ spec: result.spec, round: result.round + 1, ready });
           }
@@ -681,8 +675,7 @@
 
         const state = {
           specCount: numberValue(inputs["spec-count"]),
-          initialEdit: numberValue(inputs["initial-edit"]),
-          reworkEdit: numberValue(inputs["rework-edit"]),
+          editTime: numberValue(inputs["spec-edit"]),
           aiTime: numberValue(inputs["ai-time"]),
           reviewTime: numberValue(inputs["review-time"]),
           reworkRate: numberValue(inputs["rework-rate"]) / 100
@@ -708,25 +701,23 @@
 
           const totalSpecRounds = state.specCount + reworkCount;
           const activeTime =
-            state.specCount * state.initialEdit +
-            reworkCount * state.reworkEdit +
-            totalSpecRounds * state.reviewTime;
+            totalSpecRounds * (state.editTime + state.reviewTime);
           const scenarioResults = {
             instant: {
               total: activeTime + totalSpecRounds * state.aiTime,
               active: activeTime,
               wait: totalSpecRounds * state.aiTime,
-              first: state.initialEdit + state.aiTime
+              first: state.editTime + state.aiTime
             },
             email: {
               total:
-                state.specCount * (state.initialEdit + state.reviewTime) +
+                state.specCount * (state.editTime + state.reviewTime) +
                 state.aiTime +
                 (reworkCount === 0 ? 0 :
-                  reworkCount * (state.reworkEdit + state.reviewTime) +
+                  reworkCount * (state.editTime + state.reviewTime) +
                   state.aiTime),
               active: activeTime,
-              first: state.specCount * state.initialEdit + state.aiTime
+              first: state.specCount * state.editTime + state.aiTime
             },
             document: calculateDocument(state, roundsPerSpec, activeTime)
           };
