@@ -45,38 +45,11 @@ T_{\text{AI-plan-batch}}\approx T_{\text{AI-plan}}
 
 在即时通讯中，这个成本发生在每次尚未最终确认的 SPEC 修订中，归入“代码贡献”；在邮件和文档中，它发生在方案确认后，并且只支付一次。
 
-## 共同基础成本
+## 第一层：按流程展开原始公式
 
-三种模式都要完成相同数量的方案编辑和方案审查：
+先按照每种模式实际发生的步骤计算时间，不提前提取“共同基础成本”。这样可以直接从公式看出每段时间对应哪个流程动作。
 
-\[
-T_{\text{common-plan}}
-=
-N_{\text{spec-revision}}
-\left(
-T_{\text{spec-edit}}+T_{\text{plan-review}}
-\right)
-\]
-
-根据最终方案一次性落地代码的成本为：
-
-\[
-T_{\text{code-once}}=T_{\text{code-landing}}
-\]
-
-共同基础成本为：
-
-\[
-\boxed{
-T_{\text{common-base}}
-=
-T_{\text{common-plan}}+T_{\text{code-once}}
-}
-\]
-
-“模式开销”并不都代表无效工作，而是相对共同基础成本额外暴露在关键路径上的 AI 等待、重复代码修改或调度屏障。
-
-## 模式 1：即时通讯
+### 模式 1：即时通讯
 
 每个 SPEC 修订都串行经历：
 
@@ -106,22 +79,22 @@ N_{\text{spec-revision}}T_{\text{code-landing}}
 总时间为：
 
 \[
+\boxed{
 T_{\text{instant-total}}
 =
-T_{\text{instant-plan}}+T_{\text{instant-code}}
+N_{\text{spec-revision}}
+\left(
+T_{\text{spec-edit}}
++T_{\text{AI-plan}}
++T_{\text{code-landing}}
++T_{\text{plan-review}}
+\right)
+}
 \]
 
-相对共同基础成本的模式开销为：
+这里的“方案贡献”和“代码贡献”是活动归因，不是两个前后分离的阶段。实际时间轴仍然是每轮方案和代码交错发生。
 
-\[
-T_{\text{instant-overhead}}
-=
-T_{\text{instant-total}}-T_{\text{common-base}}
-\]
-
-它包含两部分：每个 SPEC 修订都要串行等待 AI 形成方案，以及在方案未最终确认前反复修改和检查代码。
-
-## 模式 2：邮件通讯
+### 模式 2：邮件通讯
 
 邮件把全部 SPEC 作为一个批次。整个批次平均经历 \(R_{\text{revision-avg}}\) 轮：
 
@@ -136,48 +109,46 @@ T_{\text{email-plan}}
 =
 R_{\text{revision-avg}}
 \left[
-N_{\text{spec}}
-\left(
-T_{\text{spec-edit}}+T_{\text{plan-review}}
-\right)
+N_{\text{spec}}T_{\text{spec-edit}}
 +T_{\text{AI-plan}}
++N_{\text{spec}}T_{\text{plan-review}}
 \right]
 \]
 
 方案确认后，代码只落地一次：
 
 \[
-T_{\text{email-code}}=T_{\text{code-once}}
+T_{\text{email-code}}=T_{\text{code-landing}}
 \]
 
 总时间为：
 
 \[
+\boxed{
 T_{\text{email-total}}
 =
-T_{\text{email-plan}}+T_{\text{email-code}}
-\]
-
-由于共同基础成本已经包含同样的 \(N_{\text{spec}}R_{\text{revision-avg}}\) 次编辑和审查，因此：
-
-\[
-\boxed{
-T_{\text{email-overhead}}
-=
-R_{\text{revision-avg}}T_{\text{AI-plan}}
+R_{\text{revision-avg}}
+\left[
+N_{\text{spec}}T_{\text{spec-edit}}
++T_{\text{AI-plan}}
++N_{\text{spec}}T_{\text{plan-review}}
+\right]
++T_{\text{code-landing}}
 }
 \]
 
-## 模式 3：文档协作
+### 模式 3：文档协作
 
 每个 SPEC 的平均 1.5 次修订都发生在文档阶段。开发者完成一个增量修改后即可交给 AI，随后继续编辑其他 SPEC；AI 返回后，开发者按结果到达顺序审查，需要修订的 SPEC 立即进入下一轮。
 
-文档方案时间可以归纳为：
+文档阶段包含全部 SPEC 编辑、AI 后台处理和方案审查。由于 AI 处理可以和开发者继续编辑或审查重叠，只有未被这些工作覆盖的等待时间会增加墙钟时间：
 
 \[
 T_{\text{document-plan}}
 =
-T_{\text{common-plan}}+T_{\text{document-AI-wait}}
+N_{\text{spec-revision}}T_{\text{spec-edit}}
++T_{\text{document-AI-wait}}
++N_{\text{spec-revision}}T_{\text{plan-review}}
 \]
 
 其中 \(T_{\text{document-AI-wait}}\) 表示文档调度中没有被开发者编辑或审查覆盖、最终暴露在关键路径上的 AI 等待时间。模拟器通过以下方式计算它：
@@ -190,28 +161,75 @@ T_{\text{common-plan}}+T_{\text{document-AI-wait}}
 方案确认后，代码只落地一次：
 
 \[
-T_{\text{document-code}}=T_{\text{code-once}}
+T_{\text{document-code}}=T_{\text{code-landing}}
 \]
 
 总时间为：
 
 \[
+\boxed{
 T_{\text{document-total}}
 =
-T_{\text{document-plan}}+T_{\text{document-code}}
+N_{\text{spec-revision}}T_{\text{spec-edit}}
++T_{\text{document-AI-wait}}
++N_{\text{spec-revision}}T_{\text{plan-review}}
++T_{\text{code-landing}}
+}
 \]
 
-也就是：
+不能再把整个文档协作时间乘以 1.5，因为 1.5 已经体现在 SPEC 修订任务数量和离散事件调度中。
+
+## 第二层：提取共同项，优化对比公式
+
+在三条原始公式都明确之后，可以看到它们都包含以下真实流程动作：完成预期数量的 SPEC 编辑与方案审查，并至少落地一次代码。此时再把这些项提取为“共同基础成本”：
+
+\[
+T_{\text{common-base}}
+=
+N_{\text{spec-revision}}T_{\text{spec-edit}}
++N_{\text{spec-revision}}T_{\text{plan-review}}
++T_{\text{code-landing}}
+\]
+
+提取共同项不会改变原始流程，只是把三种总时间改写成更容易横向比较的形式：
+
+\[
+\boxed{
+T_{\text{instant-total}}
+=
+T_{\text{common-base}}
++N_{\text{spec-revision}}T_{\text{AI-plan}}
++\left(N_{\text{spec-revision}}-1\right)T_{\text{code-landing}}
+}
+\]
+
+\[
+\boxed{
+T_{\text{email-total}}
+=
+T_{\text{common-base}}
++R_{\text{revision-avg}}T_{\text{AI-plan}}
+}
+\]
 
 \[
 \boxed{
 T_{\text{document-total}}
 =
-T_{\text{common-base}}+T_{\text{document-AI-wait}}
+T_{\text{common-base}}
++T_{\text{document-AI-wait}}
 }
 \]
 
-不能再把整个文档协作时间乘以 1.5，因为 1.5 已经体现在 SPEC 修订任务数量和离散事件调度中。
+因此可以统一定义：
+
+\[
+T_{\text{mode-overhead}}
+=
+T_{\text{mode-total}}-T_{\text{common-base}}
+\]
+
+这里的“模式开销”不一定是无效工作，而是相对共同流程额外暴露在关键路径上的时间：即时通讯是每轮 AI 方案处理和重复代码落地，邮件通讯是每轮整批 AI 处理屏障，文档协作则是无法被开发者工作覆盖的 AI 等待。
 
 ## 默认算例
 
@@ -230,16 +248,49 @@ T_{\text{common-base}}+T_{\text{document-AI-wait}}
 N_{\text{spec-revision}}=4\times1.5=6
 \]
 
+先按流程计算三种模式。
+
+即时通讯：
+
 \[
-T_{\text{common-plan}}=6\times(5+3)=48\text{ 分钟}
+T_{\text{instant-plan}}=6\times(5+8+3)=96\text{ 分钟}
 \]
 
 \[
-T_{\text{code-once}}=8\text{ 分钟}
+T_{\text{instant-code}}=6\times8=48\text{ 分钟}
 \]
 
 \[
-T_{\text{common-base}}=48+8=56\text{ 分钟}
+T_{\text{instant-total}}=96+48=144\text{ 分钟}
+\]
+
+邮件通讯：
+
+\[
+T_{\text{email-plan}}
+=
+1.5\times\left[4\times5+8+4\times3\right]
+=60\text{ 分钟}
+\]
+
+\[
+T_{\text{email-total}}=60+8=68\text{ 分钟}
+\]
+
+文档协作通过离散事件调度得到：
+
+\[
+T_{\text{document-plan}}=50.5\text{ 分钟}
+\]
+
+\[
+T_{\text{document-total}}=50.5+8=58.5\text{ 分钟}
+\]
+
+完成流程计算后，再提取共同基础成本：
+
+\[
+T_{\text{common-base}}=6\times5+6\times3+8=56\text{ 分钟}
 \]
 
 | 协作模式 | 需求到方案 / 方案贡献 | 方案到代码 / 代码贡献 | 模式开销 | 总耗时 |
@@ -254,8 +305,9 @@ T_{\text{common-base}}=48+8=56\text{ 分钟}
 
 - 输入项使用完整语义名，不展示单字母变量。
 - 明确同时展示“SPEC 修订总量”和“邮件整批轮数”，防止把两个 1.5 混为同一种调度。
-- 每种模式展示总耗时、方案贡献、代码贡献和模式开销。
-- 对比条使用同一尺度，并把“共同基础成本”和“模式开销”堆叠显示。
+- 每种模式先按流程展示方案贡献、代码贡献和总耗时。
+- 在完成流程结果之后，再用“共同基础成本 + 模式开销”作为横向对比视图。
+- 对比条使用同一尺度，并把优化后的“共同基础成本”和“模式开销”堆叠显示。
 - 即时通讯标明“方案与代码交错”；邮件和文档标明“方案确认后落地一次”。
 - 精确的文档调度枚举保留在模拟器内部，不在界面暴露递推公式。
 
