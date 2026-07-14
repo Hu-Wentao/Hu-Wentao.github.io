@@ -464,90 +464,156 @@
       margin-top: 14px;
     }
 
-    .workflow-list {
+    .process-list {
       margin-top: 8px;
     }
 
-    .workflow-row {
-      display: grid;
-      grid-template-columns: 90px minmax(0, 1fr) minmax(135px, auto);
-      gap: 12px;
-      align-items: center;
+    .process-map {
       min-width: 0;
-      padding: 12px 0;
+      padding: 14px 0;
       border-top: 1px solid var(--border);
     }
 
-    .workflow-row:first-child {
+    .process-map:first-child {
       padding-top: 6px;
       border-top: 0;
     }
 
-    .workflow-row:last-child {
+    .process-map:last-child {
       padding-bottom: 0;
     }
 
-    .workflow-row[data-mode="instant"] { --mode-color: var(--instant); }
-    .workflow-row[data-mode="email"] { --mode-color: var(--email); }
-    .workflow-row[data-mode="document"] { --mode-color: var(--document); }
+    .process-map[data-mode="instant"] { --mode-color: var(--instant); }
+    .process-map[data-mode="email"] { --mode-color: var(--email); }
+    .process-map[data-mode="document"] { --mode-color: var(--document); }
 
-    .workflow-row h3 {
+    .process-heading {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px 12px;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+
+    .process-heading h3 {
       margin: 0;
       font-size: 15px;
     }
 
-    .workflow-path {
+    .process-kind {
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    .process-line {
       display: flex;
-      gap: 5px;
+      gap: 6px;
       align-items: stretch;
       min-width: 0;
     }
 
-    .workflow-stage {
+    .process-node {
       display: grid;
+      grid-template-columns: 24px minmax(0, 1fr);
+      gap: 8px;
       flex: 1;
       min-width: 0;
-      min-height: 58px;
-      padding: 7px 6px;
-      place-content: center;
+      min-height: 64px;
+      padding: 8px;
       border-radius: 8px;
       background: color-mix(in srgb, var(--mode-color) 14%, var(--surface-soft));
-      text-align: center;
     }
 
-    .workflow-stage span {
-      color: var(--muted);
+    .process-number {
+      display: grid;
+      width: 24px;
+      height: 24px;
+      place-items: center;
+      border-radius: 50%;
+      background: color-mix(in srgb, var(--mode-color) 28%, var(--surface));
+      color: var(--text);
       font-size: 11px;
-      line-height: 1.25;
+      font-weight: 500;
+      line-height: 1;
     }
 
-    .workflow-stage strong {
-      margin-top: 3px;
+    .process-copy {
+      min-width: 0;
+    }
+
+    .process-copy strong {
+      display: block;
       font-size: 12px;
       font-weight: 500;
-      line-height: 1.2;
+      line-height: 1.3;
     }
 
-    .workflow-arrow {
-      align-self: center;
+    .process-copy small {
+      display: block;
+      margin-top: 3px;
+      color: var(--muted);
+      font-size: 11px;
+      line-height: 1.35;
+    }
+
+    .process-arrow,
+    .process-down {
       color: var(--mode-color);
       font-size: 15px;
       font-weight: 500;
       line-height: 1;
     }
 
-    .workflow-repeat {
-      color: var(--muted);
-      font-size: 11px;
-      line-height: 1.35;
+    .process-arrow {
+      align-self: center;
     }
 
-    .workflow-repeat strong {
-      display: block;
-      margin-bottom: 2px;
+    .process-down {
+      margin: 5px 0;
+      text-align: center;
+    }
+
+    .process-branch {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      justify-content: flex-end;
+      margin: 6px 0;
+    }
+
+    .process-branch span {
+      padding: 3px 7px;
+      border-radius: 999px;
+      background: var(--surface-soft);
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    .process-branch .process-continue {
+      background: color-mix(in srgb, var(--mode-color) 16%, var(--surface-soft));
       color: var(--text);
-      font-size: 12px;
+    }
+
+    .process-schedule {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr);
+      gap: 8px;
+      margin: 7px 0;
+      padding: 8px 10px;
+      border-left: 3px solid var(--mode-color);
+      border-radius: 7px;
+      background: var(--surface-soft);
+      font-size: 11px;
+      line-height: 1.4;
+    }
+
+    .process-schedule strong {
       font-weight: 500;
+    }
+
+    .process-schedule span {
+      color: var(--muted);
     }
 
     details {
@@ -639,19 +705,17 @@
         grid-template-columns: 82px minmax(0, 1fr) minmax(72px, auto);
       }
 
-      .workflow-row {
-        grid-template-columns: 1fr;
-        gap: 8px;
-        align-items: start;
-      }
-
-      .workflow-path {
+      .process-line {
         flex-direction: column;
       }
 
-      .workflow-arrow {
+      .process-arrow {
         align-self: center;
         transform: rotate(90deg);
+      }
+
+      .process-schedule {
+        grid-template-columns: 1fr;
       }
     }
 
@@ -720,47 +784,94 @@
 
     <section class="panel workflow-section" aria-labelledby="workflow-heading">
       <h2 id="workflow-heading">三种模式工作循环</h2>
-      <div class="workflow-list">
-        <article class="workflow-row" data-mode="instant">
-          <h3>即时通讯</h3>
-          <div class="workflow-path" data-workflow-path="instant" role="img" aria-label="即时通讯工作循环">
-            <div class="workflow-stage"><span>SPEC 编辑</span><strong data-workflow-time="instant-edit">5 分钟</strong></div>
-            <span class="workflow-arrow" aria-hidden="true">→</span>
-            <div class="workflow-stage"><span>AI 方案处理</span><strong data-workflow-time="instant-ai">8 分钟</strong></div>
-            <span class="workflow-arrow" aria-hidden="true">→</span>
-            <div class="workflow-stage"><span>代码落地</span><strong data-workflow-time="instant-code">8 分钟</strong></div>
-            <span class="workflow-arrow" aria-hidden="true">→</span>
-            <div class="workflow-stage"><span>方案审查</span><strong data-workflow-time="instant-review">3 分钟</strong></div>
+      <div class="process-list">
+        <article class="process-map" data-mode="instant" aria-labelledby="process-instant-heading">
+          <div class="process-heading"><h3 id="process-instant-heading">即时通讯</h3><span class="process-kind" data-process-kind="instant">逐 SPEC 串行 · 平均 1.50 轮</span></div>
+          <div class="process-line">
+            <div class="process-node"><span class="process-number">1</span><div class="process-copy"><strong>人类提出需求</strong><small>耗时未单列</small></div></div>
+            <span class="process-arrow" aria-hidden="true">→</span>
+            <div class="process-node"><span class="process-number">2</span><div class="process-copy"><strong>AI 拆分 SPEC</strong><small data-process-time="instant-split">拆分 4 个 SPEC；耗时未单列</small></div></div>
           </div>
-          <div class="workflow-repeat"><strong data-workflow-repeat="instant">↺ 整条循环 × 6.00</strong><span>每次 SPEC 修订</span></div>
+          <div class="process-down" aria-hidden="true">↓</div>
+          <div class="process-line">
+            <div class="process-node"><span class="process-number">3</span><div class="process-copy"><strong>人类修订当前 SPEC 方案</strong><small data-process-time="instant-edit">每次 5 分钟</small></div></div>
+            <span class="process-arrow" aria-hidden="true">→</span>
+            <div class="process-node"><span class="process-number">4</span><div class="process-copy"><strong>AI 修改当前 SPEC 方案</strong><small data-process-time="instant-ai">每次 8 分钟</small></div></div>
+            <span class="process-arrow" aria-hidden="true">→</span>
+            <div class="process-node"><span class="process-number">5</span><div class="process-copy"><strong>人类确认 SPEC 方案</strong><small data-process-time="instant-review">每次审查 3 分钟</small></div></div>
+          </div>
+          <div class="process-branch"><span>不同意 ↺ 步骤 3</span><span class="process-continue">同意 ↓ 步骤 6</span></div>
+          <div class="process-line">
+            <div class="process-node"><span class="process-number">6</span><div class="process-copy"><strong>AI 落地代码</strong><small data-process-time="instant-code">每次 8 分钟</small></div></div>
+            <span class="process-arrow" aria-hidden="true">→</span>
+            <div class="process-node"><span class="process-number">7</span><div class="process-copy"><strong>人类检查效果</strong><small data-process-time="instant-check">耗时未单列；可包含在代码落地 8 分钟中</small></div></div>
+            <span class="process-arrow" aria-hidden="true">→</span>
+            <div class="process-node"><span class="process-number">8</span><div class="process-copy"><strong>判断是否符合预期</strong><small>判断耗时未单列</small></div></div>
+          </div>
+          <div class="process-branch"><span>不符合 ↺ 步骤 3</span><span class="process-continue">符合 ↓ 步骤 9</span></div>
+          <div class="process-line">
+            <div class="process-node"><span class="process-number">9</span><div class="process-copy"><strong>检查是否还有下一个 SPEC</strong><small>有：↺ 步骤 3，开始下一个 SPEC；没有：需求完成</small></div></div>
+          </div>
         </article>
 
-        <article class="workflow-row" data-mode="email">
-          <h3>邮件通讯</h3>
-          <div class="workflow-path" data-workflow-path="email" role="img" aria-label="邮件通讯工作循环">
-            <div class="workflow-stage"><span>整批 SPEC 编辑</span><strong data-workflow-time="email-edit">20 分钟</strong></div>
-            <span class="workflow-arrow" aria-hidden="true">→</span>
-            <div class="workflow-stage"><span>AI 并行处理</span><strong data-workflow-time="email-ai">8 分钟</strong></div>
-            <span class="workflow-arrow" aria-hidden="true">→</span>
-            <div class="workflow-stage"><span>整批方案审查</span><strong data-workflow-time="email-review">12 分钟</strong></div>
-            <span class="workflow-arrow" aria-hidden="true">→</span>
-            <div class="workflow-stage"><span>代码落地</span><strong data-workflow-time="email-code">8 分钟</strong></div>
+        <article class="process-map" data-mode="email" aria-labelledby="process-email-heading">
+          <div class="process-heading"><h3 id="process-email-heading">邮件通讯</h3><span class="process-kind" data-process-kind="email">整批往返 · 平均 1.50 轮</span></div>
+          <div class="process-line">
+            <div class="process-node"><span class="process-number">1</span><div class="process-copy"><strong>人类提出需求</strong><small>耗时未单列</small></div></div>
+            <span class="process-arrow" aria-hidden="true">→</span>
+            <div class="process-node"><span class="process-number">2</span><div class="process-copy"><strong>AI 拆分所有 SPEC</strong><small data-process-time="email-split">拆分 4 个 SPEC；耗时未单列</small></div></div>
           </div>
-          <div class="workflow-repeat"><strong data-workflow-repeat="email">↺ 整批循环 × 1.50</strong><span>代码落地仅 1 次</span></div>
+          <div class="process-down" aria-hidden="true">↓</div>
+          <div class="process-line">
+            <div class="process-node"><span class="process-number">3</span><div class="process-copy"><strong>人类修订 N 个 SPEC 方案</strong><small data-process-time="email-edit">本轮主动时间：4 × 5 = 20 分钟</small></div></div>
+            <span class="process-arrow" aria-hidden="true">→</span>
+            <div class="process-node"><span class="process-number">4</span><div class="process-copy"><strong>AI 修改 N 个 SPEC 方案</strong><small data-process-time="email-ai">整批墙钟时间 8 分钟</small></div></div>
+            <span class="process-arrow" aria-hidden="true">→</span>
+            <div class="process-node"><span class="process-number">5</span><div class="process-copy"><strong>人类确认所有 SPEC 方案</strong><small data-process-time="email-review">本轮主动时间：4 × 3 = 12 分钟</small></div></div>
+          </div>
+          <div class="process-schedule"><strong>批次屏障</strong><span>人类完成全部 SPEC 后统一发给 AI；AI 完成全部结果后再统一返回给人类。</span></div>
+          <div class="process-branch"><span>不同意 ↺ 步骤 3</span><span class="process-continue">同意 ↓ 步骤 6</span></div>
+          <div class="process-line">
+            <div class="process-node"><span class="process-number">6</span><div class="process-copy"><strong>AI 落地代码</strong><small data-process-time="email-code">一次 8 分钟</small></div></div>
+            <span class="process-arrow" aria-hidden="true">→</span>
+            <div class="process-node"><span class="process-number">7</span><div class="process-copy"><strong>人类检查效果</strong><small data-process-time="email-check">耗时未单列；可包含在代码落地 8 分钟中</small></div></div>
+            <span class="process-arrow" aria-hidden="true">→</span>
+            <div class="process-node"><span class="process-number">8</span><div class="process-copy"><strong>判断是否符合预期</strong><small>判断耗时未单列</small></div></div>
+          </div>
+          <div class="process-branch"><span>不符合 ↺ 步骤 3</span><span class="process-continue">符合 ↓ 步骤 9</span></div>
+          <div class="process-line">
+            <div class="process-node"><span class="process-number">9</span><div class="process-copy"><strong>需求完成</strong><small>任务结束</small></div></div>
+          </div>
         </article>
 
-        <article class="workflow-row" data-mode="document">
-          <h3>文档协作</h3>
-          <div class="workflow-path" data-workflow-path="document" role="img" aria-label="文档协作工作循环">
-            <div class="workflow-stage"><span>SPEC 编辑</span><strong data-workflow-time="document-edit">5 分钟</strong></div>
-            <span class="workflow-arrow" aria-hidden="true">→</span>
-            <div class="workflow-stage"><span>AI 并行处理</span><strong data-workflow-time="document-ai">8 分钟</strong></div>
-            <span class="workflow-arrow" aria-hidden="true">→</span>
-            <div class="workflow-stage"><span>方案审查</span><strong data-workflow-time="document-review">3 分钟</strong></div>
-            <span class="workflow-arrow" aria-hidden="true">→</span>
-            <div class="workflow-stage"><span>代码落地</span><strong data-workflow-time="document-code">8 分钟</strong></div>
+        <article class="process-map" data-mode="document" aria-labelledby="process-document-heading">
+          <div class="process-heading"><h3 id="process-document-heading">文档协作</h3><span class="process-kind" data-process-kind="document">逐 SPEC 流水并行 · 平均 1.50 轮</span></div>
+          <div class="process-line">
+            <div class="process-node"><span class="process-number">1</span><div class="process-copy"><strong>人类提出需求</strong><small>耗时未单列</small></div></div>
+            <span class="process-arrow" aria-hidden="true">→</span>
+            <div class="process-node"><span class="process-number">2</span><div class="process-copy"><strong>AI 拆分所有 SPEC</strong><small data-process-time="document-split">拆分 4 个 SPEC；耗时未单列</small></div></div>
           </div>
-          <div class="workflow-repeat"><strong data-workflow-repeat="document">↺ 预计提交 × 6.00</strong><span>AI 可并行，代码落地 1 次</span></div>
+          <div class="process-down" aria-hidden="true">↓</div>
+          <div class="process-line">
+            <div class="process-node"><span class="process-number">3</span><div class="process-copy"><strong>人类修订 N 个 SPEC 方案</strong><small data-process-time="document-edit">本轮主动时间：4 × 5 = 20 分钟；逐个提交</small></div></div>
+            <span class="process-arrow" aria-hidden="true">→</span>
+            <div class="process-node"><span class="process-number">4</span><div class="process-copy"><strong>AI 修改 N 个 SPEC 方案</strong><small data-process-time="document-ai">单个任务 8 分钟；与步骤 3 重叠</small></div></div>
+            <span class="process-arrow" aria-hidden="true">→</span>
+            <div class="process-node"><span class="process-number">5</span><div class="process-copy"><strong>人类确认所有 SPEC 方案</strong><small data-process-time="document-review">本轮主动时间：4 × 3 = 12 分钟；结果就绪即可审查</small></div></div>
+          </div>
+          <div class="process-schedule"><strong>流水并行</strong><span>人类完成 SPEC 1 后，AI 立即开始修改；人类编辑 SPEC 2 时，AI 已在处理 SPEC 1，无需等待全部 SPEC 完成。</span></div>
+          <div class="process-branch"><span>不同意 ↺ 步骤 3</span><span class="process-continue">同意 ↓ 步骤 6</span></div>
+          <div class="process-line">
+            <div class="process-node"><span class="process-number">6</span><div class="process-copy"><strong>AI 落地代码</strong><small data-process-time="document-code">一次 8 分钟</small></div></div>
+            <span class="process-arrow" aria-hidden="true">→</span>
+            <div class="process-node"><span class="process-number">7</span><div class="process-copy"><strong>人类检查效果</strong><small data-process-time="document-check">耗时未单列；可包含在代码落地 8 分钟中</small></div></div>
+            <span class="process-arrow" aria-hidden="true">→</span>
+            <div class="process-node"><span class="process-number">8</span><div class="process-copy"><strong>判断是否符合预期</strong><small>判断耗时未单列</small></div></div>
+          </div>
+          <div class="process-branch"><span>不符合 ↺ 步骤 3</span><span class="process-continue">符合 ↓ 步骤 9</span></div>
+          <div class="process-line">
+            <div class="process-node"><span class="process-number">9</span><div class="process-copy"><strong>需求完成</strong><small>任务结束</small></div></div>
+          </div>
         </article>
       </div>
     </section>
@@ -997,45 +1108,40 @@
         return { specRevisions, commonBase, results };
       }
 
-      function updateWorkflow(state, specRevisions) {
-        const workflowTimes = {
-          "instant-edit": state.specEditTime,
-          "instant-ai": state.aiPlanTime,
-          "instant-code": state.codeLandingTime,
-          "instant-review": state.planReviewTime,
-          "email-edit": state.specCount * state.specEditTime,
-          "email-ai": state.aiPlanTime,
-          "email-review": state.specCount * state.planReviewTime,
-          "email-code": state.codeLandingTime,
-          "document-edit": state.specEditTime,
-          "document-ai": state.aiPlanTime,
-          "document-review": state.planReviewTime,
-          "document-code": state.codeLandingTime
+      function updateWorkflow(state) {
+        const batchEditTime = state.specCount * state.specEditTime;
+        const batchReviewTime = state.specCount * state.planReviewTime;
+        const processTimes = {
+          "instant-split": `拆分 ${state.specCount} 个 SPEC；耗时未单列`,
+          "instant-edit": `每次 ${formatMinutes(state.specEditTime)} 分钟`,
+          "instant-ai": `每次 ${formatMinutes(state.aiPlanTime)} 分钟`,
+          "instant-review": `每次审查 ${formatMinutes(state.planReviewTime)} 分钟`,
+          "instant-code": `每次 ${formatMinutes(state.codeLandingTime)} 分钟`,
+          "instant-check": `耗时未单列；可包含在代码落地 ${formatMinutes(state.codeLandingTime)} 分钟中`,
+          "email-split": `拆分 ${state.specCount} 个 SPEC；耗时未单列`,
+          "email-edit": `本轮主动时间：${state.specCount} × ${formatMinutes(state.specEditTime)} = ${formatMinutes(batchEditTime)} 分钟`,
+          "email-ai": `整批墙钟时间 ${formatMinutes(state.aiPlanTime)} 分钟`,
+          "email-review": `本轮主动时间：${state.specCount} × ${formatMinutes(state.planReviewTime)} = ${formatMinutes(batchReviewTime)} 分钟`,
+          "email-code": `一次 ${formatMinutes(state.codeLandingTime)} 分钟`,
+          "email-check": `耗时未单列；可包含在代码落地 ${formatMinutes(state.codeLandingTime)} 分钟中`,
+          "document-split": `拆分 ${state.specCount} 个 SPEC；耗时未单列`,
+          "document-edit": `本轮主动时间：${state.specCount} × ${formatMinutes(state.specEditTime)} = ${formatMinutes(batchEditTime)} 分钟；逐个提交`,
+          "document-ai": `单个任务 ${formatMinutes(state.aiPlanTime)} 分钟；与步骤 3 重叠`,
+          "document-review": `本轮主动时间：${state.specCount} × ${formatMinutes(state.planReviewTime)} = ${formatMinutes(batchReviewTime)} 分钟；结果就绪即可审查`,
+          "document-code": `一次 ${formatMinutes(state.codeLandingTime)} 分钟`,
+          "document-check": `耗时未单列；可包含在代码落地 ${formatMinutes(state.codeLandingTime)} 分钟中`
         };
 
-        Object.entries(workflowTimes).forEach(([stage, minutes]) => {
-          document.querySelector(`[data-workflow-time="${stage}"]`).textContent = `${formatMinutes(minutes)} 分钟`;
+        Object.entries(processTimes).forEach(([stage, text]) => {
+          document.querySelector(`[data-process-time="${stage}"]`).textContent = text;
         });
 
-        document.querySelector('[data-workflow-repeat="instant"]').textContent =
-          `↺ 整条循环 × ${specRevisions.toFixed(2)}`;
-        document.querySelector('[data-workflow-repeat="email"]').textContent =
-          `↺ 整批循环 × ${state.revisionRounds.toFixed(2)}`;
-        document.querySelector('[data-workflow-repeat="document"]').textContent =
-          `↺ 预计提交 × ${specRevisions.toFixed(2)}`;
-
-        document.querySelector('[data-workflow-path="instant"]').setAttribute(
-          "aria-label",
-          `即时通讯工作循环：SPEC 编辑${formatMinutes(state.specEditTime)}分钟，AI 方案处理${formatMinutes(state.aiPlanTime)}分钟，代码落地${formatMinutes(state.codeLandingTime)}分钟，方案审查${formatMinutes(state.planReviewTime)}分钟；整条链路循环${specRevisions.toFixed(2)}次。`
-        );
-        document.querySelector('[data-workflow-path="email"]').setAttribute(
-          "aria-label",
-          `邮件通讯工作循环：整批 SPEC 编辑${formatMinutes(state.specCount * state.specEditTime)}分钟，AI 并行处理${formatMinutes(state.aiPlanTime)}分钟，整批方案审查${formatMinutes(state.specCount * state.planReviewTime)}分钟；前三阶段循环${state.revisionRounds.toFixed(2)}次，代码落地${formatMinutes(state.codeLandingTime)}分钟且仅执行一次。`
-        );
-        document.querySelector('[data-workflow-path="document"]').setAttribute(
-          "aria-label",
-          `文档协作工作循环：SPEC 编辑${formatMinutes(state.specEditTime)}分钟，AI 并行处理${formatMinutes(state.aiPlanTime)}分钟，方案审查${formatMinutes(state.planReviewTime)}分钟；预计提交${specRevisions.toFixed(2)}次，代码落地${formatMinutes(state.codeLandingTime)}分钟且仅执行一次。`
-        );
+        document.querySelector('[data-process-kind="instant"]').textContent =
+          `逐 SPEC 串行 · 平均 ${state.revisionRounds.toFixed(2)} 轮`;
+        document.querySelector('[data-process-kind="email"]').textContent =
+          `整批往返 · 平均 ${state.revisionRounds.toFixed(2)} 轮`;
+        document.querySelector('[data-process-kind="document"]').textContent =
+          `逐 SPEC 流水并行 · 平均 ${state.revisionRounds.toFixed(2)} 轮`;
       }
 
       function calculate() {
@@ -1047,7 +1153,7 @@
         document.getElementById("spec-revisions").textContent = specRevisions.toFixed(2);
         document.getElementById("email-batch-rounds").textContent = state.revisionRounds.toFixed(2);
         document.getElementById("common-base").textContent = `${formatMinutes(commonBase)} 分钟`;
-        updateWorkflow(state, specRevisions);
+        updateWorkflow(state);
 
         const fastestPlan = Math.min(...Object.values(results).map((result) => result.plan));
         Object.entries(results).forEach(([mode, result]) => {
