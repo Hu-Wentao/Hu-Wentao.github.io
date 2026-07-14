@@ -103,20 +103,6 @@
         var(--surface);
     }
 
-    .eyebrow {
-      display: inline-flex;
-      align-items: center;
-      min-height: 28px;
-      margin: 0 0 8px;
-      padding: 3px 10px;
-      border-radius: 999px;
-      background: var(--accent-soft);
-      color: var(--accent);
-      font-size: 12px;
-      font-weight: 750;
-      letter-spacing: .04em;
-    }
-
     h1,
     h2,
     h3,
@@ -125,7 +111,7 @@
     }
 
     h1 {
-      margin-bottom: 8px;
+      margin-bottom: 0;
       font-size: clamp(23px, 4vw, 32px);
       line-height: 1.2;
       letter-spacing: -.025em;
@@ -136,22 +122,27 @@
       font-size: 18px;
     }
 
-    .hero p,
     .section-copy,
     .scope-note {
       color: var(--muted);
-    }
-
-    .hero p {
-      max-width: 64ch;
-      margin-bottom: 0;
-      font-size: 14px;
     }
 
     .panel {
       margin-top: 14px;
       padding: 18px;
       border-radius: 10px;
+    }
+
+    .input-panels {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+      margin-top: 14px;
+    }
+
+    .input-panels .panel {
+      min-width: 0;
+      margin-top: 0;
     }
 
     .section-copy {
@@ -671,6 +662,7 @@
 
       .controls-grid,
       .results,
+      .input-panels,
       .sensitivity-controls,
       .sensitivity-maps {
         grid-template-columns: 1fr;
@@ -702,59 +694,59 @@
 <body>
   <main class="app">
     <header class="hero">
-      <div class="eyebrow">需求 → 方案 → 代码</div>
-      <h1>三种协作模式耗时模拟器</h1>
-      <p>先按三种模式实际发生的流程计算“需求到方案”和“方案到代码”，再从完整结果中提取共同项进行横向比较。平均 1.5 轮在即时通讯、邮件通讯和文档协作中的调度单位并不相同。</p>
+      <h1>三种协作模式耗时模拟</h1>
     </header>
 
-    <section class="panel" aria-labelledby="workload-heading">
-      <h2 id="workload-heading">规模与修订</h2>
-      <p class="section-copy">平均修订轮数包含首轮，当前模型支持 1 到 2 轮。默认 1.5 表示首轮必做，并有 50% 概率再修订一轮。</p>
-      <div class="controls-grid">
-        <label class="control" for="spec-count">
-          <span class="tooltip-label" tabindex="0" data-tooltip="一个需求中包含的实施细节数量。">SPEC 数量<span class="tooltip-icon" aria-hidden="true">?</span></span>
-          <output id="spec-count-output" for="spec-count">4 个</output>
-          <input id="spec-count" data-input type="range" min="1" max="12" step="1" value="4">
-        </label>
-        <label class="control" for="revision-rounds">
-          <span class="tooltip-label" tabindex="0" data-tooltip="包含首轮。即时与文档按每个 SPEC 计算；邮件按整个批次计算。">平均修订轮数<span class="tooltip-icon" aria-hidden="true">?</span></span>
-          <output id="revision-rounds-output" for="revision-rounds">1.50 轮</output>
-          <input id="revision-rounds" data-input type="range" min="1" max="2" step="0.05" value="1.5">
-        </label>
-      </div>
+    <div class="input-panels">
+      <section class="panel" aria-labelledby="workload-heading">
+        <h2 id="workload-heading">规模与修订</h2>
+        <p class="section-copy">平均修订轮数包含首轮，当前模型支持 1 到 2 轮。默认 1.5 表示首轮必做，并有 50% 概率再修订一轮。</p>
+        <div class="controls-grid">
+          <label class="control" for="spec-count">
+            <span class="tooltip-label" tabindex="0" data-tooltip="一个需求中包含的实施细节数量。">SPEC 数量<span class="tooltip-icon" aria-hidden="true">?</span></span>
+            <output id="spec-count-output" for="spec-count">4 个</output>
+            <input id="spec-count" data-input type="range" min="1" max="12" step="1" value="4">
+          </label>
+          <label class="control" for="revision-rounds">
+            <span class="tooltip-label" tabindex="0" data-tooltip="包含首轮。即时与文档按每个 SPEC 计算；邮件按整个批次计算。">平均修订轮数<span class="tooltip-icon" aria-hidden="true">?</span></span>
+            <output id="revision-rounds-output" for="revision-rounds">1.50 轮</output>
+            <input id="revision-rounds" data-input type="range" min="1" max="2" step="0.05" value="1.5">
+          </label>
+        </div>
 
-      <div class="round-summary">
-        <div class="summary-chip"><small><span class="tooltip-label" tabindex="0" data-tooltip="SPEC 数量乘以平均修订轮数；用于即时通讯和文档协作。">SPEC 修订总量<span class="tooltip-icon" aria-hidden="true">?</span></span></small><strong id="spec-revisions">6.00</strong></div>
-        <div class="summary-chip"><small><span class="tooltip-label" tabindex="0" data-tooltip="邮件把全部 SPEC 作为整体，整个批次平均往返的轮数。">邮件整批轮数<span class="tooltip-icon" aria-hidden="true">?</span></span></small><strong id="email-batch-rounds">1.50</strong></div>
-      </div>
-    </section>
+        <div class="round-summary">
+          <div class="summary-chip"><small><span class="tooltip-label" tabindex="0" data-tooltip="SPEC 数量乘以平均修订轮数；用于即时通讯和文档协作。">SPEC 修订总量<span class="tooltip-icon" aria-hidden="true">?</span></span></small><strong id="spec-revisions">6.00</strong></div>
+          <div class="summary-chip"><small><span class="tooltip-label" tabindex="0" data-tooltip="邮件把全部 SPEC 作为整体，整个批次平均往返的轮数。">邮件整批轮数<span class="tooltip-icon" aria-hidden="true">?</span></span></small><strong id="email-batch-rounds">1.50</strong></div>
+        </div>
+      </section>
 
-    <section class="panel" aria-labelledby="time-heading">
-      <h2 id="time-heading">单位耗时</h2>
-      <p class="section-copy">所有时间单位均为分钟。变量按业务动作命名；代码落地是一个复合时间，可包含需要纳入模型的检查、合并和测试。</p>
-      <div class="controls-grid">
-        <label class="control" for="spec-edit">
-          <span class="tooltip-label" tabindex="0" data-tooltip="开发者编辑一个 SPEC 一轮的平均耗时。">SPEC 编辑<span class="tooltip-icon" aria-hidden="true">?</span></span>
-          <output id="spec-edit-output" for="spec-edit">5 分钟</output>
-          <input id="spec-edit" data-input type="range" min="0" max="30" step="1" value="5">
-        </label>
-        <label class="control" for="ai-plan">
-          <span class="tooltip-label" tabindex="0" data-tooltip="AI 形成或修改一个 SPEC 方案的平均耗时；邮件整批并行处理时也按这个墙钟时间计算。">AI 方案处理<span class="tooltip-icon" aria-hidden="true">?</span></span>
-          <output id="ai-plan-output" for="ai-plan">8 分钟</output>
-          <input id="ai-plan" data-input type="range" min="0" max="60" step="1" value="8">
-        </label>
-        <label class="control" for="plan-review">
-          <span class="tooltip-label" tabindex="0" data-tooltip="开发者审查一个 SPEC 一轮方案的平均耗时。">方案审查<span class="tooltip-icon" aria-hidden="true">?</span></span>
-          <output id="plan-review-output" for="plan-review">3 分钟</output>
-          <input id="plan-review" data-input type="range" min="0" max="30" step="1" value="3">
-        </label>
-        <label class="control" for="code-landing">
-          <span class="tooltip-label" tabindex="0" data-tooltip="执行一次代码落地（可含必要检查）的墙钟时间。即时模式每次 SPEC 修订都会支付；邮件和文档在方案确认后只支付一次。">一次代码落地<span class="tooltip-icon" aria-hidden="true">?</span></span>
-          <output id="code-landing-output" for="code-landing">8 分钟</output>
-          <input id="code-landing" data-input type="range" min="0" max="120" step="1" value="8">
-        </label>
-      </div>
-    </section>
+      <section class="panel" aria-labelledby="time-heading">
+        <h2 id="time-heading">单位耗时</h2>
+        <p class="section-copy">所有时间单位均为分钟。变量按业务动作命名；代码落地是一个复合时间，可包含需要纳入模型的检查、合并和测试。</p>
+        <div class="controls-grid">
+          <label class="control" for="spec-edit">
+            <span class="tooltip-label" tabindex="0" data-tooltip="开发者编辑一个 SPEC 一轮的平均耗时。">SPEC 编辑<span class="tooltip-icon" aria-hidden="true">?</span></span>
+            <output id="spec-edit-output" for="spec-edit">5 分钟</output>
+            <input id="spec-edit" data-input type="range" min="0" max="30" step="1" value="5">
+          </label>
+          <label class="control" for="ai-plan">
+            <span class="tooltip-label" tabindex="0" data-tooltip="AI 形成或修改一个 SPEC 方案的平均耗时；邮件整批并行处理时也按这个墙钟时间计算。">AI 方案处理<span class="tooltip-icon" aria-hidden="true">?</span></span>
+            <output id="ai-plan-output" for="ai-plan">8 分钟</output>
+            <input id="ai-plan" data-input type="range" min="0" max="60" step="1" value="8">
+          </label>
+          <label class="control" for="plan-review">
+            <span class="tooltip-label" tabindex="0" data-tooltip="开发者审查一个 SPEC 一轮方案的平均耗时。">方案审查<span class="tooltip-icon" aria-hidden="true">?</span></span>
+            <output id="plan-review-output" for="plan-review">3 分钟</output>
+            <input id="plan-review" data-input type="range" min="0" max="30" step="1" value="3">
+          </label>
+          <label class="control" for="code-landing">
+            <span class="tooltip-label" tabindex="0" data-tooltip="执行一次代码落地（可含必要检查）的墙钟时间。即时模式每次 SPEC 修订都会支付；邮件和文档在方案确认后只支付一次。">一次代码落地<span class="tooltip-icon" aria-hidden="true">?</span></span>
+            <output id="code-landing-output" for="code-landing">8 分钟</output>
+            <input id="code-landing" data-input type="range" min="0" max="120" step="1" value="8">
+          </label>
+        </div>
+      </section>
+    </div>
 
     <p id="result-announcement" class="sr-only" aria-live="polite" aria-atomic="true"></p>
     <section class="flow-section" aria-labelledby="flow-heading">
