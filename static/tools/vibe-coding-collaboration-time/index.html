@@ -113,7 +113,6 @@
       font-size: 18px;
     }
 
-    .section-copy,
     .scope-note {
       color: var(--muted);
     }
@@ -134,11 +133,6 @@
     .input-panels .panel {
       min-width: 0;
       margin-top: 0;
-    }
-
-    .section-copy {
-      margin-bottom: 16px;
-      font-size: 13px;
     }
 
     .controls-grid {
@@ -276,10 +270,6 @@
 
     .flow-section > h2 {
       margin-left: 2px;
-    }
-
-    .flow-section > .section-copy {
-      margin: 0 2px;
     }
 
     .result-card {
@@ -688,7 +678,6 @@
     <div class="input-panels">
       <section class="panel" aria-labelledby="workload-heading">
         <h2 id="workload-heading">规模与修订</h2>
-        <p class="section-copy">平均修订轮数包含首轮，当前模型支持 1 到 2 轮。默认 1.5 表示首轮必做，并有 50% 概率再修订一轮。</p>
         <div class="controls-grid">
           <label class="control" for="spec-count">
             <span class="tooltip-label" tabindex="0" data-tooltip="一个需求中包含的实施细节数量。">SPEC 数量<span class="tooltip-icon" aria-hidden="true">?</span></span>
@@ -710,7 +699,6 @@
 
       <section class="panel" aria-labelledby="time-heading">
         <h2 id="time-heading">单位耗时</h2>
-        <p class="section-copy">所有时间单位均为分钟。变量按业务动作命名；代码落地是一个复合时间，可包含需要纳入模型的检查、合并和测试。</p>
         <div class="controls-grid">
           <label class="control" for="spec-edit">
             <span class="tooltip-label" tabindex="0" data-tooltip="开发者编辑一个 SPEC 一轮的平均耗时。">SPEC 编辑<span class="tooltip-icon" aria-hidden="true">?</span></span>
@@ -739,7 +727,6 @@
     <p id="result-announcement" class="sr-only" aria-live="polite" aria-atomic="true"></p>
     <section class="flow-section" aria-labelledby="flow-heading">
       <h2 id="flow-heading">第一层：按流程计算</h2>
-      <p class="section-copy">先看每种模式实际经历的方案和代码步骤；此处不使用共同基础成本进行改写。</p>
       <div class="results" aria-label="三种协作模式的流程计算结果">
         <article class="result-card" data-mode="instant">
           <div class="result-heading"><h3><span class="tooltip-label" tabindex="0" data-tooltip="每个 SPEC 修订都串行形成隐式方案并立即修改代码。">即时通讯<span class="tooltip-icon" aria-hidden="true">?</span></span></h3><span class="winner">方案最快</span></div>
@@ -773,7 +760,6 @@
 
     <section class="panel" aria-labelledby="comparison-heading">
       <h2 id="comparison-heading">第二层：提取共同项进行比较</h2>
-      <p class="section-copy">流程结果计算完成后，再把三种模式都包含的编辑、审查和一次代码落地提取出来。这是数学上的对比优化，不是额外的流程阶段。</p>
       <p class="comparison-base">优化后提取的共同基础成本 <strong id="common-base">0 分钟</strong></p>
       <div class="bar-legend" aria-hidden="true">
         <span class="legend-item"><span class="legend-swatch"></span>共同基础成本</span>
@@ -788,7 +774,6 @@
 
     <section class="panel" aria-labelledby="sensitivity-heading">
       <h2 id="sensitivity-heading">双参数敏感性分析</h2>
-      <p class="section-copy">任选两个参数作为横轴和纵轴，其他参数保持上方当前值。每个格子显示该模式总耗时相对同一参数组合下最快模式的倍数。</p>
       <div class="sensitivity-controls">
         <label class="axis-control" for="sensitivity-x">
           <span>横轴参数</span>
