@@ -223,7 +223,7 @@
       width: max-content;
       max-width: min(280px, calc(100vw - 24px));
       padding: 8px 10px;
-      border: 1px solid var(--border-strong);
+      border: 1px solid var(--border);
       border-radius: 8px;
       background: var(--text);
       color: var(--surface);
@@ -338,6 +338,12 @@
       display: inline-flex;
     }
 
+    .primary-label {
+      margin-bottom: 3px;
+      color: var(--muted);
+      font-size: 11px;
+    }
+
     .total-time {
       margin-bottom: 12px;
       color: var(--mode-color);
@@ -380,6 +386,32 @@
       margin-top: 16px;
     }
 
+    .bar-legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px 16px;
+      margin-top: 10px;
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    .legend-item {
+      display: inline-flex;
+      gap: 6px;
+      align-items: center;
+    }
+
+    .legend-swatch {
+      width: 18px;
+      height: 8px;
+      border-radius: 999px;
+      background: color-mix(in srgb, var(--muted) 55%, var(--surface));
+    }
+
+    .legend-swatch.overhead {
+      background: var(--document);
+    }
+
     .bar-row {
       display: grid;
       grid-template-columns: 76px minmax(0, 1fr) 72px;
@@ -393,18 +425,26 @@
     }
 
     .bar-track {
+      display: flex;
       height: 13px;
       border-radius: 999px;
       background: var(--surface-soft);
       overflow: hidden;
     }
 
-    .bar-fill {
+    .bar-base,
+    .bar-overhead {
       width: 0;
       height: 100%;
-      border-radius: inherit;
-      background: var(--mode-color);
       transition: width 180ms ease-out;
+    }
+
+    .bar-base {
+      background: color-mix(in srgb, var(--muted) 55%, var(--surface));
+    }
+
+    .bar-overhead {
+      background: var(--mode-color);
     }
 
     .bar-row[data-mode="instant"] { --mode-color: var(--instant); }
@@ -460,6 +500,18 @@
       text-align: center;
     }
 
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+
     @media (max-width: 620px) {
       .app {
         padding: 10px;
@@ -480,7 +532,7 @@
       }
 
       .bar-row {
-        grid-template-columns: 82px minmax(0, 1fr) 62px;
+        grid-template-columns: 82px minmax(0, 1fr) minmax(72px, auto);
       }
     }
 
@@ -497,116 +549,130 @@
 <body>
   <main class="app">
     <header class="hero">
-      <div class="eyebrow">SPEC 协作阶段</div>
+      <div class="eyebrow">需求 → 方案 → 代码</div>
       <h1>三种协作模式耗时模拟器</h1>
-      <p>三种协作模式使用完全相同的 SPEC、沟通轮数和单位耗时，只改变任务的调度方式。结果是模型估算，不包含最终代码落地和运行检查。</p>
+      <p>同一个平均 1.5 轮，在即时通讯中作用于每个 SPEC 的“方案 + 代码”，在邮件中作用于整个批次，在文档中则被增量修订过程吸收。三种模式使用相同的共同基础成本，只改变暴露在关键路径上的模式开销。</p>
     </header>
 
     <section class="panel" aria-labelledby="workload-heading">
-      <h2 id="workload-heading">任务与资源</h2>
-      <p class="section-copy">所有时间单位均为分钟。AI 时间指一个 SPEC 在一轮中的分析与修改时间。</p>
+      <h2 id="workload-heading">规模与修订</h2>
+      <p class="section-copy">平均修订轮数包含首轮，当前模型支持 1 到 2 轮。默认 1.5 表示首轮必做，并有 50% 概率再修订一轮。</p>
       <div class="controls-grid">
         <label class="control" for="spec-count">
-          <span class="tooltip-label" tabindex="0" data-tooltip="代表一个需求中包含的实施细节数量。">SPEC 数量<span class="tooltip-icon" aria-hidden="true">?</span></span>
+          <span class="tooltip-label" tabindex="0" data-tooltip="一个需求中包含的实施细节数量。">SPEC 数量<span class="tooltip-icon" aria-hidden="true">?</span></span>
           <output id="spec-count-output" for="spec-count">4 个</output>
           <input id="spec-count" data-input type="range" min="1" max="12" step="1" value="4">
         </label>
+        <label class="control" for="revision-rounds">
+          <span class="tooltip-label" tabindex="0" data-tooltip="包含首轮。即时与文档按每个 SPEC 计算；邮件按整个批次计算。">平均修订轮数<span class="tooltip-icon" aria-hidden="true">?</span></span>
+          <output id="revision-rounds-output" for="revision-rounds">1.50 轮</output>
+          <input id="revision-rounds" data-input type="range" min="1" max="2" step="0.05" value="1.5">
+        </label>
+      </div>
+
+      <div class="round-summary">
+        <div class="summary-chip"><small><span class="tooltip-label" tabindex="0" data-tooltip="SPEC 数量乘以平均修订轮数；用于即时通讯和文档协作。">SPEC 修订总量<span class="tooltip-icon" aria-hidden="true">?</span></span></small><strong id="spec-revisions">6.00</strong></div>
+        <div class="summary-chip"><small><span class="tooltip-label" tabindex="0" data-tooltip="邮件把全部 SPEC 作为整体，整个批次平均往返的轮数。">邮件整批轮数<span class="tooltip-icon" aria-hidden="true">?</span></span></small><strong id="email-batch-rounds">1.50</strong></div>
+        <div class="summary-chip"><small><span class="tooltip-label" tabindex="0" data-tooltip="所有模式共同的方案编辑与审查，加上一次代码落地。">共同基础成本<span class="tooltip-icon" aria-hidden="true">?</span></span></small><strong id="common-base">0 分钟</strong></div>
+      </div>
+    </section>
+
+    <section class="panel" aria-labelledby="time-heading">
+      <h2 id="time-heading">单位耗时</h2>
+      <p class="section-copy">所有时间单位均为分钟。变量按业务动作命名；代码落地是一个复合时间，可包含需要纳入模型的检查、合并和测试。</p>
+      <div class="controls-grid">
         <label class="control" for="spec-edit">
-          <span class="tooltip-label" tabindex="0" data-tooltip="开发者编辑一个 SPEC 一次的平均耗时，首轮和返工使用相同数值。">SPEC 编辑<span class="tooltip-icon" aria-hidden="true">?</span></span>
+          <span class="tooltip-label" tabindex="0" data-tooltip="开发者编辑一个 SPEC 一轮的平均耗时。">SPEC 编辑<span class="tooltip-icon" aria-hidden="true">?</span></span>
           <output id="spec-edit-output" for="spec-edit">5 分钟</output>
           <input id="spec-edit" data-input type="range" min="0" max="30" step="1" value="5">
         </label>
-        <label class="control" for="ai-time">
-          <span class="tooltip-label" tabindex="0" data-tooltip="AI 完成一个 SPEC 一轮分析与修改的平均耗时。">AI 处理 / SPEC-round<span class="tooltip-icon" aria-hidden="true">?</span></span>
-          <output id="ai-time-output" for="ai-time">8 分钟</output>
-          <input id="ai-time" data-input type="range" min="1" max="60" step="1" value="8">
+        <label class="control" for="ai-plan">
+          <span class="tooltip-label" tabindex="0" data-tooltip="AI 形成或修改一个 SPEC 方案的平均耗时；邮件整批并行处理时也按这个墙钟时间计算。">AI 方案处理<span class="tooltip-icon" aria-hidden="true">?</span></span>
+          <output id="ai-plan-output" for="ai-plan">8 分钟</output>
+          <input id="ai-plan" data-input type="range" min="0" max="60" step="1" value="8">
         </label>
-        <label class="control" for="review-time">
-          <span class="tooltip-label" tabindex="0" data-tooltip="开发者审查一个 SPEC 一轮处理结果的平均耗时。">人工审查 / SPEC-round<span class="tooltip-icon" aria-hidden="true">?</span></span>
-          <output id="review-time-output" for="review-time">3 分钟</output>
-          <input id="review-time" data-input type="range" min="0" max="30" step="1" value="3">
+        <label class="control" for="plan-review">
+          <span class="tooltip-label" tabindex="0" data-tooltip="开发者审查一个 SPEC 一轮方案的平均耗时。">方案审查<span class="tooltip-icon" aria-hidden="true">?</span></span>
+          <output id="plan-review-output" for="plan-review">3 分钟</output>
+          <input id="plan-review" data-input type="range" min="0" max="30" step="1" value="3">
+        </label>
+        <label class="control" for="code-landing">
+          <span class="tooltip-label" tabindex="0" data-tooltip="执行一次代码落地（可含必要检查）的墙钟时间。即时模式每次 SPEC 修订都会支付；邮件和文档在方案确认后只支付一次。">一次代码落地<span class="tooltip-icon" aria-hidden="true">?</span></span>
+          <output id="code-landing-output" for="code-landing">8 分钟</output>
+          <input id="code-landing" data-input type="range" min="0" max="120" step="1" value="8">
         </label>
       </div>
     </section>
 
-    <section class="panel" aria-labelledby="rounds-heading">
-      <h2 id="rounds-heading">平均返工率</h2>
-      <p class="section-copy">返工率表示一个 SPEC 在首轮后仍需再沟通一次的平均概率。无需指定返工发生在哪个 SPEC，模拟结果会对所有可能组合加权取平均。</p>
-      <div class="controls-grid">
-        <label class="control" for="rework-rate">
-          <span class="tooltip-label" tabindex="0" data-tooltip="一个 SPEC 在首轮后仍需再沟通一次的概率。0.5 即 50%。">平均返工率<span class="tooltip-icon" aria-hidden="true">?</span></span>
-          <output id="rework-rate-output" for="rework-rate">50%</output>
-          <input id="rework-rate" data-input type="range" min="0" max="100" step="5" value="50">
-        </label>
-      </div>
-
-      <div class="round-summary" aria-live="polite">
-        <div class="summary-chip"><small><span class="tooltip-label" tabindex="0" data-tooltip="数值代表平均有多少个 SPEC 需要沟通两次才能达到预期。">平均返工 SPEC<span class="tooltip-icon" aria-hidden="true">?</span></span></small><strong id="rework-specs">2.00</strong></div>
-        <div class="summary-chip"><small><span class="tooltip-label" tabindex="0" data-tooltip="首轮处理次数与平均返工次数之和。">平均 SPEC-round<span class="tooltip-icon" aria-hidden="true">?</span></span></small><strong id="spec-rounds">6.00</strong></div>
-        <div class="summary-chip"><small><span class="tooltip-label" tabindex="0" data-tooltip="每个 SPEC 从首轮到达到预期，平均需要沟通的轮数。">平均轮数 / SPEC<span class="tooltip-icon" aria-hidden="true">?</span></span></small><strong id="average-rounds">1.50</strong></div>
-      </div>
+    <p id="result-announcement" class="sr-only" aria-live="polite" aria-atomic="true"></p>
+    <section class="results" aria-label="三种协作模式的模拟结果">
+      <article class="result-card" data-mode="instant">
+        <div class="result-heading"><h3><span class="tooltip-label" tabindex="0" data-tooltip="每个 SPEC 修订都串行形成隐式方案并立即修改代码。">即时通讯<span class="tooltip-icon" aria-hidden="true">?</span></span></h3><span class="winner">方案最快</span></div>
+        <div class="primary-label">需求 → 方案确认（活动归因）</div>
+        <div class="total-time tooltip-label" tabindex="0" data-tooltip="方案与代码实际交错发生；这里把编辑、AI 隐式方案和方案审查归入方案贡献。"><strong data-plan>0</strong><span>分钟</span><span class="tooltip-icon" aria-hidden="true">?</span></div>
+        <dl class="metrics">
+          <dt><span class="tooltip-label" tabindex="0" data-tooltip="每次 SPEC 修订都会同步支付一次代码落地成本。">代码贡献<span class="tooltip-icon" aria-hidden="true">?</span></span></dt><dd data-code>0 分钟</dd>
+          <dt><span class="tooltip-label" tabindex="0" data-tooltip="方案贡献与代码贡献之和。">端到端总耗时<span class="tooltip-icon" aria-hidden="true">?</span></span></dt><dd data-total>0 分钟</dd>
+          <dt><span class="tooltip-label" tabindex="0" data-tooltip="总耗时减去共同基础成本，包括串行 AI 方案等待和重复代码落地。">模式开销<span class="tooltip-icon" aria-hidden="true">?</span></span></dt><dd data-overhead>0 分钟</dd>
+        </dl>
+      </article>
+      <article class="result-card" data-mode="email">
+        <div class="result-heading"><h3><span class="tooltip-label" tabindex="0" data-tooltip="全部 SPEC 作为一个邮件批次，整个批次平均往返指定轮数。">邮件通讯<span class="tooltip-icon" aria-hidden="true">?</span></span></h3><span class="winner">方案最快</span></div>
+        <div class="primary-label">需求 → 方案确认</div>
+        <div class="total-time tooltip-label" tabindex="0" data-tooltip="每一轮都编辑、并行处理并审查整个邮件批次。"><strong data-plan>0</strong><span>分钟</span><span class="tooltip-icon" aria-hidden="true">?</span></div>
+        <dl class="metrics">
+          <dt><span class="tooltip-label" tabindex="0" data-tooltip="整批方案确认后只落地一次代码。">方案 → 代码落地<span class="tooltip-icon" aria-hidden="true">?</span></span></dt><dd data-code>0 分钟</dd>
+          <dt><span class="tooltip-label" tabindex="0" data-tooltip="方案确认时间与一次代码落地之和。">端到端总耗时<span class="tooltip-icon" aria-hidden="true">?</span></span></dt><dd data-total>0 分钟</dd>
+          <dt><span class="tooltip-label" tabindex="0" data-tooltip="整个邮件批次每轮暴露在关键路径上的 AI 方案处理时间。">模式开销<span class="tooltip-icon" aria-hidden="true">?</span></span></dt><dd data-overhead>0 分钟</dd>
+        </dl>
+      </article>
+      <article class="result-card" data-mode="document">
+        <div class="result-heading"><h3><span class="tooltip-label" tabindex="0" data-tooltip="每个 SPEC 的修订发生在文档内部；增量任务可与开发者继续编辑重叠。">文档协作<span class="tooltip-icon" aria-hidden="true">?</span></span></h3><span class="winner">方案最快</span></div>
+        <div class="primary-label">需求 → 方案确认</div>
+        <div class="total-time tooltip-label" tabindex="0" data-tooltip="共同方案工作加上无法被其他编辑或审查覆盖的 AI 等待。"><strong data-plan>0</strong><span>分钟</span><span class="tooltip-icon" aria-hidden="true">?</span></div>
+        <dl class="metrics">
+          <dt><span class="tooltip-label" tabindex="0" data-tooltip="文档确认后只落地一次代码。">方案 → 代码落地<span class="tooltip-icon" aria-hidden="true">?</span></span></dt><dd data-code>0 分钟</dd>
+          <dt><span class="tooltip-label" tabindex="0" data-tooltip="方案确认时间与一次代码落地之和。">端到端总耗时<span class="tooltip-icon" aria-hidden="true">?</span></span></dt><dd data-total>0 分钟</dd>
+          <dt><span class="tooltip-label" tabindex="0" data-tooltip="文档调度中没有被开发者编辑或审查覆盖的 AI 等待时间。">模式开销<span class="tooltip-icon" aria-hidden="true">?</span></span></dt><dd data-overhead>0 分钟</dd>
+        </dl>
+      </article>
     </section>
-
-    <div id="result-output" role="status" aria-live="polite">
-      <section class="results" aria-label="三种协作模式的模拟结果">
-        <article class="result-card" data-mode="instant">
-          <div class="result-heading"><h3><span class="tooltip-label" tabindex="0" data-tooltip="逐个处理 SPEC；每次等待 AI 返回并审查后，再开始下一个任务。">即时通讯<span class="tooltip-icon" aria-hidden="true">?</span></span></h3><span class="winner">最快</span></div>
-          <div class="total-time tooltip-label" tabindex="0" data-tooltip="从开始编辑第一个 SPEC 到完成最后一次审查的平均总耗时。"><strong data-total>0</strong><span>分钟</span><span class="tooltip-icon" aria-hidden="true">?</span></div>
-          <dl class="metrics">
-            <dt><span class="tooltip-label" tabindex="0" data-tooltip="开发者用于编辑 SPEC 和审查结果的平均总时间。">开发者主动<span class="tooltip-icon" aria-hidden="true">?</span></span></dt><dd data-active>0 分钟</dd>
-            <dt><span class="tooltip-label" tabindex="0" data-tooltip="端到端耗时减去开发者主动时间，主要是等待 AI 处理的时间。">开发者等待<span class="tooltip-icon" aria-hidden="true">?</span></span></dt><dd data-wait>0 分钟</dd>
-            <dt><span class="tooltip-label" tabindex="0" data-tooltip="从开始协作到第一个 AI 结果可供开发者审查的平均时间。">首个可审查结果<span class="tooltip-icon" aria-hidden="true">?</span></span></dt><dd data-first>0 分钟</dd>
-          </dl>
-        </article>
-        <article class="result-card" data-mode="email">
-          <div class="result-heading"><h3><span class="tooltip-label" tabindex="0" data-tooltip="把一轮中的 SPEC 整批提交，等待整批返回并审查后，再组织下一轮。">邮件通讯<span class="tooltip-icon" aria-hidden="true">?</span></span></h3><span class="winner">最快</span></div>
-          <div class="total-time tooltip-label" tabindex="0" data-tooltip="从开始编辑第一个 SPEC 到完成最后一次审查的平均总耗时。"><strong data-total>0</strong><span>分钟</span><span class="tooltip-icon" aria-hidden="true">?</span></div>
-          <dl class="metrics">
-            <dt><span class="tooltip-label" tabindex="0" data-tooltip="开发者用于编辑 SPEC 和审查结果的平均总时间。">开发者主动<span class="tooltip-icon" aria-hidden="true">?</span></span></dt><dd data-active>0 分钟</dd>
-            <dt><span class="tooltip-label" tabindex="0" data-tooltip="端到端耗时减去开发者主动时间，主要是等待 AI 处理的时间。">开发者等待<span class="tooltip-icon" aria-hidden="true">?</span></span></dt><dd data-wait>0 分钟</dd>
-            <dt><span class="tooltip-label" tabindex="0" data-tooltip="从开始协作到第一个 AI 结果可供开发者审查的平均时间。">首个可审查结果<span class="tooltip-icon" aria-hidden="true">?</span></span></dt><dd data-first>0 分钟</dd>
-          </dl>
-        </article>
-        <article class="result-card" data-mode="document">
-          <div class="result-heading"><h3><span class="tooltip-label" tabindex="0" data-tooltip="逐个增量提交 SPEC，让 AI 在后台并行处理，并按结果到达顺序审查和返工。">文档协作<span class="tooltip-icon" aria-hidden="true">?</span></span></h3><span class="winner">最快</span></div>
-          <div class="total-time tooltip-label" tabindex="0" data-tooltip="从开始编辑第一个 SPEC 到完成最后一次审查的平均总耗时。"><strong data-total>0</strong><span>分钟</span><span class="tooltip-icon" aria-hidden="true">?</span></div>
-          <dl class="metrics">
-            <dt><span class="tooltip-label" tabindex="0" data-tooltip="开发者用于编辑 SPEC 和审查结果的平均总时间。">开发者主动<span class="tooltip-icon" aria-hidden="true">?</span></span></dt><dd data-active>0 分钟</dd>
-            <dt><span class="tooltip-label" tabindex="0" data-tooltip="端到端耗时减去开发者主动时间，主要是等待 AI 处理的时间。">开发者等待<span class="tooltip-icon" aria-hidden="true">?</span></span></dt><dd data-wait>0 分钟</dd>
-            <dt><span class="tooltip-label" tabindex="0" data-tooltip="从开始协作到第一个 AI 结果可供开发者审查的平均时间。">首个可审查结果<span class="tooltip-icon" aria-hidden="true">?</span></span></dt><dd data-first>0 分钟</dd>
-          </dl>
-        </article>
-      </section>
-    </div>
 
     <section class="panel" aria-labelledby="comparison-heading">
-      <h2 id="comparison-heading">端到端耗时对比</h2>
-      <p class="section-copy">条形图使用同一时间尺度；“开发者等待”是端到端时间减去相同的主动工作时间。</p>
+      <h2 id="comparison-heading">共同基础成本 + 模式开销</h2>
+      <p class="section-copy">三条使用同一时间尺度。灰色部分是三种模式共同需要完成的工作，彩色部分是各自额外暴露在关键路径上的时间。</p>
+      <div class="bar-legend" aria-hidden="true">
+        <span class="legend-item"><span class="legend-swatch"></span>共同基础成本</span>
+        <span class="legend-item"><span class="legend-swatch overhead"></span>模式开销</span>
+      </div>
       <div class="comparison-list">
-        <div class="bar-row" data-mode="instant"><span class="bar-label tooltip-label" tabindex="0" data-tooltip="即时通讯模式的平均端到端耗时。">即时通讯<span class="tooltip-icon" aria-hidden="true">?</span></span><div class="bar-track"><div class="bar-fill"></div></div><span class="bar-value">0 分钟</span></div>
-        <div class="bar-row" data-mode="email"><span class="bar-label tooltip-label" tabindex="0" data-tooltip="邮件通讯模式的平均端到端耗时。">邮件通讯<span class="tooltip-icon" aria-hidden="true">?</span></span><div class="bar-track"><div class="bar-fill"></div></div><span class="bar-value">0 分钟</span></div>
-        <div class="bar-row" data-mode="document"><span class="bar-label tooltip-label" tabindex="0" data-tooltip="文档协作模式的平均端到端耗时。">文档协作<span class="tooltip-icon" aria-hidden="true">?</span></span><div class="bar-track"><div class="bar-fill"></div></div><span class="bar-value">0 分钟</span></div>
+        <div class="bar-row" data-mode="instant"><span class="bar-label tooltip-label" tabindex="0" data-tooltip="即时通讯：共同基础成本加串行方案等待和重复代码落地。">即时通讯<span class="tooltip-icon" aria-hidden="true">?</span></span><div class="bar-track" role="img"><div class="bar-base"></div><div class="bar-overhead"></div></div><span class="bar-value">0 分钟</span></div>
+        <div class="bar-row" data-mode="email"><span class="bar-label tooltip-label" tabindex="0" data-tooltip="邮件通讯：共同基础成本加整批每轮的 AI 方案等待。">邮件通讯<span class="tooltip-icon" aria-hidden="true">?</span></span><div class="bar-track" role="img"><div class="bar-base"></div><div class="bar-overhead"></div></div><span class="bar-value">0 分钟</span></div>
+        <div class="bar-row" data-mode="document"><span class="bar-label tooltip-label" tabindex="0" data-tooltip="文档协作：共同基础成本加未被开发者工作覆盖的 AI 等待。">文档协作<span class="tooltip-icon" aria-hidden="true">?</span></span><div class="bar-track" role="img"><div class="bar-base"></div><div class="bar-overhead"></div></div><span class="bar-value">0 分钟</span></div>
       </div>
     </section>
 
     <details>
       <summary>查看公式、调度策略与边界</summary>
       <div class="details-body">
-        <p>令 <strong>N</strong> 为 SPEC 数，<strong>p</strong> 为平均返工率，<strong>e</strong> 为单次 SPEC 编辑时间，<strong>a</strong> 为单个 AI 任务时间，<strong>v</strong> 为审查时间。</p>
-        <span class="formula">平均返工 SPEC = Np；平均 SPEC-round = N(1 + p)</span>
-        <span class="formula">即时：E[T] = N(1 + p)(e + a + v)</span>
-        <span class="formula">邮件与文档：对每个 SPEC 独立以概率 p 返工一次，并对所有组合的调度结果加权取平均</span>
-        <p>文档协作先连续完成所有首轮编辑，同时把修改交给最早空闲的 AI；之后优先审查最早完成的结果，需要返工时立即编辑并再次提交，不等待其他 SPEC 组成整批。</p>
+        <span class="formula">SPEC 修订总量 = SPEC 数量 × 平均修订轮数</span>
+        <span class="formula">共同方案成本 = SPEC 修订总量 ×（SPEC 编辑 + 方案审查）</span>
+        <span class="formula">共同基础成本 = 共同方案成本 + 一次代码落地</span>
+        <span class="formula">即时总耗时 = SPEC 修订总量 ×（SPEC 编辑 + AI 方案处理 + 方案审查 + 一次代码落地）</span>
+        <span class="formula">邮件总耗时 = 平均修订轮数 ×［SPEC 数量 ×（SPEC 编辑 + 方案审查）+ AI 方案处理］+ 一次代码落地</span>
+        <span class="formula">文档总耗时 = 共同基础成本 + 文档中未被覆盖的 AI 等待</span>
+        <p>平均 1.5 轮包含首轮。即时与文档把它解释为每个 SPEC 的平均修订轮数；邮件把它解释为整个批次的平均往返轮数。</p>
+        <p>文档协作先连续完成所有首轮编辑，同时增量提交 AI；之后优先审查最早完成的结果，需要修订时立即编辑并再次提交。模拟器只为文档模式枚举 SPEC 的第二轮组合，邮件不会沿用这个概率模型。</p>
         <ul>
-          <li>开发者只有一个执行槽，编辑和审查不能并行。</li>
-          <li>AI 任务相互独立、耗时相同，且不限制同时处理的任务数量。</li>
-          <li>每个 SPEC 最多返工一次；三种协作模式使用相同的返工概率和期望工作量。</li>
-          <li>不计交接、共享文件冲突、最终代码落地与运行检查。</li>
+          <li>开发者只有一个编辑/审查执行槽，AI 任务没有并发数量上限。</li>
+          <li>当前只支持 1 到 2 轮；第二轮概率等于“平均修订轮数 − 1”。</li>
+          <li>代码落地是一个复合输入，可以包含希望纳入比较的代码检查、合并和测试。</li>
+          <li>不计算现实邮件的离线查收延迟、部署发布和模式交接成本。</li>
         </ul>
       </div>
     </details>
 
-    <p class="scope-note">该工具比较的是 SPEC 协作阶段的确定性调度结果，而不是对所有团队和任务都成立的性能承诺。</p>
+    <p class="scope-note">该工具比较的是给定假设下的墙钟时间，不是对所有团队和工程任务都成立的性能承诺。</p>
   </main>
 
   <div class="field-tooltip" id="field-tooltip" role="tooltip" hidden></div>
@@ -615,12 +681,18 @@
     (() => {
       const inputIds = [
         "spec-count",
+        "revision-rounds",
         "spec-edit",
-        "ai-time",
-        "review-time",
-        "rework-rate"
+        "ai-plan",
+        "plan-review",
+        "code-landing"
       ];
       const inputs = Object.fromEntries(inputIds.map((id) => [id, document.getElementById(id)]));
+      const modeNames = {
+        instant: "即时通讯",
+        email: "邮件通讯",
+        document: "文档协作"
+      };
 
       const numberValue = (input) => Number(input.value);
       const formatMinutes = (value) => {
@@ -629,23 +701,27 @@
       };
 
       function updateOutputs() {
-        const minuteIds = ["spec-edit", "ai-time", "review-time"];
-        document.getElementById("spec-count-output").textContent = `${numberValue(inputs["spec-count"])} 个`;
-        document.getElementById("rework-rate-output").textContent = `${numberValue(inputs["rework-rate"])}%`;
+        const minuteIds = ["spec-edit", "ai-plan", "plan-review", "code-landing"];
+        const specCount = numberValue(inputs["spec-count"]);
+        const revisionRounds = numberValue(inputs["revision-rounds"]);
+        document.getElementById("spec-count-output").textContent = `${specCount} 个`;
+        document.getElementById("revision-rounds-output").textContent = `${revisionRounds.toFixed(2)} 轮`;
+        inputs["spec-count"].setAttribute("aria-valuetext", `${specCount} 个 SPEC`);
+        inputs["revision-rounds"].setAttribute("aria-valuetext", `${revisionRounds.toFixed(2)} 轮`);
         minuteIds.forEach((id) => {
-          document.getElementById(`${id}-output`).textContent = `${formatMinutes(numberValue(inputs[id]))} 分钟`;
+          const valueText = `${formatMinutes(numberValue(inputs[id]))} 分钟`;
+          document.getElementById(`${id}-output`).textContent = valueText;
+          inputs[id].setAttribute("aria-valuetext", valueText);
         });
       }
 
-      function calculateDocument(state, roundsPerSpec, activeTime) {
+      function calculateDocumentPlan(state, roundsPerSpec) {
         const pendingResults = [];
         let humanAt = 0;
-        let firstFeedback = Number.POSITIVE_INFINITY;
 
         for (let spec = 0; spec < state.specCount; spec += 1) {
-          humanAt += state.editTime;
-          const ready = humanAt + state.aiTime;
-          firstFeedback = Math.min(firstFeedback, ready);
+          humanAt += state.specEditTime;
+          const ready = humanAt + state.aiPlanTime;
           pendingResults.push({ spec, round: 1, ready });
         }
 
@@ -653,21 +729,40 @@
           pendingResults.sort((left, right) => left.ready - right.ready || left.spec - right.spec || left.round - right.round);
           const result = pendingResults.shift();
           humanAt = Math.max(humanAt, result.ready);
-          humanAt += state.reviewTime;
+          humanAt += state.planReviewTime;
 
           if (result.round < roundsPerSpec[result.spec]) {
-            humanAt += state.editTime;
-            const ready = humanAt + state.aiTime;
+            humanAt += state.specEditTime;
+            const ready = humanAt + state.aiPlanTime;
             pendingResults.push({ spec: result.spec, round: result.round + 1, ready });
           }
         }
 
-        return {
-          total: humanAt,
-          active: activeTime,
-          wait: Math.max(0, humanAt - activeTime),
-          first: firstFeedback
-        };
+        return humanAt;
+      }
+
+      function calculateExpectedDocumentPlan(state) {
+        const secondRoundProbability = state.revisionRounds - 1;
+        const scenarioCount = 2 ** state.specCount;
+        let expectedPlanTime = 0;
+        let totalProbability = 0;
+
+        for (let mask = 0; mask < scenarioCount; mask += 1) {
+          const roundsPerSpec = Array.from(
+            { length: state.specCount },
+            (_, spec) => ((mask >> spec) & 1) + 1
+          );
+          const secondRoundCount = roundsPerSpec.reduce((sum, rounds) => sum + rounds - 1, 0);
+          const probability =
+            secondRoundProbability ** secondRoundCount *
+            (1 - secondRoundProbability) ** (state.specCount - secondRoundCount);
+          if (probability === 0) continue;
+
+          totalProbability += probability;
+          expectedPlanTime += probability * calculateDocumentPlan(state, roundsPerSpec);
+        }
+
+        return totalProbability > 0 ? expectedPlanTime / totalProbability : 0;
       }
 
       function calculate() {
@@ -675,90 +770,69 @@
 
         const state = {
           specCount: numberValue(inputs["spec-count"]),
-          editTime: numberValue(inputs["spec-edit"]),
-          aiTime: numberValue(inputs["ai-time"]),
-          reviewTime: numberValue(inputs["review-time"]),
-          reworkRate: numberValue(inputs["rework-rate"]) / 100
+          revisionRounds: numberValue(inputs["revision-rounds"]),
+          specEditTime: numberValue(inputs["spec-edit"]),
+          aiPlanTime: numberValue(inputs["ai-plan"]),
+          planReviewTime: numberValue(inputs["plan-review"]),
+          codeLandingTime: numberValue(inputs["code-landing"])
         };
-        const results = Object.fromEntries(["instant", "email", "document"].map((mode) => [mode, {
-          total: 0,
-          active: 0,
-          wait: 0,
-          first: 0
-        }]));
-        const scenarioCount = 2 ** state.specCount;
+        const specRevisions = state.specCount * state.revisionRounds;
+        const commonPlan = specRevisions * (state.specEditTime + state.planReviewTime);
+        const commonBase = commonPlan + state.codeLandingTime;
+        const documentPlan = calculateExpectedDocumentPlan(state);
+        const results = {
+          instant: {
+            plan: specRevisions * (state.specEditTime + state.aiPlanTime + state.planReviewTime),
+            code: specRevisions * state.codeLandingTime
+          },
+          email: {
+            plan: state.revisionRounds * (
+              state.specCount * (state.specEditTime + state.planReviewTime) + state.aiPlanTime
+            ),
+            code: state.codeLandingTime
+          },
+          document: {
+            plan: documentPlan,
+            code: state.codeLandingTime
+          }
+        };
 
-        for (let mask = 0; mask < scenarioCount; mask += 1) {
-          const roundsPerSpec = Array.from(
-            { length: state.specCount },
-            (_, spec) => ((mask >> spec) & 1) + 1
-          );
-          const reworkCount = roundsPerSpec.reduce((sum, rounds) => sum + rounds - 1, 0);
-          const probability =
-            state.reworkRate ** reworkCount *
-            (1 - state.reworkRate) ** (state.specCount - reworkCount);
-          if (probability === 0) continue;
+        Object.values(results).forEach((result) => {
+          result.total = result.plan + result.code;
+          result.overhead = Math.max(0, result.total - commonBase);
+        });
 
-          const totalSpecRounds = state.specCount + reworkCount;
-          const activeTime =
-            totalSpecRounds * (state.editTime + state.reviewTime);
-          const scenarioResults = {
-            instant: {
-              total: activeTime + totalSpecRounds * state.aiTime,
-              active: activeTime,
-              wait: totalSpecRounds * state.aiTime,
-              first: state.editTime + state.aiTime
-            },
-            email: {
-              total:
-                state.specCount * (state.editTime + state.reviewTime) +
-                state.aiTime +
-                (reworkCount === 0 ? 0 :
-                  reworkCount * (state.editTime + state.reviewTime) +
-                  state.aiTime),
-              active: activeTime,
-              first: state.specCount * state.editTime + state.aiTime
-            },
-            document: calculateDocument(state, roundsPerSpec, activeTime)
-          };
-          scenarioResults.email.wait = Math.max(0, scenarioResults.email.total - activeTime);
+        document.getElementById("spec-revisions").textContent = specRevisions.toFixed(2);
+        document.getElementById("email-batch-rounds").textContent = state.revisionRounds.toFixed(2);
+        document.getElementById("common-base").textContent = `${formatMinutes(commonBase)} 分钟`;
 
-          Object.entries(scenarioResults).forEach(([mode, result]) => {
-            Object.keys(results[mode]).forEach((metric) => {
-              results[mode][metric] += probability * result[metric];
-            });
-          });
-        }
-
-        const expectedReworks = state.specCount * state.reworkRate;
-        document.getElementById("rework-specs").textContent = expectedReworks.toFixed(2);
-        document.getElementById("spec-rounds").textContent = (state.specCount + expectedReworks).toFixed(2);
-        document.getElementById("average-rounds").textContent = (1 + state.reworkRate).toFixed(2);
-
-        const fastest = Math.min(...Object.values(results).map((result) => result.total));
+        const fastestPlan = Math.min(...Object.values(results).map((result) => result.plan));
         Object.entries(results).forEach(([mode, result]) => {
           const card = document.querySelector(`.result-card[data-mode="${mode}"]`);
-          card.dataset.winner = String(Math.abs(result.total - fastest) < 0.001);
-          card.querySelector("[data-total]").textContent = formatMinutes(result.total);
-          card.querySelector("[data-active]").textContent = `${formatMinutes(result.active)} 分钟`;
-          card.querySelector("[data-wait]").textContent = `${formatMinutes(result.wait)} 分钟`;
-          card.querySelector("[data-first]").textContent = `${formatMinutes(result.first)} 分钟`;
+          card.dataset.winner = String(Math.abs(result.plan - fastestPlan) < 0.001);
+          card.querySelector("[data-plan]").textContent = formatMinutes(result.plan);
+          card.querySelector("[data-code]").textContent = `${formatMinutes(result.code)} 分钟`;
+          card.querySelector("[data-total]").textContent = `${formatMinutes(result.total)} 分钟`;
+          card.querySelector("[data-overhead]").textContent = `${formatMinutes(result.overhead)} 分钟`;
         });
 
         const maximum = Math.max(...Object.values(results).map((result) => result.total), 1);
         Object.entries(results).forEach(([mode, result]) => {
           const row = document.querySelector(`.bar-row[data-mode="${mode}"]`);
-          row.querySelector(".bar-fill").style.width = `${(result.total / maximum) * 100}%`;
+          row.querySelector(".bar-base").style.width = `${(commonBase / maximum) * 100}%`;
+          row.querySelector(".bar-overhead").style.width = `${(result.overhead / maximum) * 100}%`;
           row.querySelector(".bar-value").textContent = `${formatMinutes(result.total)} 分钟`;
+          row.querySelector(".bar-track").setAttribute(
+            "aria-label",
+            `${modeNames[mode]}总耗时${formatMinutes(result.total)}分钟，其中共同基础成本${formatMinutes(commonBase)}分钟，模式开销${formatMinutes(result.overhead)}分钟。`
+          );
         });
 
         const fastestModes = Object.entries(results)
-          .filter(([, result]) => Math.abs(result.total - fastest) < 0.001)
-          .map(([mode]) => ({ instant: "即时通讯", email: "邮件通讯", document: "文档协作" })[mode]);
-        document.getElementById("result-output").setAttribute(
-          "aria-label",
-          `模拟完成：${fastestModes.join("和")}最快，总耗时${formatMinutes(fastest)}分钟。`
-        );
+          .filter(([, result]) => Math.abs(result.plan - fastestPlan) < 0.001)
+          .map(([mode]) => modeNames[mode]);
+        document.getElementById("result-announcement").textContent =
+          `模拟完成：${fastestModes.join("和")}的方案确认最快，需要${formatMinutes(fastestPlan)}分钟。`;
 
         requestResize();
       }
