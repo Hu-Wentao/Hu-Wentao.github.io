@@ -256,7 +256,7 @@
 
     .round-summary {
       display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
+      grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 8px;
       margin-top: 12px;
     }
@@ -285,7 +285,19 @@
       display: grid;
       grid-template-columns: repeat(3, minmax(0, 1fr));
       gap: 10px;
+      margin-top: 10px;
+    }
+
+    .flow-section {
       margin-top: 14px;
+    }
+
+    .flow-section > h2 {
+      margin-left: 2px;
+    }
+
+    .flow-section > .section-copy {
+      margin: 0 2px;
     }
 
     .result-card {
@@ -386,6 +398,21 @@
       margin-top: 16px;
     }
 
+    .comparison-base {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px 8px;
+      align-items: baseline;
+      margin: 10px 0 0;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .comparison-base strong {
+      color: var(--accent);
+      font-size: 16px;
+    }
+
     .bar-legend {
       display: flex;
       flex-wrap: wrap;
@@ -409,7 +436,12 @@
     }
 
     .legend-swatch.overhead {
-      background: var(--document);
+      background: linear-gradient(
+        90deg,
+        var(--instant) 0 33%,
+        var(--email) 33% 66%,
+        var(--document) 66% 100%
+      );
     }
 
     .bar-row {
@@ -482,6 +514,16 @@
       margin-bottom: 0;
     }
 
+    .details-body h3 {
+      margin: 16px 0 6px;
+      color: var(--text);
+      font-size: 13px;
+    }
+
+    .details-body h3:first-child {
+      margin-top: 0;
+    }
+
     .formula {
       display: block;
       margin: 8px 0;
@@ -551,7 +593,7 @@
     <header class="hero">
       <div class="eyebrow">需求 → 方案 → 代码</div>
       <h1>三种协作模式耗时模拟器</h1>
-      <p>同一个平均 1.5 轮，在即时通讯中作用于每个 SPEC 的“方案 + 代码”，在邮件中作用于整个批次，在文档中则被增量修订过程吸收。三种模式使用相同的共同基础成本，只改变暴露在关键路径上的模式开销。</p>
+      <p>先按三种模式实际发生的流程计算“需求到方案”和“方案到代码”，再从完整结果中提取共同项进行横向比较。平均 1.5 轮在即时通讯、邮件通讯和文档协作中的调度单位并不相同。</p>
     </header>
 
     <section class="panel" aria-labelledby="workload-heading">
@@ -573,7 +615,6 @@
       <div class="round-summary">
         <div class="summary-chip"><small><span class="tooltip-label" tabindex="0" data-tooltip="SPEC 数量乘以平均修订轮数；用于即时通讯和文档协作。">SPEC 修订总量<span class="tooltip-icon" aria-hidden="true">?</span></span></small><strong id="spec-revisions">6.00</strong></div>
         <div class="summary-chip"><small><span class="tooltip-label" tabindex="0" data-tooltip="邮件把全部 SPEC 作为整体，整个批次平均往返的轮数。">邮件整批轮数<span class="tooltip-icon" aria-hidden="true">?</span></span></small><strong id="email-batch-rounds">1.50</strong></div>
-        <div class="summary-chip"><small><span class="tooltip-label" tabindex="0" data-tooltip="所有模式共同的方案编辑与审查，加上一次代码落地。">共同基础成本<span class="tooltip-icon" aria-hidden="true">?</span></span></small><strong id="common-base">0 分钟</strong></div>
       </div>
     </section>
 
@@ -605,45 +646,47 @@
     </section>
 
     <p id="result-announcement" class="sr-only" aria-live="polite" aria-atomic="true"></p>
-    <section class="results" aria-label="三种协作模式的模拟结果">
-      <article class="result-card" data-mode="instant">
-        <div class="result-heading"><h3><span class="tooltip-label" tabindex="0" data-tooltip="每个 SPEC 修订都串行形成隐式方案并立即修改代码。">即时通讯<span class="tooltip-icon" aria-hidden="true">?</span></span></h3><span class="winner">方案最快</span></div>
-        <div class="primary-label">需求 → 方案确认（活动归因）</div>
-        <div class="total-time tooltip-label" tabindex="0" data-tooltip="方案与代码实际交错发生；这里把编辑、AI 隐式方案和方案审查归入方案贡献。"><strong data-plan>0</strong><span>分钟</span><span class="tooltip-icon" aria-hidden="true">?</span></div>
-        <dl class="metrics">
-          <dt><span class="tooltip-label" tabindex="0" data-tooltip="每次 SPEC 修订都会同步支付一次代码落地成本。">代码贡献<span class="tooltip-icon" aria-hidden="true">?</span></span></dt><dd data-code>0 分钟</dd>
-          <dt><span class="tooltip-label" tabindex="0" data-tooltip="方案贡献与代码贡献之和。">端到端总耗时<span class="tooltip-icon" aria-hidden="true">?</span></span></dt><dd data-total>0 分钟</dd>
-          <dt><span class="tooltip-label" tabindex="0" data-tooltip="总耗时减去共同基础成本，包括串行 AI 方案等待和重复代码落地。">模式开销<span class="tooltip-icon" aria-hidden="true">?</span></span></dt><dd data-overhead>0 分钟</dd>
-        </dl>
-      </article>
-      <article class="result-card" data-mode="email">
-        <div class="result-heading"><h3><span class="tooltip-label" tabindex="0" data-tooltip="全部 SPEC 作为一个邮件批次，整个批次平均往返指定轮数。">邮件通讯<span class="tooltip-icon" aria-hidden="true">?</span></span></h3><span class="winner">方案最快</span></div>
-        <div class="primary-label">需求 → 方案确认</div>
-        <div class="total-time tooltip-label" tabindex="0" data-tooltip="每一轮都编辑、并行处理并审查整个邮件批次。"><strong data-plan>0</strong><span>分钟</span><span class="tooltip-icon" aria-hidden="true">?</span></div>
-        <dl class="metrics">
-          <dt><span class="tooltip-label" tabindex="0" data-tooltip="整批方案确认后只落地一次代码。">方案 → 代码落地<span class="tooltip-icon" aria-hidden="true">?</span></span></dt><dd data-code>0 分钟</dd>
-          <dt><span class="tooltip-label" tabindex="0" data-tooltip="方案确认时间与一次代码落地之和。">端到端总耗时<span class="tooltip-icon" aria-hidden="true">?</span></span></dt><dd data-total>0 分钟</dd>
-          <dt><span class="tooltip-label" tabindex="0" data-tooltip="整个邮件批次每轮暴露在关键路径上的 AI 方案处理时间。">模式开销<span class="tooltip-icon" aria-hidden="true">?</span></span></dt><dd data-overhead>0 分钟</dd>
-        </dl>
-      </article>
-      <article class="result-card" data-mode="document">
-        <div class="result-heading"><h3><span class="tooltip-label" tabindex="0" data-tooltip="每个 SPEC 的修订发生在文档内部；增量任务可与开发者继续编辑重叠。">文档协作<span class="tooltip-icon" aria-hidden="true">?</span></span></h3><span class="winner">方案最快</span></div>
-        <div class="primary-label">需求 → 方案确认</div>
-        <div class="total-time tooltip-label" tabindex="0" data-tooltip="共同方案工作加上无法被其他编辑或审查覆盖的 AI 等待。"><strong data-plan>0</strong><span>分钟</span><span class="tooltip-icon" aria-hidden="true">?</span></div>
-        <dl class="metrics">
-          <dt><span class="tooltip-label" tabindex="0" data-tooltip="文档确认后只落地一次代码。">方案 → 代码落地<span class="tooltip-icon" aria-hidden="true">?</span></span></dt><dd data-code>0 分钟</dd>
-          <dt><span class="tooltip-label" tabindex="0" data-tooltip="方案确认时间与一次代码落地之和。">端到端总耗时<span class="tooltip-icon" aria-hidden="true">?</span></span></dt><dd data-total>0 分钟</dd>
-          <dt><span class="tooltip-label" tabindex="0" data-tooltip="文档调度中没有被开发者编辑或审查覆盖的 AI 等待时间。">模式开销<span class="tooltip-icon" aria-hidden="true">?</span></span></dt><dd data-overhead>0 分钟</dd>
-        </dl>
-      </article>
+    <section class="flow-section" aria-labelledby="flow-heading">
+      <h2 id="flow-heading">第一层：按流程计算</h2>
+      <p class="section-copy">先看每种模式实际经历的方案和代码步骤；此处不使用共同基础成本进行改写。</p>
+      <div class="results" aria-label="三种协作模式的流程计算结果">
+        <article class="result-card" data-mode="instant">
+          <div class="result-heading"><h3><span class="tooltip-label" tabindex="0" data-tooltip="每个 SPEC 修订都串行形成隐式方案并立即修改代码。">即时通讯<span class="tooltip-icon" aria-hidden="true">?</span></span></h3><span class="winner">方案最快</span></div>
+          <div class="primary-label">需求 → 方案确认（活动归因）</div>
+          <div class="total-time tooltip-label" tabindex="0" data-tooltip="方案与代码实际交错发生；这里把编辑、AI 隐式方案和方案审查归入方案贡献。"><strong data-plan>0</strong><span>分钟</span><span class="tooltip-icon" aria-hidden="true">?</span></div>
+          <dl class="metrics">
+            <dt><span class="tooltip-label" tabindex="0" data-tooltip="每次 SPEC 修订都会同步支付一次代码落地成本。">代码贡献<span class="tooltip-icon" aria-hidden="true">?</span></span></dt><dd data-code>0 分钟</dd>
+            <dt><span class="tooltip-label" tabindex="0" data-tooltip="方案贡献与代码贡献之和。">端到端总耗时<span class="tooltip-icon" aria-hidden="true">?</span></span></dt><dd data-total>0 分钟</dd>
+          </dl>
+        </article>
+        <article class="result-card" data-mode="email">
+          <div class="result-heading"><h3><span class="tooltip-label" tabindex="0" data-tooltip="全部 SPEC 作为一个邮件批次，整个批次平均往返指定轮数。">邮件通讯<span class="tooltip-icon" aria-hidden="true">?</span></span></h3><span class="winner">方案最快</span></div>
+          <div class="primary-label">需求 → 方案确认</div>
+          <div class="total-time tooltip-label" tabindex="0" data-tooltip="每一轮都编辑、并行处理并审查整个邮件批次。"><strong data-plan>0</strong><span>分钟</span><span class="tooltip-icon" aria-hidden="true">?</span></div>
+          <dl class="metrics">
+            <dt><span class="tooltip-label" tabindex="0" data-tooltip="整批方案确认后只落地一次代码。">方案 → 代码落地<span class="tooltip-icon" aria-hidden="true">?</span></span></dt><dd data-code>0 分钟</dd>
+            <dt><span class="tooltip-label" tabindex="0" data-tooltip="方案确认时间与一次代码落地之和。">端到端总耗时<span class="tooltip-icon" aria-hidden="true">?</span></span></dt><dd data-total>0 分钟</dd>
+          </dl>
+        </article>
+        <article class="result-card" data-mode="document">
+          <div class="result-heading"><h3><span class="tooltip-label" tabindex="0" data-tooltip="每个 SPEC 的修订发生在文档内部；增量任务可与开发者继续编辑重叠。">文档协作<span class="tooltip-icon" aria-hidden="true">?</span></span></h3><span class="winner">方案最快</span></div>
+          <div class="primary-label">需求 → 方案确认</div>
+          <div class="total-time tooltip-label" tabindex="0" data-tooltip="全部 SPEC 编辑与方案审查，再加上无法被开发者工作覆盖的 AI 等待。"><strong data-plan>0</strong><span>分钟</span><span class="tooltip-icon" aria-hidden="true">?</span></div>
+          <dl class="metrics">
+            <dt><span class="tooltip-label" tabindex="0" data-tooltip="文档确认后只落地一次代码。">方案 → 代码落地<span class="tooltip-icon" aria-hidden="true">?</span></span></dt><dd data-code>0 分钟</dd>
+            <dt><span class="tooltip-label" tabindex="0" data-tooltip="方案确认时间与一次代码落地之和。">端到端总耗时<span class="tooltip-icon" aria-hidden="true">?</span></span></dt><dd data-total>0 分钟</dd>
+          </dl>
+        </article>
+      </div>
     </section>
 
     <section class="panel" aria-labelledby="comparison-heading">
-      <h2 id="comparison-heading">共同基础成本 + 模式开销</h2>
-      <p class="section-copy">三条使用同一时间尺度。灰色部分是三种模式共同需要完成的工作，彩色部分是各自额外暴露在关键路径上的时间。</p>
+      <h2 id="comparison-heading">第二层：提取共同项进行比较</h2>
+      <p class="section-copy">流程结果计算完成后，再把三种模式都包含的编辑、审查和一次代码落地提取出来。这是数学上的对比优化，不是额外的流程阶段。</p>
+      <p class="comparison-base">优化后提取的共同基础成本 <strong id="common-base">0 分钟</strong></p>
       <div class="bar-legend" aria-hidden="true">
         <span class="legend-item"><span class="legend-swatch"></span>共同基础成本</span>
-        <span class="legend-item"><span class="legend-swatch overhead"></span>模式开销</span>
+        <span class="legend-item"><span class="legend-swatch overhead"></span>各模式开销</span>
       </div>
       <div class="comparison-list">
         <div class="bar-row" data-mode="instant"><span class="bar-label tooltip-label" tabindex="0" data-tooltip="即时通讯：共同基础成本加串行方案等待和重复代码落地。">即时通讯<span class="tooltip-icon" aria-hidden="true">?</span></span><div class="bar-track" role="img"><div class="bar-base"></div><div class="bar-overhead"></div></div><span class="bar-value">0 分钟</span></div>
@@ -653,14 +696,23 @@
     </section>
 
     <details>
-      <summary>查看公式、调度策略与边界</summary>
+      <summary>查看流程公式、优化公式与模型边界</summary>
       <div class="details-body">
+        <h3>第一层：按流程展开</h3>
         <span class="formula">SPEC 修订总量 = SPEC 数量 × 平均修订轮数</span>
-        <span class="formula">共同方案成本 = SPEC 修订总量 ×（SPEC 编辑 + 方案审查）</span>
-        <span class="formula">共同基础成本 = 共同方案成本 + 一次代码落地</span>
-        <span class="formula">即时总耗时 = SPEC 修订总量 ×（SPEC 编辑 + AI 方案处理 + 方案审查 + 一次代码落地）</span>
-        <span class="formula">邮件总耗时 = 平均修订轮数 ×［SPEC 数量 ×（SPEC 编辑 + 方案审查）+ AI 方案处理］+ 一次代码落地</span>
+        <span class="formula">即时总耗时 = SPEC 修订总量 ×（SPEC 编辑 + AI 方案处理 + 一次代码落地 + 方案审查）</span>
+        <span class="formula">邮件总耗时 = 平均修订轮数 ×［SPEC 数量 × SPEC 编辑 + AI 方案处理 + SPEC 数量 × 方案审查］+ 一次代码落地</span>
+        <span class="formula">文档总耗时 = SPEC 修订总量 × SPEC 编辑 + 文档中未被覆盖的 AI 等待 + SPEC 修订总量 × 方案审查 + 一次代码落地</span>
+        <p>即时通讯的方案和代码在每轮中交错发生；邮件和文档则在方案确认后只落地一次代码。</p>
+
+        <h3>第二层：提取共同项</h3>
+        <span class="formula">共同基础成本 = SPEC 修订总量 × SPEC 编辑 + SPEC 修订总量 × 方案审查 + 一次代码落地</span>
+        <span class="formula">即时总耗时 = 共同基础成本 + SPEC 修订总量 × AI 方案处理 +（SPEC 修订总量 − 1）× 一次代码落地</span>
+        <span class="formula">邮件总耗时 = 共同基础成本 + 平均修订轮数 × AI 方案处理</span>
         <span class="formula">文档总耗时 = 共同基础成本 + 文档中未被覆盖的 AI 等待</span>
+        <p>这组公式只用于横向比较。模式开销等于模式总耗时减去共同基础成本，并不一定代表无效工作。</p>
+
+        <h3>调度假设与边界</h3>
         <p>平均 1.5 轮包含首轮。即时与文档把它解释为每个 SPEC 的平均修订轮数；邮件把它解释为整个批次的平均往返轮数。</p>
         <p>文档协作先连续完成所有首轮编辑，同时增量提交 AI；之后优先审查最早完成的结果，需要修订时立即编辑并再次提交。模拟器只为文档模式枚举 SPEC 的第二轮组合，邮件不会沿用这个概率模型。</p>
         <ul>
@@ -813,7 +865,6 @@
           card.querySelector("[data-plan]").textContent = formatMinutes(result.plan);
           card.querySelector("[data-code]").textContent = `${formatMinutes(result.code)} 分钟`;
           card.querySelector("[data-total]").textContent = `${formatMinutes(result.total)} 分钟`;
-          card.querySelector("[data-overhead]").textContent = `${formatMinutes(result.overhead)} 分钟`;
         });
 
         const maximum = Math.max(...Object.values(results).map((result) => result.total), 1);
