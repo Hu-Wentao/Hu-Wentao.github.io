@@ -460,109 +460,94 @@
       text-align: right;
     }
 
-    .sensitivity-controls {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 10px;
+    .workflow-section {
       margin-top: 14px;
     }
 
-    .axis-control {
+    .workflow-list {
+      margin-top: 8px;
+    }
+
+    .workflow-row {
       display: grid;
-      gap: 6px;
+      grid-template-columns: 90px minmax(0, 1fr) minmax(135px, auto);
+      gap: 12px;
+      align-items: center;
       min-width: 0;
-      color: var(--muted);
-      font-size: 12px;
+      padding: 12px 0;
+      border-top: 1px solid var(--border);
     }
 
-    .axis-control span {
-      color: var(--text);
-      font-weight: 680;
+    .workflow-row:first-child {
+      padding-top: 6px;
+      border-top: 0;
     }
 
-    .axis-control select {
-      width: 100%;
-      min-height: 42px;
-      padding: 8px 10px;
-      border: 1px solid var(--border);
+    .workflow-row:last-child {
+      padding-bottom: 0;
+    }
+
+    .workflow-row[data-mode="instant"] { --mode-color: var(--instant); }
+    .workflow-row[data-mode="email"] { --mode-color: var(--email); }
+    .workflow-row[data-mode="document"] { --mode-color: var(--document); }
+
+    .workflow-row h3 {
+      margin: 0;
+      font-size: 15px;
+    }
+
+    .workflow-path {
+      display: flex;
+      gap: 5px;
+      align-items: stretch;
+      min-width: 0;
+    }
+
+    .workflow-stage {
+      display: grid;
+      flex: 1;
+      min-width: 0;
+      min-height: 58px;
+      padding: 7px 6px;
+      place-content: center;
       border-radius: 8px;
-      background: var(--surface-soft);
-      color: var(--text);
+      background: color-mix(in srgb, var(--mode-color) 14%, var(--surface-soft));
+      text-align: center;
     }
 
-    .sensitivity-guide {
-      margin: 12px 0 0;
-      color: var(--muted);
-      font-size: 11px;
-    }
-
-    .sensitivity-guide strong {
-      color: var(--text);
-    }
-
-    .sensitivity-maps {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
-      gap: 18px;
-      margin-top: 14px;
-    }
-
-    .sensitivity-map {
-      min-width: 0;
-    }
-
-    .sensitivity-map[data-mode="instant"] { --mode-color: var(--instant); }
-    .sensitivity-map[data-mode="email"] { --mode-color: var(--email); }
-    .sensitivity-map[data-mode="document"] { --mode-color: var(--document); }
-
-    .sensitivity-map h3 {
-      margin-bottom: 7px;
-      font-size: 13px;
-    }
-
-    .heatmap-grid {
-      width: 100%;
-      table-layout: fixed;
-      border-spacing: 4px;
-    }
-
-    .heatmap-corner,
-    .heatmap-header,
-    .heatmap-row-label {
-      min-width: 0;
-      height: 28px;
+    .workflow-stage span {
       color: var(--muted);
       font-size: 11px;
       line-height: 1.25;
-      text-align: center;
-      vertical-align: middle;
     }
 
-    .heatmap-corner {
-      width: 50px;
+    .workflow-stage strong {
+      margin-top: 3px;
+      font-size: 12px;
+      font-weight: 500;
+      line-height: 1.2;
     }
 
-    .heatmap-cell {
-      position: relative;
-      min-width: 0;
-      height: 42px;
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      background: color-mix(
-        in srgb,
-        var(--mode-color) var(--ratio-intensity, 8%),
-        var(--surface)
-      );
-      color: var(--text);
-      font-size: 11px;
-      font-weight: 700;
+    .workflow-arrow {
+      align-self: center;
+      color: var(--mode-color);
+      font-size: 15px;
+      font-weight: 500;
       line-height: 1;
-      text-align: center;
-      vertical-align: middle;
     }
 
-    .heatmap-cell[data-fastest="true"] {
-      box-shadow: inset 0 0 0 1px var(--mode-color);
+    .workflow-repeat {
+      color: var(--muted);
+      font-size: 11px;
+      line-height: 1.35;
+    }
+
+    .workflow-repeat strong {
+      display: block;
+      margin-bottom: 2px;
+      color: var(--text);
+      font-size: 12px;
+      font-weight: 500;
     }
 
     details {
@@ -642,9 +627,7 @@
 
       .controls-grid,
       .results,
-      .input-panels,
-      .sensitivity-controls,
-      .sensitivity-maps {
+      .input-panels {
         grid-template-columns: 1fr;
       }
 
@@ -656,8 +639,19 @@
         grid-template-columns: 82px minmax(0, 1fr) minmax(72px, auto);
       }
 
-      .heatmap-corner {
-        width: 44px;
+      .workflow-row {
+        grid-template-columns: 1fr;
+        gap: 8px;
+        align-items: start;
+      }
+
+      .workflow-path {
+        flex-direction: column;
+      }
+
+      .workflow-arrow {
+        align-self: center;
+        transform: rotate(90deg);
       }
     }
 
@@ -724,6 +718,53 @@
       </section>
     </div>
 
+    <section class="panel workflow-section" aria-labelledby="workflow-heading">
+      <h2 id="workflow-heading">三种模式工作循环</h2>
+      <div class="workflow-list">
+        <article class="workflow-row" data-mode="instant">
+          <h3>即时通讯</h3>
+          <div class="workflow-path" data-workflow-path="instant" role="img" aria-label="即时通讯工作循环">
+            <div class="workflow-stage"><span>SPEC 编辑</span><strong data-workflow-time="instant-edit">5 分钟</strong></div>
+            <span class="workflow-arrow" aria-hidden="true">→</span>
+            <div class="workflow-stage"><span>AI 方案处理</span><strong data-workflow-time="instant-ai">8 分钟</strong></div>
+            <span class="workflow-arrow" aria-hidden="true">→</span>
+            <div class="workflow-stage"><span>代码落地</span><strong data-workflow-time="instant-code">8 分钟</strong></div>
+            <span class="workflow-arrow" aria-hidden="true">→</span>
+            <div class="workflow-stage"><span>方案审查</span><strong data-workflow-time="instant-review">3 分钟</strong></div>
+          </div>
+          <div class="workflow-repeat"><strong data-workflow-repeat="instant">↺ 整条循环 × 6.00</strong><span>每次 SPEC 修订</span></div>
+        </article>
+
+        <article class="workflow-row" data-mode="email">
+          <h3>邮件通讯</h3>
+          <div class="workflow-path" data-workflow-path="email" role="img" aria-label="邮件通讯工作循环">
+            <div class="workflow-stage"><span>整批 SPEC 编辑</span><strong data-workflow-time="email-edit">20 分钟</strong></div>
+            <span class="workflow-arrow" aria-hidden="true">→</span>
+            <div class="workflow-stage"><span>AI 并行处理</span><strong data-workflow-time="email-ai">8 分钟</strong></div>
+            <span class="workflow-arrow" aria-hidden="true">→</span>
+            <div class="workflow-stage"><span>整批方案审查</span><strong data-workflow-time="email-review">12 分钟</strong></div>
+            <span class="workflow-arrow" aria-hidden="true">→</span>
+            <div class="workflow-stage"><span>代码落地</span><strong data-workflow-time="email-code">8 分钟</strong></div>
+          </div>
+          <div class="workflow-repeat"><strong data-workflow-repeat="email">↺ 整批循环 × 1.50</strong><span>代码落地仅 1 次</span></div>
+        </article>
+
+        <article class="workflow-row" data-mode="document">
+          <h3>文档协作</h3>
+          <div class="workflow-path" data-workflow-path="document" role="img" aria-label="文档协作工作循环">
+            <div class="workflow-stage"><span>SPEC 编辑</span><strong data-workflow-time="document-edit">5 分钟</strong></div>
+            <span class="workflow-arrow" aria-hidden="true">→</span>
+            <div class="workflow-stage"><span>AI 并行处理</span><strong data-workflow-time="document-ai">8 分钟</strong></div>
+            <span class="workflow-arrow" aria-hidden="true">→</span>
+            <div class="workflow-stage"><span>方案审查</span><strong data-workflow-time="document-review">3 分钟</strong></div>
+            <span class="workflow-arrow" aria-hidden="true">→</span>
+            <div class="workflow-stage"><span>代码落地</span><strong data-workflow-time="document-code">8 分钟</strong></div>
+          </div>
+          <div class="workflow-repeat"><strong data-workflow-repeat="document">↺ 预计提交 × 6.00</strong><span>AI 可并行，代码落地 1 次</span></div>
+        </article>
+      </div>
+    </section>
+
     <p id="result-announcement" class="sr-only" aria-live="polite" aria-atomic="true"></p>
     <section class="flow-section" aria-labelledby="flow-heading">
       <h2 id="flow-heading">第一层：按流程计算</h2>
@@ -769,51 +810,6 @@
         <div class="bar-row" data-mode="instant"><span class="bar-label tooltip-label" tabindex="0" data-tooltip="即时通讯：共同基础成本加串行方案等待和重复代码落地。">即时通讯<span class="tooltip-icon" aria-hidden="true">?</span></span><div class="bar-track" role="img"><div class="bar-base"></div><div class="bar-overhead"></div></div><span class="bar-value">0 分钟</span></div>
         <div class="bar-row" data-mode="email"><span class="bar-label tooltip-label" tabindex="0" data-tooltip="邮件通讯：共同基础成本加整批每轮的 AI 方案等待。">邮件通讯<span class="tooltip-icon" aria-hidden="true">?</span></span><div class="bar-track" role="img"><div class="bar-base"></div><div class="bar-overhead"></div></div><span class="bar-value">0 分钟</span></div>
         <div class="bar-row" data-mode="document"><span class="bar-label tooltip-label" tabindex="0" data-tooltip="文档协作：共同基础成本加未被开发者工作覆盖的 AI 等待。">文档协作<span class="tooltip-icon" aria-hidden="true">?</span></span><div class="bar-track" role="img"><div class="bar-base"></div><div class="bar-overhead"></div></div><span class="bar-value">0 分钟</span></div>
-      </div>
-    </section>
-
-    <section class="panel" aria-labelledby="sensitivity-heading">
-      <h2 id="sensitivity-heading">双参数敏感性分析</h2>
-      <div class="sensitivity-controls">
-        <label class="axis-control" for="sensitivity-x">
-          <span>横轴参数</span>
-          <select id="sensitivity-x" data-sensitivity-axis="x">
-            <option value="spec-count">SPEC 数量</option>
-            <option value="revision-rounds" selected>平均修订轮数</option>
-            <option value="spec-edit">SPEC 编辑</option>
-            <option value="ai-plan">AI 方案处理</option>
-            <option value="plan-review">方案审查</option>
-            <option value="code-landing">一次代码落地</option>
-          </select>
-        </label>
-        <label class="axis-control" for="sensitivity-y">
-          <span>纵轴参数</span>
-          <select id="sensitivity-y" data-sensitivity-axis="y">
-            <option value="spec-count">SPEC 数量</option>
-            <option value="revision-rounds">平均修订轮数</option>
-            <option value="spec-edit">SPEC 编辑</option>
-            <option value="ai-plan" selected>AI 方案处理</option>
-            <option value="plan-review">方案审查</option>
-            <option value="code-landing">一次代码落地</option>
-          </select>
-        </label>
-      </div>
-      <p class="sensitivity-guide" id="sensitivity-guide">
-        纵轴 <strong data-sensitivity-y-label>AI 方案处理 ↑</strong> · 横轴 <strong data-sensitivity-x-label>平均修订轮数 →</strong>，各取完整范围内 5 个值。1.00× 表示该组合下最快，颜色在 2× 及以上达到最深；倍数只能在同一个格子内比较，不表示不同格子的绝对耗时。
-      </p>
-      <div class="sensitivity-maps" aria-describedby="sensitivity-guide">
-        <section class="sensitivity-map" data-mode="instant" aria-labelledby="sensitivity-instant-heading">
-          <h3 id="sensitivity-instant-heading">即时通讯</h3>
-          <table class="heatmap-grid" data-heatmap="instant"></table>
-        </section>
-        <section class="sensitivity-map" data-mode="email" aria-labelledby="sensitivity-email-heading">
-          <h3 id="sensitivity-email-heading">邮件通讯</h3>
-          <table class="heatmap-grid" data-heatmap="email"></table>
-        </section>
-        <section class="sensitivity-map" data-mode="document" aria-labelledby="sensitivity-document-heading">
-          <h3 id="sensitivity-document-heading">文档协作</h3>
-          <table class="heatmap-grid" data-heatmap="document"></table>
-        </section>
       </div>
     </section>
 
@@ -867,18 +863,6 @@
         email: "邮件通讯",
         document: "文档协作"
       };
-      const parameterDefinitions = {
-        "spec-count": { stateKey: "specCount", label: "SPEC 数量" },
-        "revision-rounds": { stateKey: "revisionRounds", label: "平均修订轮数" },
-        "spec-edit": { stateKey: "specEditTime", label: "SPEC 编辑" },
-        "ai-plan": { stateKey: "aiPlanTime", label: "AI 方案处理" },
-        "plan-review": { stateKey: "planReviewTime", label: "方案审查" },
-        "code-landing": { stateKey: "codeLandingTime", label: "一次代码落地" }
-      };
-      const sensitivityAxes = {
-        x: document.getElementById("sensitivity-x"),
-        y: document.getElementById("sensitivity-y")
-      };
       const documentPlanCache = new Map();
 
       const numberValue = (input) => Number(input.value);
@@ -896,40 +880,6 @@
           planReviewTime: numberValue(inputs["plan-review"]),
           codeLandingTime: numberValue(inputs["code-landing"])
         };
-      }
-
-      function formatParameterValue(parameterId, value, long = false) {
-        if (parameterId === "spec-count") return `${Math.round(value)}${long ? " 个 SPEC" : "个"}`;
-        if (parameterId === "revision-rounds") return `${value.toFixed(2)}${long ? " 轮" : "轮"}`;
-        return `${formatMinutes(value)}${long ? " 分钟" : "分"}`;
-      }
-
-      function snapParameterValue(parameterId, value) {
-        const input = inputs[parameterId];
-        const minimum = Number(input.min);
-        const maximum = Number(input.max);
-        const step = Number(input.step) || 1;
-        const stepText = String(input.step);
-        const precision = stepText.includes(".") ? stepText.split(".")[1].length : 0;
-        const snapped = minimum + Math.round((value - minimum) / step) * step;
-        return Number(Math.min(maximum, Math.max(minimum, snapped)).toFixed(precision));
-      }
-
-      function buildAxisValues(parameterId) {
-        const input = inputs[parameterId];
-        const minimum = Number(input.min);
-        const maximum = Number(input.max);
-        return Array.from(
-          { length: 5 },
-          (_, index) => snapParameterValue(parameterId, minimum + (maximum - minimum) * index / 4)
-        );
-      }
-
-      function formatRatio(ratio, isFastest) {
-        if (isFastest) return "1.00×";
-        if (!Number.isFinite(ratio)) return "不可比";
-        if (ratio < 1.01) return "<1.01×";
-        return `${ratio < 10 ? ratio.toFixed(2) : ratio.toFixed(1)}×`;
       }
 
       function updateOutputs() {
@@ -1047,118 +997,48 @@
         return { specRevisions, commonBase, results };
       }
 
-      function renderSensitivity(state) {
-        const xParameterId = sensitivityAxes.x.value;
-        const yParameterId = sensitivityAxes.y.value;
-        const xDefinition = parameterDefinitions[xParameterId];
-        const yDefinition = parameterDefinitions[yParameterId];
-        const xValues = buildAxisValues(xParameterId);
-        const yValues = buildAxisValues(yParameterId).reverse();
-        const comparisonRows = yValues.map((yValue) => xValues.map((xValue) => {
-          const scenarioState = {
-            ...state,
-            [xDefinition.stateKey]: xValue,
-            [yDefinition.stateKey]: yValue
-          };
-          const { results } = calculateModel(scenarioState);
-          const totals = Object.fromEntries(
-            Object.entries(results).map(([mode, result]) => [mode, result.total])
-          );
-          const fastest = Math.min(...Object.values(totals));
-          const fastestModes = Object.entries(totals)
-            .filter(([, total]) => Math.abs(total - fastest) < 1e-9)
-            .map(([mode]) => mode);
-          return { xValue, yValue, totals, fastest, fastestModes };
-        }));
+      function updateWorkflow(state, specRevisions) {
+        const workflowTimes = {
+          "instant-edit": state.specEditTime,
+          "instant-ai": state.aiPlanTime,
+          "instant-code": state.codeLandingTime,
+          "instant-review": state.planReviewTime,
+          "email-edit": state.specCount * state.specEditTime,
+          "email-ai": state.aiPlanTime,
+          "email-review": state.specCount * state.planReviewTime,
+          "email-code": state.codeLandingTime,
+          "document-edit": state.specEditTime,
+          "document-ai": state.aiPlanTime,
+          "document-review": state.planReviewTime,
+          "document-code": state.codeLandingTime
+        };
 
-        document.querySelector("[data-sensitivity-x-label]").textContent = `${xDefinition.label} →`;
-        document.querySelector("[data-sensitivity-y-label]").textContent = `${yDefinition.label} ↑`;
-
-        Object.keys(modeNames).forEach((mode) => {
-          const table = document.querySelector(`[data-heatmap="${mode}"]`);
-          const caption = document.createElement("caption");
-          caption.className = "sr-only";
-          caption.textContent = `${modeNames[mode]}相对耗时；横轴${xDefinition.label}，纵轴${yDefinition.label}`;
-
-          const tableHead = document.createElement("thead");
-          const headerRow = document.createElement("tr");
-          const corner = document.createElement("th");
-          corner.className = "heatmap-corner";
-          corner.scope = "col";
-          corner.textContent = "纵 / 横";
-          headerRow.append(corner);
-          xValues.forEach((value) => {
-            const header = document.createElement("th");
-            header.className = "heatmap-header";
-            header.scope = "col";
-            header.textContent = formatParameterValue(xParameterId, value);
-            headerRow.append(header);
-          });
-          tableHead.append(headerRow);
-
-          const tableBody = document.createElement("tbody");
-          comparisonRows.forEach((row, rowIndex) => {
-            const tableRow = document.createElement("tr");
-            const rowLabel = document.createElement("th");
-            rowLabel.className = "heatmap-row-label";
-            rowLabel.scope = "row";
-            rowLabel.textContent = formatParameterValue(yParameterId, yValues[rowIndex]);
-            tableRow.append(rowLabel);
-
-            row.forEach((scenario) => {
-              const total = scenario.totals[mode];
-              const allZero = Object.values(scenario.totals).every((value) => Math.abs(value) < 1e-9);
-              const isFastest = scenario.fastestModes.includes(mode);
-              const ratio = scenario.fastest > 1e-9 ? total / scenario.fastest : Number.POSITIVE_INFINITY;
-              const cell = document.createElement("td");
-              cell.className = "heatmap-cell";
-              cell.dataset.fastest = String(isFastest);
-
-              if (allZero) {
-                cell.textContent = "均为 0";
-                cell.style.setProperty("--ratio-intensity", "8%");
-                cell.setAttribute(
-                  "aria-label",
-                  `${modeNames[mode]}；${xDefinition.label}${formatParameterValue(xParameterId, scenario.xValue, true)}；${yDefinition.label}${formatParameterValue(yParameterId, scenario.yValue, true)}；三种模式均为 0 分钟，比例不适用。`
-                );
-              } else {
-                cell.textContent = formatRatio(ratio, isFastest);
-                const intensity = 8 + Math.min(Math.max(ratio - 1, 0), 1) * 28;
-                cell.style.setProperty("--ratio-intensity", `${intensity}%`);
-                const fastestNames = scenario.fastestModes.map((fastestMode) => modeNames[fastestMode]).join("和");
-                const ratioText = Number.isFinite(ratio) ? formatRatio(ratio, isFastest) : "无有限倍数";
-                cell.setAttribute(
-                  "aria-label",
-                  `${modeNames[mode]}；${xDefinition.label}${formatParameterValue(xParameterId, scenario.xValue, true)}；${yDefinition.label}${formatParameterValue(yParameterId, scenario.yValue, true)}；总耗时${formatMinutes(total)}分钟；最快为${fastestNames}${formatMinutes(scenario.fastest)}分钟；相对耗时${ratioText}。`
-                );
-              }
-              tableRow.append(cell);
-            });
-            tableBody.append(tableRow);
-          });
-
-          table.replaceChildren(caption, tableHead, tableBody);
+        Object.entries(workflowTimes).forEach(([stage, minutes]) => {
+          document.querySelector(`[data-workflow-time="${stage}"]`).textContent = `${formatMinutes(minutes)} 分钟`;
         });
 
-        document.getElementById("result-announcement").textContent =
-          `${latestMainAnnouncement}；双参数分析已更新：横轴${xDefinition.label}，纵轴${yDefinition.label}。`;
-        requestResize();
+        document.querySelector('[data-workflow-repeat="instant"]').textContent =
+          `↺ 整条循环 × ${specRevisions.toFixed(2)}`;
+        document.querySelector('[data-workflow-repeat="email"]').textContent =
+          `↺ 整批循环 × ${state.revisionRounds.toFixed(2)}`;
+        document.querySelector('[data-workflow-repeat="document"]').textContent =
+          `↺ 预计提交 × ${specRevisions.toFixed(2)}`;
+
+        document.querySelector('[data-workflow-path="instant"]').setAttribute(
+          "aria-label",
+          `即时通讯工作循环：SPEC 编辑${formatMinutes(state.specEditTime)}分钟，AI 方案处理${formatMinutes(state.aiPlanTime)}分钟，代码落地${formatMinutes(state.codeLandingTime)}分钟，方案审查${formatMinutes(state.planReviewTime)}分钟；整条链路循环${specRevisions.toFixed(2)}次。`
+        );
+        document.querySelector('[data-workflow-path="email"]').setAttribute(
+          "aria-label",
+          `邮件通讯工作循环：整批 SPEC 编辑${formatMinutes(state.specCount * state.specEditTime)}分钟，AI 并行处理${formatMinutes(state.aiPlanTime)}分钟，整批方案审查${formatMinutes(state.specCount * state.planReviewTime)}分钟；前三阶段循环${state.revisionRounds.toFixed(2)}次，代码落地${formatMinutes(state.codeLandingTime)}分钟且仅执行一次。`
+        );
+        document.querySelector('[data-workflow-path="document"]').setAttribute(
+          "aria-label",
+          `文档协作工作循环：SPEC 编辑${formatMinutes(state.specEditTime)}分钟，AI 并行处理${formatMinutes(state.aiPlanTime)}分钟，方案审查${formatMinutes(state.planReviewTime)}分钟；预计提交${specRevisions.toFixed(2)}次，代码落地${formatMinutes(state.codeLandingTime)}分钟且仅执行一次。`
+        );
       }
 
-      let sensitivityTimer = 0;
-      let latestMainAnnouncement = "";
-
-      function scheduleSensitivity(state, immediate = false) {
-        clearTimeout(sensitivityTimer);
-        const render = () => renderSensitivity(state);
-        if (immediate) {
-          render();
-          return;
-        }
-        sensitivityTimer = window.setTimeout(render, 160);
-      }
-
-      function calculate(immediateSensitivity = false) {
+      function calculate() {
         updateOutputs();
 
         const state = readState();
@@ -1167,6 +1047,7 @@
         document.getElementById("spec-revisions").textContent = specRevisions.toFixed(2);
         document.getElementById("email-batch-rounds").textContent = state.revisionRounds.toFixed(2);
         document.getElementById("common-base").textContent = `${formatMinutes(commonBase)} 分钟`;
+        updateWorkflow(state, specRevisions);
 
         const fastestPlan = Math.min(...Object.values(results).map((result) => result.plan));
         Object.entries(results).forEach(([mode, result]) => {
@@ -1192,10 +1073,8 @@
         const fastestModes = Object.entries(results)
           .filter(([, result]) => Math.abs(result.plan - fastestPlan) < 0.001)
           .map(([mode]) => modeNames[mode]);
-        latestMainAnnouncement =
-          `模拟完成：${fastestModes.join("和")}的方案确认最快，需要${formatMinutes(fastestPlan)}分钟`;
-
-        scheduleSensitivity(state, immediateSensitivity);
+        document.getElementById("result-announcement").textContent =
+          `模拟完成：${fastestModes.join("和")}的方案确认最快，需要${formatMinutes(fastestPlan)}分钟。`;
         requestResize();
       }
 
@@ -1219,18 +1098,8 @@
       }
 
       document.querySelectorAll("[data-input]").forEach((input) => {
-        input.addEventListener("input", () => calculate(false));
-        input.addEventListener("change", () => calculate(true));
-      });
-
-      document.querySelectorAll("[data-sensitivity-axis]").forEach((select) => {
-        select.addEventListener("change", () => {
-          const otherAxis = select === sensitivityAxes.x ? sensitivityAxes.y : sensitivityAxes.x;
-          if (select.value === otherAxis.value) {
-            otherAxis.value = Object.keys(parameterDefinitions).find((parameterId) => parameterId !== select.value);
-          }
-          calculate(true);
-        });
+        input.addEventListener("input", calculate);
+        input.addEventListener("change", calculate);
       });
 
       const fieldTooltip = document.getElementById("field-tooltip");
@@ -1303,7 +1172,7 @@
         new ResizeObserver(requestResize).observe(document.body);
       }
       window.addEventListener("load", requestResize);
-      calculate(true);
+      calculate();
     })();
   </script>
 </body>
