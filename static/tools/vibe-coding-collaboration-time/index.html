@@ -743,15 +743,20 @@
             <input id="spec-count" data-input type="range" min="1" max="12" step="1" value="4">
           </label>
           <label class="control" for="revision-rounds">
-            <span class="tooltip-label" tabindex="0" data-tooltip="包含首轮。即时与文档按每个 SPEC 计算；邮件按整个批次计算。">平均修订轮数<span class="tooltip-icon" aria-hidden="true">?</span></span>
+            <span class="tooltip-label" tabindex="0" data-tooltip="代码首次落地前的方案修订轮数，包含首轮。即时与文档按每个 SPEC 计算；邮件按整个批次计算。">平均方案修订轮数<span class="tooltip-icon" aria-hidden="true">?</span></span>
             <output id="revision-rounds-output" for="revision-rounds">1.50 轮</output>
             <input id="revision-rounds" data-input type="range" min="1" max="2" step="0.05" value="1.5">
+          </label>
+          <label class="control" for="code-attempts">
+            <span class="tooltip-label" tabindex="0" data-tooltip="包含首次落地。1.20 次表示首次代码落地有 20% 的概率不符合预期，需要回到方案修改后再落地一次。">平均代码落地次数<span class="tooltip-icon" aria-hidden="true">?</span></span>
+            <output id="code-attempts-output" for="code-attempts">1.20 次</output>
+            <input id="code-attempts" data-input type="range" min="1" max="2" step="0.05" value="1.2">
           </label>
         </div>
 
         <div class="round-summary">
-          <div class="summary-chip"><small><span class="tooltip-label" tabindex="0" data-tooltip="SPEC 数量乘以平均修订轮数；用于即时通讯和文档协作。">SPEC 修订总量<span class="tooltip-icon" aria-hidden="true">?</span></span></small><strong id="spec-revisions">6.00</strong></div>
-          <div class="summary-chip"><small><span class="tooltip-label" tabindex="0" data-tooltip="邮件把全部 SPEC 作为整体，整个批次平均往返的轮数。">邮件整批轮数<span class="tooltip-icon" aria-hidden="true">?</span></span></small><strong id="email-batch-rounds">1.50</strong></div>
+          <div class="summary-chip"><small><span class="tooltip-label" tabindex="0" data-tooltip="包含首次方案修订，以及代码检查失败后返回方案修改产生的额外循环。">SPEC 方案循环总量<span class="tooltip-icon" aria-hidden="true">?</span></span></small><strong id="spec-revisions">6.80</strong></div>
+          <div class="summary-chip"><small><span class="tooltip-label" tabindex="0" data-tooltip="邮件整批方案修订轮数，加上代码检查失败后返回方案修改的额外轮数。">邮件整批方案循环<span class="tooltip-icon" aria-hidden="true">?</span></span></small><strong id="email-batch-rounds">1.70</strong></div>
         </div>
       </section>
 
@@ -774,7 +779,7 @@
             <input id="plan-review" data-input type="range" min="0" max="30" step="1" value="3">
           </label>
           <label class="control" for="code-landing">
-            <span class="tooltip-label" tabindex="0" data-tooltip="执行一次代码落地（可含必要检查）的墙钟时间。即时模式每次 SPEC 修订都会支付；邮件和文档在方案确认后只支付一次。">一次代码落地<span class="tooltip-icon" aria-hidden="true">?</span></span>
+            <span class="tooltip-label" tabindex="0" data-tooltip="执行一次代码落地（可含必要检查）的墙钟时间。实际代码贡献还会乘以平均代码落地次数。">一次代码落地<span class="tooltip-icon" aria-hidden="true">?</span></span>
             <output id="code-landing-output" for="code-landing">8 分钟</output>
             <input id="code-landing" data-input type="range" min="0" max="120" step="1" value="8">
           </label>
@@ -786,7 +791,7 @@
       <h2 id="workflow-heading">三种模式工作循环</h2>
       <div class="process-list">
         <article class="process-map" data-mode="instant" aria-labelledby="process-instant-heading">
-          <div class="process-heading"><h3 id="process-instant-heading">即时通讯</h3><span class="process-kind" data-process-kind="instant">逐 SPEC 串行 · 平均 1.50 轮</span></div>
+          <div class="process-heading"><h3 id="process-instant-heading">即时通讯</h3><span class="process-kind" data-process-kind="instant">逐 SPEC 串行 · 方案 1.50 轮 · 落地 1.20 次</span></div>
           <div class="process-line">
             <div class="process-node"><span class="process-number">1</span><div class="process-copy"><strong>人类提出需求</strong><small>耗时未单列</small></div></div>
             <span class="process-arrow" aria-hidden="true">→</span>
@@ -802,20 +807,20 @@
           </div>
           <div class="process-branch"><span>不同意 ↺ 步骤 3</span><span class="process-continue">同意 ↓ 步骤 6</span></div>
           <div class="process-line">
-            <div class="process-node"><span class="process-number">6</span><div class="process-copy"><strong>AI 落地代码</strong><small data-process-time="instant-code">每次 8 分钟</small></div></div>
+            <div class="process-node"><span class="process-number">6</span><div class="process-copy"><strong>AI 落地代码</strong><small data-process-time="instant-code">每个 SPEC 平均 1.20 × 8 = 9.6 分钟</small></div></div>
             <span class="process-arrow" aria-hidden="true">→</span>
             <div class="process-node"><span class="process-number">7</span><div class="process-copy"><strong>人类检查效果</strong><small data-process-time="instant-check">耗时未单列；可包含在代码落地 8 分钟中</small></div></div>
             <span class="process-arrow" aria-hidden="true">→</span>
-            <div class="process-node"><span class="process-number">8</span><div class="process-copy"><strong>判断是否符合预期</strong><small>判断耗时未单列</small></div></div>
+            <div class="process-node"><span class="process-number">8</span><div class="process-copy"><strong>判断是否符合预期</strong><small data-process-time="instant-outcome">20% 需要返回步骤 3 修改</small></div></div>
           </div>
-          <div class="process-branch"><span>不符合 ↺ 步骤 3</span><span class="process-continue">符合 ↓ 步骤 9</span></div>
+          <div class="process-branch"><span data-process-retry="instant">不符合（20%）↺ 步骤 3</span><span class="process-continue">符合 ↓ 步骤 9</span></div>
           <div class="process-line">
             <div class="process-node"><span class="process-number">9</span><div class="process-copy"><strong>检查是否还有下一个 SPEC</strong><small>有：↺ 步骤 3，开始下一个 SPEC；没有：需求完成</small></div></div>
           </div>
         </article>
 
         <article class="process-map" data-mode="email" aria-labelledby="process-email-heading">
-          <div class="process-heading"><h3 id="process-email-heading">邮件通讯</h3><span class="process-kind" data-process-kind="email">整批往返 · 平均 1.50 轮</span></div>
+          <div class="process-heading"><h3 id="process-email-heading">邮件通讯</h3><span class="process-kind" data-process-kind="email">整批往返 · 方案 1.50 轮 · 落地 1.20 次</span></div>
           <div class="process-line">
             <div class="process-node"><span class="process-number">1</span><div class="process-copy"><strong>人类提出需求</strong><small>耗时未单列</small></div></div>
             <span class="process-arrow" aria-hidden="true">→</span>
@@ -832,20 +837,20 @@
           <div class="process-schedule"><strong>批次屏障</strong><span>人类完成全部 SPEC 后统一发给 AI；AI 完成全部结果后再统一返回给人类。</span></div>
           <div class="process-branch"><span>不同意 ↺ 步骤 3</span><span class="process-continue">同意 ↓ 步骤 6</span></div>
           <div class="process-line">
-            <div class="process-node"><span class="process-number">6</span><div class="process-copy"><strong>AI 落地代码</strong><small data-process-time="email-code">一次 8 分钟</small></div></div>
+            <div class="process-node"><span class="process-number">6</span><div class="process-copy"><strong>AI 落地代码</strong><small data-process-time="email-code">整批平均 1.20 × 8 = 9.6 分钟</small></div></div>
             <span class="process-arrow" aria-hidden="true">→</span>
             <div class="process-node"><span class="process-number">7</span><div class="process-copy"><strong>人类检查效果</strong><small data-process-time="email-check">耗时未单列；可包含在代码落地 8 分钟中</small></div></div>
             <span class="process-arrow" aria-hidden="true">→</span>
-            <div class="process-node"><span class="process-number">8</span><div class="process-copy"><strong>判断是否符合预期</strong><small>判断耗时未单列</small></div></div>
+            <div class="process-node"><span class="process-number">8</span><div class="process-copy"><strong>判断是否符合预期</strong><small data-process-time="email-outcome">20% 需要返回步骤 3 修改整批方案</small></div></div>
           </div>
-          <div class="process-branch"><span>不符合 ↺ 步骤 3</span><span class="process-continue">符合 ↓ 步骤 9</span></div>
+          <div class="process-branch"><span data-process-retry="email">不符合（20%）↺ 步骤 3</span><span class="process-continue">符合 ↓ 步骤 9</span></div>
           <div class="process-line">
             <div class="process-node"><span class="process-number">9</span><div class="process-copy"><strong>需求完成</strong><small>任务结束</small></div></div>
           </div>
         </article>
 
         <article class="process-map" data-mode="document" aria-labelledby="process-document-heading">
-          <div class="process-heading"><h3 id="process-document-heading">文档协作</h3><span class="process-kind" data-process-kind="document">逐 SPEC 流水并行 · 平均 1.50 轮</span></div>
+          <div class="process-heading"><h3 id="process-document-heading">文档协作</h3><span class="process-kind" data-process-kind="document">逐 SPEC 流水并行 · 方案 1.50 轮 · 落地 1.20 次</span></div>
           <div class="process-line">
             <div class="process-node"><span class="process-number">1</span><div class="process-copy"><strong>人类提出需求</strong><small>耗时未单列</small></div></div>
             <span class="process-arrow" aria-hidden="true">→</span>
@@ -862,13 +867,13 @@
           <div class="process-schedule"><strong>流水并行</strong><span>人类完成 SPEC 1 后，AI 立即开始修改；人类编辑 SPEC 2 时，AI 已在处理 SPEC 1，无需等待全部 SPEC 完成。</span></div>
           <div class="process-branch"><span>不同意 ↺ 步骤 3</span><span class="process-continue">同意 ↓ 步骤 6</span></div>
           <div class="process-line">
-            <div class="process-node"><span class="process-number">6</span><div class="process-copy"><strong>AI 落地代码</strong><small data-process-time="document-code">一次 8 分钟</small></div></div>
+            <div class="process-node"><span class="process-number">6</span><div class="process-copy"><strong>AI 落地代码</strong><small data-process-time="document-code">整批平均 1.20 × 8 = 9.6 分钟</small></div></div>
             <span class="process-arrow" aria-hidden="true">→</span>
             <div class="process-node"><span class="process-number">7</span><div class="process-copy"><strong>人类检查效果</strong><small data-process-time="document-check">耗时未单列；可包含在代码落地 8 分钟中</small></div></div>
             <span class="process-arrow" aria-hidden="true">→</span>
-            <div class="process-node"><span class="process-number">8</span><div class="process-copy"><strong>判断是否符合预期</strong><small>判断耗时未单列</small></div></div>
+            <div class="process-node"><span class="process-number">8</span><div class="process-copy"><strong>判断是否符合预期</strong><small data-process-time="document-outcome">20% 需要返回步骤 3 修改整批方案</small></div></div>
           </div>
-          <div class="process-branch"><span>不符合 ↺ 步骤 3</span><span class="process-continue">符合 ↓ 步骤 9</span></div>
+          <div class="process-branch"><span data-process-retry="document">不符合（20%）↺ 步骤 3</span><span class="process-continue">符合 ↓ 步骤 9</span></div>
           <div class="process-line">
             <div class="process-node"><span class="process-number">9</span><div class="process-copy"><strong>需求完成</strong><small>任务结束</small></div></div>
           </div>
@@ -881,30 +886,30 @@
       <h2 id="flow-heading">第一层：按流程计算</h2>
       <div class="results" aria-label="三种协作模式的流程计算结果">
         <article class="result-card" data-mode="instant">
-          <div class="result-heading"><h3><span class="tooltip-label" tabindex="0" data-tooltip="每个 SPEC 修订都串行形成隐式方案并立即修改代码。">即时通讯<span class="tooltip-icon" aria-hidden="true">?</span></span></h3><span class="winner">方案最快</span></div>
-          <div class="primary-label">需求 → 方案确认（活动归因）</div>
-          <div class="total-time tooltip-label" tabindex="0" data-tooltip="方案与代码实际交错发生；这里把编辑、AI 隐式方案和方案审查归入方案贡献。"><strong data-plan>0</strong><span>分钟</span><span class="tooltip-icon" aria-hidden="true">?</span></div>
+          <div class="result-heading"><h3><span class="tooltip-label" tabindex="0" data-tooltip="每个 SPEC 依次完成方案确认、代码落地和效果检查；失败后返回当前 SPEC 的方案修改。">即时通讯<span class="tooltip-icon" aria-hidden="true">?</span></span></h3><span class="winner">方案处理最快</span></div>
+          <div class="primary-label">方案处理（含代码失败后的修改）</div>
+          <div class="total-time tooltip-label" tabindex="0" data-tooltip="包括首次方案修订，以及代码效果不符合预期后返回步骤 3 产生的方案修改。"><strong data-plan>0</strong><span>分钟</span><span class="tooltip-icon" aria-hidden="true">?</span></div>
           <dl class="metrics">
-            <dt><span class="tooltip-label" tabindex="0" data-tooltip="每次 SPEC 修订都会同步支付一次代码落地成本。">代码贡献<span class="tooltip-icon" aria-hidden="true">?</span></span></dt><dd data-code>0 分钟</dd>
+            <dt><span class="tooltip-label" tabindex="0" data-tooltip="SPEC 数量 × 平均代码落地次数 × 一次代码落地时间。">代码贡献<span class="tooltip-icon" aria-hidden="true">?</span></span></dt><dd data-code>0 分钟</dd>
             <dt><span class="tooltip-label" tabindex="0" data-tooltip="方案贡献与代码贡献之和。">端到端总耗时<span class="tooltip-icon" aria-hidden="true">?</span></span></dt><dd data-total>0 分钟</dd>
           </dl>
         </article>
         <article class="result-card" data-mode="email">
-          <div class="result-heading"><h3><span class="tooltip-label" tabindex="0" data-tooltip="全部 SPEC 作为一个邮件批次，整个批次平均往返指定轮数。">邮件通讯<span class="tooltip-icon" aria-hidden="true">?</span></span></h3><span class="winner">方案最快</span></div>
-          <div class="primary-label">需求 → 方案确认</div>
-          <div class="total-time tooltip-label" tabindex="0" data-tooltip="每一轮都编辑、并行处理并审查整个邮件批次。"><strong data-plan>0</strong><span>分钟</span><span class="tooltip-icon" aria-hidden="true">?</span></div>
+          <div class="result-heading"><h3><span class="tooltip-label" tabindex="0" data-tooltip="全部 SPEC 作为一个邮件批次，整个批次平均往返指定轮数。">邮件通讯<span class="tooltip-icon" aria-hidden="true">?</span></span></h3><span class="winner">方案处理最快</span></div>
+          <div class="primary-label">方案处理（含代码失败后的修改）</div>
+          <div class="total-time tooltip-label" tabindex="0" data-tooltip="包括首次方案修订，以及代码效果不符合预期后整批返回步骤 3 产生的方案修改。"><strong data-plan>0</strong><span>分钟</span><span class="tooltip-icon" aria-hidden="true">?</span></div>
           <dl class="metrics">
-            <dt><span class="tooltip-label" tabindex="0" data-tooltip="整批方案确认后只落地一次代码。">方案 → 代码落地<span class="tooltip-icon" aria-hidden="true">?</span></span></dt><dd data-code>0 分钟</dd>
-            <dt><span class="tooltip-label" tabindex="0" data-tooltip="方案确认时间与一次代码落地之和。">端到端总耗时<span class="tooltip-icon" aria-hidden="true">?</span></span></dt><dd data-total>0 分钟</dd>
+            <dt><span class="tooltip-label" tabindex="0" data-tooltip="平均代码落地次数 × 一次代码落地时间。">代码落地贡献<span class="tooltip-icon" aria-hidden="true">?</span></span></dt><dd data-code>0 分钟</dd>
+            <dt><span class="tooltip-label" tabindex="0" data-tooltip="方案处理贡献与代码落地贡献之和。">端到端总耗时<span class="tooltip-icon" aria-hidden="true">?</span></span></dt><dd data-total>0 分钟</dd>
           </dl>
         </article>
         <article class="result-card" data-mode="document">
-          <div class="result-heading"><h3><span class="tooltip-label" tabindex="0" data-tooltip="每个 SPEC 的修订发生在文档内部；增量任务可与开发者继续编辑重叠。">文档协作<span class="tooltip-icon" aria-hidden="true">?</span></span></h3><span class="winner">方案最快</span></div>
-          <div class="primary-label">需求 → 方案确认</div>
-          <div class="total-time tooltip-label" tabindex="0" data-tooltip="全部 SPEC 编辑与方案审查，再加上无法被开发者工作覆盖的 AI 等待。"><strong data-plan>0</strong><span>分钟</span><span class="tooltip-icon" aria-hidden="true">?</span></div>
+          <div class="result-heading"><h3><span class="tooltip-label" tabindex="0" data-tooltip="每个 SPEC 的修订发生在文档内部；增量任务可与开发者继续编辑重叠。">文档协作<span class="tooltip-icon" aria-hidden="true">?</span></span></h3><span class="winner">方案处理最快</span></div>
+          <div class="primary-label">方案处理（含代码失败后的修改）</div>
+          <div class="total-time tooltip-label" tabindex="0" data-tooltip="包括首次文档方案流水，以及代码效果不符合预期后再次执行的文档纠正流水。"><strong data-plan>0</strong><span>分钟</span><span class="tooltip-icon" aria-hidden="true">?</span></div>
           <dl class="metrics">
-            <dt><span class="tooltip-label" tabindex="0" data-tooltip="文档确认后只落地一次代码。">方案 → 代码落地<span class="tooltip-icon" aria-hidden="true">?</span></span></dt><dd data-code>0 分钟</dd>
-            <dt><span class="tooltip-label" tabindex="0" data-tooltip="方案确认时间与一次代码落地之和。">端到端总耗时<span class="tooltip-icon" aria-hidden="true">?</span></span></dt><dd data-total>0 分钟</dd>
+            <dt><span class="tooltip-label" tabindex="0" data-tooltip="平均代码落地次数 × 一次代码落地时间。">代码落地贡献<span class="tooltip-icon" aria-hidden="true">?</span></span></dt><dd data-code>0 分钟</dd>
+            <dt><span class="tooltip-label" tabindex="0" data-tooltip="方案处理贡献与代码落地贡献之和。">端到端总耗时<span class="tooltip-icon" aria-hidden="true">?</span></span></dt><dd data-total>0 分钟</dd>
           </dl>
         </article>
       </div>
@@ -918,7 +923,7 @@
         <span class="legend-item"><span class="legend-swatch overhead"></span>各模式开销</span>
       </div>
       <div class="comparison-list">
-        <div class="bar-row" data-mode="instant"><span class="bar-label tooltip-label" tabindex="0" data-tooltip="即时通讯：共同基础成本加串行方案等待和重复代码落地。">即时通讯<span class="tooltip-icon" aria-hidden="true">?</span></span><div class="bar-track" role="img"><div class="bar-base"></div><div class="bar-overhead"></div></div><span class="bar-value">0 分钟</span></div>
+        <div class="bar-row" data-mode="instant"><span class="bar-label tooltip-label" tabindex="0" data-tooltip="即时通讯：共同基础成本加逐 SPEC 的串行 AI 方案等待，以及相对整批模式多出的代码落地。">即时通讯<span class="tooltip-icon" aria-hidden="true">?</span></span><div class="bar-track" role="img"><div class="bar-base"></div><div class="bar-overhead"></div></div><span class="bar-value">0 分钟</span></div>
         <div class="bar-row" data-mode="email"><span class="bar-label tooltip-label" tabindex="0" data-tooltip="邮件通讯：共同基础成本加整批每轮的 AI 方案等待。">邮件通讯<span class="tooltip-icon" aria-hidden="true">?</span></span><div class="bar-track" role="img"><div class="bar-base"></div><div class="bar-overhead"></div></div><span class="bar-value">0 分钟</span></div>
         <div class="bar-row" data-mode="document"><span class="bar-label tooltip-label" tabindex="0" data-tooltip="文档协作：共同基础成本加未被开发者工作覆盖的 AI 等待。">文档协作<span class="tooltip-icon" aria-hidden="true">?</span></span><div class="bar-track" role="img"><div class="bar-base"></div><div class="bar-overhead"></div></div><span class="bar-value">0 分钟</span></div>
       </div>
@@ -928,25 +933,27 @@
       <summary>查看流程公式、优化公式与模型边界</summary>
       <div class="details-body">
         <h3>第一层：按流程展开</h3>
-        <span class="formula">SPEC 修订总量 = SPEC 数量 × 平均修订轮数</span>
-        <span class="formula">即时总耗时 = SPEC 修订总量 ×（SPEC 编辑 + AI 方案处理 + 一次代码落地 + 方案审查）</span>
-        <span class="formula">邮件总耗时 = 平均修订轮数 ×［SPEC 数量 × SPEC 编辑 + AI 方案处理 + SPEC 数量 × 方案审查］+ 一次代码落地</span>
-        <span class="formula">文档总耗时 = SPEC 修订总量 × SPEC 编辑 + 文档中未被覆盖的 AI 等待 + SPEC 修订总量 × 方案审查 + 一次代码落地</span>
-        <p>即时通讯的方案和代码在每轮中交错发生；邮件和文档则在方案确认后只落地一次代码。</p>
+        <span class="formula">代码失败后的额外方案轮数 = 平均代码落地次数 − 1</span>
+        <span class="formula">有效方案循环轮数 = 平均方案修订轮数 + 平均代码落地次数 − 1</span>
+        <span class="formula">即时总耗时 = SPEC 数量 ×［有效方案循环轮数 ×（SPEC 编辑 + AI 方案处理 + 方案审查）+ 平均代码落地次数 × 一次代码落地］</span>
+        <span class="formula">邮件总耗时 = 有效方案循环轮数 ×［SPEC 数量 × SPEC 编辑 + AI 方案处理 + SPEC 数量 × 方案审查］+ 平均代码落地次数 × 一次代码落地</span>
+        <span class="formula">文档总耗时 = 首次方案确认的文档流水时间 + 代码失败后的额外方案轮数 × 文档纠正循环时间 + 平均代码落地次数 × 一次代码落地</span>
+        <p>平均代码落地次数包含首次落地。1.20 次表示 20% 的首次落地不符合预期，需要返回步骤 3 完成一次方案纠正后再落地代码。</p>
 
         <h3>第二层：提取共同项</h3>
-        <span class="formula">共同基础成本 = SPEC 修订总量 × SPEC 编辑 + SPEC 修订总量 × 方案审查 + 一次代码落地</span>
-        <span class="formula">即时总耗时 = 共同基础成本 + SPEC 修订总量 × AI 方案处理 +（SPEC 修订总量 − 1）× 一次代码落地</span>
-        <span class="formula">邮件总耗时 = 共同基础成本 + 平均修订轮数 × AI 方案处理</span>
+        <span class="formula">共同基础成本 = SPEC 数量 × 有效方案循环轮数 ×（SPEC 编辑 + 方案审查）+ 平均代码落地次数 × 一次代码落地</span>
+        <span class="formula">即时总耗时 = 共同基础成本 + SPEC 数量 × 有效方案循环轮数 × AI 方案处理 +（SPEC 数量 − 1）× 平均代码落地次数 × 一次代码落地</span>
+        <span class="formula">邮件总耗时 = 共同基础成本 + 有效方案循环轮数 × AI 方案处理</span>
         <span class="formula">文档总耗时 = 共同基础成本 + 文档中未被覆盖的 AI 等待</span>
         <p>这组公式只用于横向比较。模式开销等于模式总耗时减去共同基础成本，并不一定代表无效工作。</p>
 
         <h3>调度假设与边界</h3>
-        <p>平均 1.5 轮包含首轮。即时与文档把它解释为每个 SPEC 的平均修订轮数；邮件把它解释为整个批次的平均往返轮数。</p>
+        <p>平均 1.5 轮方案修订包含首轮。即时与文档把它解释为每个 SPEC 的平均修订轮数；邮件把它解释为整个批次的平均往返轮数。</p>
+        <p>平均代码落地次数只支持 1 到 2 次：超过 1 的部分表示首次代码落地失败、返回步骤 3 完成一次整批纠正的概率。</p>
         <p>文档协作先连续完成所有首轮编辑，同时增量提交 AI；之后优先审查最早完成的结果，需要修订时立即编辑并再次提交。模拟器只为文档模式枚举 SPEC 的第二轮组合，邮件不会沿用这个概率模型。</p>
         <ul>
           <li>开发者只有一个编辑/审查执行槽，AI 任务没有并发数量上限。</li>
-          <li>当前只支持 1 到 2 轮；第二轮概率等于“平均修订轮数 − 1”。</li>
+          <li>方案修订只支持 1 到 2 轮；第二轮概率等于“平均方案修订轮数 − 1”。</li>
           <li>代码落地是一个复合输入，可以包含希望纳入比较的代码检查、合并和测试。</li>
           <li>不计算现实邮件的离线查收延迟、部署发布和模式交接成本。</li>
         </ul>
@@ -963,6 +970,7 @@
       const inputIds = [
         "spec-count",
         "revision-rounds",
+        "code-attempts",
         "spec-edit",
         "ai-plan",
         "plan-review",
@@ -986,6 +994,7 @@
         return {
           specCount: numberValue(inputs["spec-count"]),
           revisionRounds: numberValue(inputs["revision-rounds"]),
+          codeAttempts: numberValue(inputs["code-attempts"]),
           specEditTime: numberValue(inputs["spec-edit"]),
           aiPlanTime: numberValue(inputs["ai-plan"]),
           planReviewTime: numberValue(inputs["plan-review"]),
@@ -997,10 +1006,13 @@
         const minuteIds = ["spec-edit", "ai-plan", "plan-review", "code-landing"];
         const specCount = numberValue(inputs["spec-count"]);
         const revisionRounds = numberValue(inputs["revision-rounds"]);
+        const codeAttempts = numberValue(inputs["code-attempts"]);
         document.getElementById("spec-count-output").textContent = `${specCount} 个`;
         document.getElementById("revision-rounds-output").textContent = `${revisionRounds.toFixed(2)} 轮`;
+        document.getElementById("code-attempts-output").textContent = `${codeAttempts.toFixed(2)} 次`;
         inputs["spec-count"].setAttribute("aria-valuetext", `${specCount} 个 SPEC`);
         inputs["revision-rounds"].setAttribute("aria-valuetext", `${revisionRounds.toFixed(2)} 轮`);
+        inputs["code-attempts"].setAttribute("aria-valuetext", `${codeAttempts.toFixed(2)} 次`);
         minuteIds.forEach((id) => {
           const valueText = `${formatMinutes(numberValue(inputs[id]))} 分钟`;
           document.getElementById(`${id}-output`).textContent = valueText;
@@ -1079,24 +1091,32 @@
       }
 
       function calculateModel(state) {
-        const specRevisions = state.specCount * state.revisionRounds;
+        const codeRetryProbability = state.codeAttempts - 1;
+        const effectivePlanRounds = state.revisionRounds + codeRetryProbability;
+        const specRevisions = state.specCount * effectivePlanRounds;
         const commonPlan = specRevisions * (state.specEditTime + state.planReviewTime);
-        const commonBase = commonPlan + state.codeLandingTime;
-        const documentPlan = calculateExpectedDocumentPlan(state);
+        const commonCode = state.codeAttempts * state.codeLandingTime;
+        const commonBase = commonPlan + commonCode;
+        const initialDocumentPlan = calculateExpectedDocumentPlan(state);
+        const documentCorrectionPlan = calculateDocumentPlan(
+          state,
+          Array(state.specCount).fill(1)
+        );
+        const documentPlan = initialDocumentPlan + codeRetryProbability * documentCorrectionPlan;
         const results = {
           instant: {
             plan: specRevisions * (state.specEditTime + state.aiPlanTime + state.planReviewTime),
-            code: specRevisions * state.codeLandingTime
+            code: state.specCount * commonCode
           },
           email: {
-            plan: state.revisionRounds * (
+            plan: effectivePlanRounds * (
               state.specCount * (state.specEditTime + state.planReviewTime) + state.aiPlanTime
             ),
-            code: state.codeLandingTime
+            code: commonCode
           },
           document: {
             plan: documentPlan,
-            code: state.codeLandingTime
+            code: commonCode
           }
         };
 
@@ -1105,31 +1125,37 @@
           result.overhead = Math.max(0, result.total - commonBase);
         });
 
-        return { specRevisions, commonBase, results };
+        return { effectivePlanRounds, specRevisions, commonBase, results };
       }
 
       function updateWorkflow(state) {
         const batchEditTime = state.specCount * state.specEditTime;
         const batchReviewTime = state.specCount * state.planReviewTime;
+        const codeRetryProbability = state.codeAttempts - 1;
+        const codeRetryPercent = Math.round(codeRetryProbability * 100);
+        const averageCodeTime = state.codeAttempts * state.codeLandingTime;
         const processTimes = {
           "instant-split": `拆分 ${state.specCount} 个 SPEC；耗时未单列`,
           "instant-edit": `每次 ${formatMinutes(state.specEditTime)} 分钟`,
           "instant-ai": `每次 ${formatMinutes(state.aiPlanTime)} 分钟`,
           "instant-review": `每次审查 ${formatMinutes(state.planReviewTime)} 分钟`,
-          "instant-code": `每次 ${formatMinutes(state.codeLandingTime)} 分钟`,
+          "instant-code": `每个 SPEC 平均 ${state.codeAttempts.toFixed(2)} × ${formatMinutes(state.codeLandingTime)} = ${formatMinutes(averageCodeTime)} 分钟`,
           "instant-check": `耗时未单列；可包含在代码落地 ${formatMinutes(state.codeLandingTime)} 分钟中`,
+          "instant-outcome": `${codeRetryPercent}% 需要返回步骤 3 修改`,
           "email-split": `拆分 ${state.specCount} 个 SPEC；耗时未单列`,
           "email-edit": `本轮主动时间：${state.specCount} × ${formatMinutes(state.specEditTime)} = ${formatMinutes(batchEditTime)} 分钟`,
           "email-ai": `整批墙钟时间 ${formatMinutes(state.aiPlanTime)} 分钟`,
           "email-review": `本轮主动时间：${state.specCount} × ${formatMinutes(state.planReviewTime)} = ${formatMinutes(batchReviewTime)} 分钟`,
-          "email-code": `一次 ${formatMinutes(state.codeLandingTime)} 分钟`,
+          "email-code": `整批平均 ${state.codeAttempts.toFixed(2)} × ${formatMinutes(state.codeLandingTime)} = ${formatMinutes(averageCodeTime)} 分钟`,
           "email-check": `耗时未单列；可包含在代码落地 ${formatMinutes(state.codeLandingTime)} 分钟中`,
+          "email-outcome": `${codeRetryPercent}% 需要返回步骤 3 修改整批方案`,
           "document-split": `拆分 ${state.specCount} 个 SPEC；耗时未单列`,
           "document-edit": `本轮主动时间：${state.specCount} × ${formatMinutes(state.specEditTime)} = ${formatMinutes(batchEditTime)} 分钟；逐个提交`,
           "document-ai": `单个任务 ${formatMinutes(state.aiPlanTime)} 分钟；与步骤 3 重叠`,
           "document-review": `本轮主动时间：${state.specCount} × ${formatMinutes(state.planReviewTime)} = ${formatMinutes(batchReviewTime)} 分钟；结果就绪即可审查`,
-          "document-code": `一次 ${formatMinutes(state.codeLandingTime)} 分钟`,
-          "document-check": `耗时未单列；可包含在代码落地 ${formatMinutes(state.codeLandingTime)} 分钟中`
+          "document-code": `整批平均 ${state.codeAttempts.toFixed(2)} × ${formatMinutes(state.codeLandingTime)} = ${formatMinutes(averageCodeTime)} 分钟`,
+          "document-check": `耗时未单列；可包含在代码落地 ${formatMinutes(state.codeLandingTime)} 分钟中`,
+          "document-outcome": `${codeRetryPercent}% 需要返回步骤 3 修改整批方案`
         };
 
         Object.entries(processTimes).forEach(([stage, text]) => {
@@ -1137,21 +1163,25 @@
         });
 
         document.querySelector('[data-process-kind="instant"]').textContent =
-          `逐 SPEC 串行 · 平均 ${state.revisionRounds.toFixed(2)} 轮`;
+          `逐 SPEC 串行 · 方案 ${state.revisionRounds.toFixed(2)} 轮 · 落地 ${state.codeAttempts.toFixed(2)} 次`;
         document.querySelector('[data-process-kind="email"]').textContent =
-          `整批往返 · 平均 ${state.revisionRounds.toFixed(2)} 轮`;
+          `整批往返 · 方案 ${state.revisionRounds.toFixed(2)} 轮 · 落地 ${state.codeAttempts.toFixed(2)} 次`;
         document.querySelector('[data-process-kind="document"]').textContent =
-          `逐 SPEC 流水并行 · 平均 ${state.revisionRounds.toFixed(2)} 轮`;
+          `逐 SPEC 流水并行 · 方案 ${state.revisionRounds.toFixed(2)} 轮 · 落地 ${state.codeAttempts.toFixed(2)} 次`;
+
+        document.querySelectorAll("[data-process-retry]").forEach((element) => {
+          element.textContent = `不符合（${codeRetryPercent}%）↺ 步骤 3`;
+        });
       }
 
       function calculate() {
         updateOutputs();
 
         const state = readState();
-        const { specRevisions, commonBase, results } = calculateModel(state);
+        const { effectivePlanRounds, specRevisions, commonBase, results } = calculateModel(state);
 
         document.getElementById("spec-revisions").textContent = specRevisions.toFixed(2);
-        document.getElementById("email-batch-rounds").textContent = state.revisionRounds.toFixed(2);
+        document.getElementById("email-batch-rounds").textContent = effectivePlanRounds.toFixed(2);
         document.getElementById("common-base").textContent = `${formatMinutes(commonBase)} 分钟`;
         updateWorkflow(state);
 
@@ -1180,7 +1210,7 @@
           .filter(([, result]) => Math.abs(result.plan - fastestPlan) < 0.001)
           .map(([mode]) => modeNames[mode]);
         document.getElementById("result-announcement").textContent =
-          `模拟完成：${fastestModes.join("和")}的方案确认最快，需要${formatMinutes(fastestPlan)}分钟。`;
+          `模拟完成：${fastestModes.join("和")}的方案处理最快，需要${formatMinutes(fastestPlan)}分钟。`;
         requestResize();
       }
 
