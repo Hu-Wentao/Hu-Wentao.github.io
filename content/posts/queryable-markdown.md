@@ -6,6 +6,9 @@ aliases: ["/posts/make-markdown-queryable/"]
 summary: "queryable-markdown 让 Agent 只读查询普通 Markdown，并通过持久化 mdq 契约安全地创建、维护和编辑半结构化文档"
 tags: ["AI", "Markdown", "Skill", "VibeCoding", "文档工程"]
 categories: ["Artifacts"]
+publish:
+  juejin:
+    category: "人工智能"
 ---
 
 > 本文介绍了一种让AI准确查询半结构化MD文档的skill，安装使用参见 [快速体验](#快速体验)
