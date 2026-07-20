@@ -55,10 +55,12 @@
       Math.max(16, preferredTop),
       Math.max(16, window.innerHeight - previewHeight - 16),
     );
-    const preferredLeft = rect.right + (label ? label.offsetWidth : 0) + 32;
+    const maximumMarkRight = rect.left + 64;
+    const labelRight = maximumMarkRight + (label ? label.offsetWidth + 12 : 0);
+    const preferredLeft = labelRight + 20;
     const left = Math.min(preferredLeft, window.innerWidth - previewWidth - 16);
     preview.style.top = `${top}px`;
-    preview.style.left = `${Math.max(104, left)}px`;
+    preview.style.left = `${Math.max(maximumMarkRight + 20, left)}px`;
   };
 
   const showPreview = (anchor, heading) => {
