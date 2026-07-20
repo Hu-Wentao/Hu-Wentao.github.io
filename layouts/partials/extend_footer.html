@@ -59,3 +59,10 @@
     });
   })();
 </script>
+
+{{- if and .IsPage (.Param "ShowToc") }}
+{{- with resources.Get "js/article-rail.js" }}
+{{- $articleRail := . | minify | fingerprint }}
+<script src="{{ $articleRail.RelPermalink }}" integrity="{{ $articleRail.Data.Integrity }}"></script>
+{{- end }}
+{{- end }}

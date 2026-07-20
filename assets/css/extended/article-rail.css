@@ -1,0 +1,151 @@
+.article-rail,
+.article-rail-preview {
+    display: none;
+}
+
+@media screen and (min-width: 1101px) and (hover: hover) and (pointer: fine) {
+    .post-single > .toc {
+        display: none;
+    }
+
+    .article-rail {
+        position: fixed;
+        top: 50%;
+        left: 24px;
+        z-index: 90;
+        display: block;
+        transform: translateY(-50%);
+    }
+
+    .article-rail ol {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        margin: 0;
+        padding: 12px;
+        list-style: none;
+    }
+
+    .article-rail li {
+        display: flex;
+        align-items: center;
+        height: 14px;
+    }
+
+    .article-rail-mark {
+        position: relative;
+        display: block;
+        width: max(12px, calc(44px - var(--heading-depth) * 14px));
+        height: 3px;
+        background: var(--primary);
+        border-radius: 2px;
+        opacity: 0.2;
+        transition:
+            width 0.18s ease,
+            height 0.18s ease,
+            opacity 0.18s ease;
+    }
+
+    .article-rail-mark.is-active {
+        height: 4px;
+        opacity: 0.65;
+    }
+
+    .article-rail-mark:hover,
+    .article-rail-mark:focus-visible {
+        width: 56px;
+        height: 4px;
+        opacity: 1;
+        outline: none;
+    }
+
+    .article-rail-mark:focus-visible {
+        box-shadow: 0 0 0 3px var(--theme), 0 0 0 5px var(--primary);
+    }
+
+    .article-rail-label {
+        position: absolute;
+        top: 50%;
+        left: calc(100% + 12px);
+        max-width: min(260px, 24vw);
+        padding: 4px 8px;
+        overflow: hidden;
+        color: var(--primary);
+        background: var(--theme);
+        border-radius: 6px;
+        box-shadow: 0 4px 14px rgb(0 0 0 / 8%);
+        font-size: 14px;
+        font-weight: 500;
+        line-height: 1.5;
+        opacity: 0;
+        pointer-events: none;
+        text-overflow: ellipsis;
+        transform: translate(-4px, -50%);
+        transition:
+            opacity 0.14s ease,
+            transform 0.14s ease;
+        white-space: nowrap;
+    }
+
+    .article-rail-mark:hover .article-rail-label,
+    .article-rail-mark:focus-visible .article-rail-label {
+        opacity: 1;
+        transform: translate(0, -50%);
+    }
+
+    .article-rail-preview {
+        position: fixed;
+        z-index: 91;
+        display: block;
+        width: min(420px, calc(100vw - 136px));
+        max-height: min(280px, calc(100vh - 32px));
+        padding: 22px 24px;
+        overflow: hidden;
+        color: var(--primary);
+        background: var(--theme);
+        border: 1px solid var(--border);
+        border-radius: 22px;
+        box-shadow: 0 18px 42px rgb(0 0 0 / 12%);
+        opacity: 0;
+        pointer-events: none;
+        transform: translateX(-8px);
+        transition:
+            opacity 0.16s ease,
+            transform 0.16s ease;
+        backdrop-filter: blur(12px);
+    }
+
+    .article-rail-preview.is-visible {
+        opacity: 1;
+        transform: translateX(0);
+    }
+
+    .article-rail-preview strong {
+        display: block;
+        margin-bottom: 10px;
+        overflow: hidden;
+        font-size: 20px;
+        line-height: 1.45;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .article-rail-preview p {
+        display: -webkit-box;
+        margin: 0;
+        overflow: hidden;
+        color: var(--secondary);
+        font-size: 16px;
+        line-height: 1.75;
+        -webkit-box-orient: vertical;
+        -webkit-line-clamp: 5;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .article-rail-mark,
+    .article-rail-label,
+    .article-rail-preview {
+        transition: none;
+    }
+}

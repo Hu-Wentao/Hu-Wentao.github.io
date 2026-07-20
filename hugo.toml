@@ -17,6 +17,7 @@ theme = 'PaperMod'
     ShowPostNavLinks = true
     ShowBreadCrumbs = true
     ShowCodeCopyButtons = true
+    ShowToc = true
     languageName = "Chinese"
     contentLanguage = "zh"
     [[params.author]]
