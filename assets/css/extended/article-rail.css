@@ -34,28 +34,42 @@
 
     .article-rail-mark {
         position: relative;
-        display: block;
-        width: max(12px, calc(44px - var(--heading-depth) * 14px));
+        display: flex;
+        width: var(--rail-width, 8px);
+        height: 14px;
+        align-items: center;
+        transition:
+            width 0.16s ease;
+    }
+
+    .article-rail-mark::before {
+        width: 100%;
         height: 3px;
         background: var(--primary);
         border-radius: 2px;
+        content: "";
         opacity: 0.2;
         transition:
-            width 0.18s ease,
-            height 0.18s ease,
-            opacity 0.18s ease;
+            height 0.16s ease,
+            opacity 0.16s ease;
     }
 
-    .article-rail-mark.is-active {
+    .article-rail-mark.is-active::before {
         height: 4px;
         opacity: 0.65;
     }
 
-    .article-rail-mark:hover,
-    .article-rail-mark:focus-visible {
-        width: 56px;
+    .article-rail-mark.is-nearest::before {
+        opacity: 0.72;
+    }
+
+    .article-rail-mark:hover::before,
+    .article-rail-mark:focus-visible::before {
         height: 4px;
         opacity: 1;
+    }
+
+    .article-rail-mark:focus-visible {
         outline: none;
     }
 
@@ -87,6 +101,7 @@
         white-space: nowrap;
     }
 
+    .article-rail-mark.is-nearest .article-rail-label,
     .article-rail-mark:hover .article-rail-label,
     .article-rail-mark:focus-visible .article-rail-label {
         opacity: 1;
@@ -144,6 +159,7 @@
 
 @media (prefers-reduced-motion: reduce) {
     .article-rail-mark,
+    .article-rail-mark::before,
     .article-rail-label,
     .article-rail-preview {
         transition: none;

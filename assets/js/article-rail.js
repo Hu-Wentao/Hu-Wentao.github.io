@@ -83,7 +83,7 @@
 
     link.href = `#${encodeURIComponent(heading.id)}`;
     link.className = "article-rail-mark";
-    link.style.setProperty("--heading-depth", String(level - minimumLevel));
+    link.dataset.headingDepth = String(level - minimumLevel);
     link.setAttribute("aria-label", title);
     label.className = "article-rail-label";
     label.textContent = title;
@@ -104,6 +104,64 @@
 
   let activeIndex = -1;
   let ticking = false;
+  let pointerFrame = 0;
+  let pointerPosition = null;
+
+  const idleWidth = (index) => {
+    const sectionDistance = Math.abs(index - Math.max(0, activeIndex));
+    const headingDepth = Number(links[index].dataset.headingDepth);
+    return Math.max(8, 30 - sectionDistance * 5 - headingDepth * 2);
+  };
+
+  const resetPointerInfluence = () => {
+    pointerPosition = null;
+    links.forEach((link, index) => {
+      link.classList.remove("is-nearest");
+      link.style.setProperty("--rail-width", `${idleWidth(index)}px`);
+    });
+  };
+
+  const updatePointerInfluence = () => {
+    pointerFrame = 0;
+    if (!pointerPosition) return;
+
+    const railRect = rail.getBoundingClientRect();
+    const horizontalDistance = Math.max(0, pointerPosition.x - railRect.right - 16);
+    if (horizontalDistance > 240 || pointerPosition.x < railRect.left - 24) {
+      resetPointerInfluence();
+      return;
+    }
+
+    let nearestIndex = -1;
+    let strongestInfluence = 0;
+
+    links.forEach((link, index) => {
+      const rect = link.getBoundingClientRect();
+      const verticalDistance = Math.abs(pointerPosition.y - (rect.top + rect.height / 2));
+      const distance = Math.hypot(horizontalDistance * 0.65, verticalDistance);
+      const influence = Math.max(0, 1 - distance / 120);
+      const baseWidth = idleWidth(index);
+      const width = baseWidth + influence * (64 - baseWidth);
+
+      link.classList.remove("is-nearest");
+      link.style.setProperty("--rail-width", `${width.toFixed(1)}px`);
+
+      if (influence > strongestInfluence) {
+        strongestInfluence = influence;
+        nearestIndex = index;
+      }
+    });
+
+    if (nearestIndex >= 0 && strongestInfluence >= 0.2) {
+      links[nearestIndex].classList.add("is-nearest");
+    }
+  };
+
+  const requestPointerUpdate = (event) => {
+    pointerPosition = { x: event.clientX, y: event.clientY };
+    if (pointerFrame) return;
+    pointerFrame = requestAnimationFrame(updatePointerInfluence);
+  };
 
   const updateActiveHeading = () => {
     const activationLine = Math.min(180, window.innerHeight * 0.28);
@@ -121,6 +179,12 @@
       links[nextIndex].classList.add("is-active");
       links[nextIndex].setAttribute("aria-current", "location");
       activeIndex = nextIndex;
+
+      if (pointerPosition) {
+        updatePointerInfluence();
+      } else {
+        resetPointerInfluence();
+      }
     }
 
     ticking = false;
@@ -133,8 +197,12 @@
   };
 
   window.addEventListener("scroll", requestUpdate, { passive: true });
+  document.addEventListener("pointermove", requestPointerUpdate, { passive: true });
+  document.documentElement.addEventListener("pointerleave", resetPointerInfluence);
+  window.addEventListener("blur", resetPointerInfluence);
   window.addEventListener("resize", () => {
     requestUpdate();
+    if (pointerPosition) updatePointerInfluence();
     if (previewAnchor) positionPreview(previewAnchor);
   });
   updateActiveHeading();
