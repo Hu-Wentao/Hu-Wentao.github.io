@@ -1,45 +1,133 @@
 ---
-title: "让同一个 Skill 适应不同项目：Skill Config 机制"
+title: "Skillcraft：创建可复用 Skill，并让它适应不同项目"
 date: 2026-07-17T00:00:00+08:00
-lastmod: 2026-07-19T00:00:00+08:00
+lastmod: 2026-07-20T00:00:00+08:00
 draft: true
-summary: "通过通用 Skill、不透明项目 Profile、确定性解析器和内容寻址缓存，让同一套 Agent 工作流在不同仓库中获得可审查、可验证的项目行为"
+summary: "Skillcraft 是 skill-creator 的完整替代：它覆盖 Skill 的设计、初始化、验证与前向测试，并通过 Skill Config 将通用能力和项目规则安全地组合起来"
 tags: ["AI", "VibeCoding", "Skill", "软件工程", "配置管理"]
 categories: ["Artifacts"]
 ---
 
-一个可复用 Skill 很容易在第一个项目里工作良好，又在接入第二个项目时迅速长出大量条件分支：如果仓库是 A，就运行 `pnpm test`；如果仓库是 B，就使用另一套目录和发布流程；如果是某个内部项目，还要遵守一组只有它才需要的术语、拓扑和安全规则。
+创建一个 Skill 并不难。写一份 `SKILL.md`，告诉 Agent 什么时候使用它、遇到任务后怎样工作，就已经可以把一段临时提示词变成可复用能力。
 
-继续把这些差异写进共享 `SKILL.md`，甚至在共享脚本里增加 `if profile == "project-a"`，最终会得到一个了解所有项目、却难以在任何项目中独立演进的“万能 Skill”。复制一份 Skill 再分别修改也没有真正解决问题：通用流程修复后需要同步多个副本，项目规则和共享逻辑仍然会逐渐漂移。
+真正困难的是继续维护它。
 
-为此，我在 [skillcraft](https://github.com/Hu-Wentao/skills/tree/main/skills/skillcraft) 中实现了 Skill Config 机制。它把一个 Skill 的行为拆成三类：
+随着 Skill 被用于更多任务，说明会越来越长，脚本、参考资料和模板开始混在一起；接入第二个项目后，共享逻辑中又会出现项目专属命令、目录和条件分支。最终，Skill 要么成为一个消耗大量上下文的万能说明书，要么被复制成多个无法同步的项目版本。
 
-| 内容 | 所有者 | 是否进入版本控制 |
-| --- | --- | --- |
-| 通用工作流、默认行为和安全不变量 | 可复用 Skill | 是 |
-| 项目术语、命令、拓扑和项目政策 | 目标仓库的 Profile | 是 |
-| 合并后的有效指令 | 确定性解析器生成的缓存 | 否 |
+为此，我实现了 [skillcraft](https://github.com/Hu-Wentao/skills/tree/main/skills/skillcraft)。它是一套创建、更新、验证和测试 Codex Skill 的完整工作流，也是 `skill-creator` 的直接替代。普通 Skill 可以继续保持自包含；当同一 Skill 确实需要在不同仓库中表现出不同的长期行为时，再启用它最重要的扩展：Skill Config。
 
 它的核心可以概括成一句话：
 
-> 共享 Skill 定义“怎样完成这类工作”，项目配置定义“在这个仓库里具体怎样做”，解析器把二者编译成 Agent 本次真正执行的指令。
+> 先把能力设计成简洁、可验证的通用 Skill；只有项目必须拥有的差异，才通过可审查的配置注入。
 
-## 配置不是 Skill 的替代品
+## Skillcraft 不只是一个初始化脚本
 
-并非每个 Skill 都需要项目配置。普通 Skill 仍然可以将完整行为放在自己的 `SKILL.md`、`scripts/` 和 `references/` 中。只有当同一个可复用工作流必须根据仓库中长期维护、需要评审的规则改变行为时，才值得引入 Skill Config。
+`skillcraft` 保留了 `skill-creator` 的完整能力。名称不同，是为了避免与系统内置 Skill 发生发现冲突，而不是缩小适用范围。
 
-路径不同也不一定需要配置。如果 Agent 可以廉价、可靠地从 `package.json`、目录结构或现有工具中发现差异，直接发现通常更简单。适合进入配置的是仓库必须明确拥有的决定，例如：
+它覆盖一个 Skill 的完整生命周期：
 
-- 项目使用的领域术语和权威文档；
-- 构建、验证和发布命令；
-- 服务拓扑、环境名称和包管理约定；
-- 只对当前项目成立的安全边界与操作政策。
+1. 用真实请求理解 Skill 应该解决什么问题；
+2. 判断哪些内容属于通用指令、脚本、参考资料或输出资产；
+3. 初始化目录和 `agents/openai.yaml`；
+4. 编写或更新 `SKILL.md` 与配套资源；
+5. 运行结构校验和脚本测试；
+6. 用接近真实用户请求的任务做前向测试；
+7. 根据实际失败继续收紧或简化 Skill。
 
-一次性用户输入、密钥、生成结果和运行状态则不属于配置。它们既不应污染共享 Skill，也不应被包装成项目长期规则。
+创建新 Skill 时，`skillcraft` 会生成符合约定的目录骨架；更新已有 Skill 时，则跳过初始化，直接检查触发描述、工作流、资源与 UI 元数据是否仍然一致。对于复杂 Skill，它还强调使用隔离上下文做前向测试：测试者只看到待测 Skill 和真实任务，不提前知道预期答案或作者的诊断，避免“因为泄题而通过”。
 
-## 三层目录对应三种所有权
+因此，`skillcraft` 管理的不是一次文件生成，而是从需求理解到验证迭代的完整工程过程。
 
-一个支持配置的 Skill 在目标仓库中使用以下结构：
+## 一个 Skill 应该怎样组织
+
+`skillcraft` 使用标准 Skill 结构：
+
+~~~text
+<skill-name>/
+├── SKILL.md
+├── agents/
+│   └── openai.yaml
+├── scripts/
+├── references/
+└── assets/
+~~~
+
+其中只有 `SKILL.md` 必需，其他目录按需创建：
+
+| 组成 | 职责 |
+| --- | --- |
+| `SKILL.md` | 定义触发条件、核心工作流和资源导航 |
+| `agents/openai.yaml` | 提供展示名称、简短描述和默认提示等 UI 元数据 |
+| `scripts/` | 保存需要确定性、会被反复执行的程序 |
+| `references/` | 保存只在特定任务中才需要加载的详细知识 |
+| `assets/` | 保存会被复制或用于最终产物的模板、图片、字体等文件 |
+
+这里最重要的设计原则是渐进式披露。Agent 总能看到 Skill 的 `name` 和 `description`，Skill 被触发后才读取 `SKILL.md` 正文，遇到具体任务时再按需读取 reference 或调用 script。
+
+~~~text
+name + description
+        ↓ Skill 被触发
+     SKILL.md
+        ↓ 当前任务需要
+scripts / references / assets
+~~~
+
+这也是为什么 `description` 必须同时写清楚“做什么”和“何时使用”，而 `SKILL.md` 应只保留工作流与必要导航。大段领域资料放进 `references/`，重复且脆弱的操作写成 `scripts/`，供输出使用但不需要进入上下文的文件放进 `assets/`。
+
+Skill 不需要为了看起来完整而同时拥有这三个目录，也不应再附带 `README.md`、安装指南、快速参考和变更日志等面向人的辅助文档。Skill 中的每个文件都应该直接帮助另一个 Agent 完成任务。
+
+## 自由度应该与任务风险匹配
+
+`skillcraft` 不追求把所有操作都写成脚本。它要求根据任务的稳定性和风险选择约束强度：
+
+- 当多种方案都成立、选择依赖当前上下文时，使用高自由度的文字原则；
+- 当存在推荐模式但允许局部变化时，使用伪代码或带参数的脚本；
+- 当步骤脆弱、顺序错误会造成损失时，提供确定性脚本和严格检查。
+
+这条原则同时避免两个极端：既不让 Agent 每次从头猜测高风险操作，也不把本来需要判断的工作硬编码成无法适应上下文的流水线。
+
+## 普通 Skill 已经覆盖大多数场景
+
+没有 `--project-config` 时，`skillcraft` 创建的是普通自包含 Skill。下面的命令会生成 `SKILL.md`、UI 元数据，以及实际需要的脚本和参考资料目录：
+
+```bash
+uv run python /path/to/skillcraft/scripts/init_skill.py release-package \
+  --path "${CODEX_HOME:-$HOME/.codex}/skills" \
+  --resources scripts,references \
+  --interface display_name="Release Package" \
+  --interface short_description="Release a package with validated steps" \
+  --interface default_prompt="Use $release-package to prepare this release."
+```
+
+初始化后仍要删除占位内容、实现真实资源并运行验证：
+
+```bash
+uv run --with pyyaml python \
+  /path/to/skillcraft/scripts/quick_validate.py \
+  "${CODEX_HOME:-$HOME/.codex}/skills/release-package"
+```
+
+如果 Skill 只需要一套跨项目都成立的流程，到这里就足够了。不同仓库只是文件路径略有差异，而且这些差异可以可靠发现，也没有必要引入配置。
+
+## Skill Config 解决什么问题
+
+普通 Skill 的边界会在一种场景下遇到困难：工作方法相同，但每个仓库必须长期拥有并评审自己的术语、命令、拓扑或政策。
+
+例如，一个通用发布 Skill 可以规定“读取版本、运行项目验证、构建产物、确认发布边界”的工作流；但不同仓库可能分别使用 `pnpm test`、`uv run pytest` 或 `fvm flutter test`，也可能拥有不同的环境名称、产物目录和恢复政策。
+
+把这些项目事实直接写进共享 `SKILL.md`，会让 Skill 逐渐了解所有使用者。复制 Skill 再分别修改，又会让通用修复无法同步。更隐蔽的错误是在共享脚本中加入项目分支：
+
+```python
+# 错误：共享 Skill 开始认识具体项目
+if profile == "personal-blog":
+    validate_command = "pnpm build"
+```
+
+Skill Config 的目标就是让共享能力与项目事实各自拥有明确位置，并在运行时确定性地组合，而不是让一方吞并另一方。
+
+## 三层内容，三个所有者
+
+启用 Skill Config 后，目标仓库采用三层结构：
 
 ~~~text
 .agents/
@@ -54,19 +142,19 @@ categories: ["Artifacts"]
     └── <task>/<digest>.md
 ~~~
 
-`.agents/skills/<skill-name>/` 是可复用实现。它包含所有项目都成立的流程、通用 fallback、配置 Schema、解析器以及测试。
+| 内容 | 所有者 | 是否跟踪 |
+| --- | --- | --- |
+| 通用工作流、fallback、安全不变量、Schema 和 resolver | 可复用 Skill | 是 |
+| 项目术语、命令、拓扑、政策和验证入口 | 目标仓库 | 是 |
+| 合并后的有效指令 | resolver 生成 | 否 |
 
-`.agents/skills-config/<skill-name>/` 属于目标项目。这里的配置和 Profile 应与代码一起提交、评审和演进，但不应被反向复制到共享 Skill 仓库中。
+`.agents/skills/<skill-name>/` 仍然是可复用 Skill，不能携带某个具体项目的 Profile。`.agents/skills-config/<skill-name>/` 与项目代码一起提交和评审，但不会反向复制进共享 Skill。`.agents/.cache/<skill-name>/` 只是可重复生成的运行产物，应加入 `.gitignore`。
 
-`.agents/.cache/<skill-name>/` 保存解析器生成的有效指令。它是可重复生成的运行产物，应加入 `.gitignore`，而不是成为第三份人工维护的事实源。
+一次性用户输入、密钥、生成结果和运行状态不属于任何 Profile。Skill Config 保存的是仓库需要长期拥有的行为差异，不是一个任意数据存储目录。
 
-这条边界解决的并不只是代码复用问题。它让通用 Skill 的维护者可以修改跨项目流程，让项目维护者可以修改本地规则，双方都不必取得另一侧全部内容的所有权。
+## 配置描述任务，不执行任务
 
-其中还有一条容易被忽略的边界：`profile` 只是 manifest 中用于标识当前配置的字符串，共享 Skill 必须将它视为不透明标识。`personal-blog` 这个名称可以被输出、记录并参与 `instructions_id` 计算，但共享 resolver 或其他 Python 脚本不能根据它选择项目行为。
-
-## 一个配置文件怎样描述项目行为
-
-每个 Skill 拥有自己的版本化 Schema。下面是一个假想的 `release-web` Skill 配置：
+每个支持配置的 Skill 拥有自己的版本化 Schema。例如，一个 `release-web` Skill 可以由博客仓库提供以下配置：
 
 ```yaml
 schema: release-web.config.v1
@@ -79,63 +167,44 @@ tasks:
       validate: pnpm build
 ```
 
-`tasks` 允许一个 Skill 为不同任务组合不同的通用指令和项目指令。`base` 相对于 `.agents/skills/release-web/`，`profile` 相对于 `.agents/skills-config/release-web/`。`commands` 只是声明项目提供的命令，并不代表解析器有权执行它。
+`base` 相对于 `.agents/skills/release-web/`，用于选择通用任务说明；`profile` 相对于 `.agents/skills-config/release-web/`，用于选择项目说明；`commands` 声明当前项目提供的命令。
 
-对应的 `project.md` 可以只写当前仓库特有的知识：
+对应的 `project.md` 只需要保存这个仓库特有的知识：
 
 ```md
 # Project Profile
 
 - 使用 pnpm 管理 Node.js 依赖。
-- 发布前以 `pnpm build` 验证 Hugo 站点。
+- 发布前运行 `pnpm build`。
 - 静态产物位于 `public/`。
 ```
 
-这样，通用发布流程不需要知道 `personal-blog` 这个项目名，也不需要增加项目分支。同一份 Skill 安装到另一个仓库后，只需由那个仓库维护自己的 Profile。
+配置中的命令只是 resolver 的输出。解析配置不会执行它们，Agent 是否以及何时运行命令，仍由 Skill 工作流、当前任务和用户授权共同决定。
 
-## Profile 是标签，不是分支条件
+## Resolver 让配置真正进入执行链路
 
-配置机制最容易退化的方式，是先把项目规则移出 `SKILL.md`，随后又在共享脚本里根据 Profile 名称把它们写回来：
+只生成 `config.yaml` 还不够。如果 Agent 没有被要求读取它，Profile 仍然只是一份旁路文档。
 
-```python
-# 错误：共享 Skill 再次知道了具体项目
-if profile == "personal-blog":
-    validate_command = "pnpm build"
-```
-
-这种写法表面上使用了 Profile，实际仍然是项目命名分支。每接入一个仓库，都必须修改和重新发布共享 Skill；项目行为也无法只通过目标仓库中的配置完成评审。
-
-当前 `skillcraft` 要求共享代码对 Profile 名称保持无知。具体差异必须通过所选任务的 `base`、Profile 文本和声明式 `commands` 表达：
-
-```python
-# 正确：Profile 只作为解析结果的一部分
-profile = str(config.get("profile", "project"))
-print(f"profile: {profile}")
-```
-
-这并不意味着 resolver 不能读取 `profile`。它可以将名称写入 manifest、有效指令和哈希输入；不能做的是把某个具体名称解释成隐藏在共享代码里的项目逻辑。Profile 决定行为的方式是选择和描述配置内容，而不是触发 `if`、`match` 或成员测试中的硬编码分支。
-
-## 真正让配置生效的是解析过程
-
-只有配置文件还不够。如果 `SKILL.md` 没有要求 Agent 在执行任务前解析配置，Profile 就只是一份可能永远不会被读取的旁路文档。
-
-因此，支持配置的 Skill 必须将下面的动作写入自身工作流：
+因此，支持配置的 Skill 必须在自己的 `SKILL.md` 中规定：执行相关任务前，先运行 resolver。
 
 ```bash
-uv run python .agents/skills/<skill-name>/scripts/resolve.py --task <task>
+uv run python \
+  .agents/skills/<skill-name>/scripts/resolve.py \
+  --task <task>
 ```
 
-`skillcraft` 生成的 resolver 会按确定顺序完成以下工作：
+`skillcraft` 生成的 resolver 会完成以下工作：
 
 1. 从当前目录向上寻找最近的 Git 仓库根目录；
 2. 加载 Skill 内置的通用任务指令；
-3. 如果存在 `skills-config/<skill-name>/config.yaml`，校验 Schema 并加载项目 Profile；
-4. 先放入通用指令，再追加项目指令和声明式命令；
-5. 对所有有效输入计算稳定的 `instructions_id`；
-6. 将合并结果写入 `.agents/.cache/`；
-7. 返回一份很小的 manifest，由 Agent 读取其中指向的有效指令。
+3. 如果存在项目配置，校验精确 Schema 和任务映射；
+4. 分别校验通用 reference 与项目 Profile 的路径边界；
+5. 先写入通用指令，再追加项目指令和声明式命令；
+6. 对所有有效输入计算稳定的 `instructions_id`；
+7. 将结果写入 `.agents/.cache/`；
+8. 返回一份小型 manifest，供 Agent 定位并读取有效指令。
 
-解析结果类似：
+一次解析的 manifest 类似：
 
 ```yaml
 status: ready
@@ -152,69 +221,56 @@ commands:
   validate: pnpm build
 ```
 
-Agent 读取 `instructions.path` 后，得到的不是互相独立的几份材料，而是一份包含来源、优先级、通用规则、项目规则和命令声明的完整有效指令。配置从“可能相关的上下文”变成了工作流中必须消费的输入。
+Agent 随后读取 `instructions.path`。它得到的不是三份松散材料，而是一份已经写明来源、优先级、通用规则、项目规则和命令声明的完整指令。只有完成这一步，项目配置才从“仓库中存在的文件”变成 Skill 的实际行为。
 
-## `instructions_id` 是行为指纹
+## `instructions_id` 是有效行为的指纹
 
-resolver 会把解析器版本、Skill 名称、任务名、Profile 名称、通用指令、项目指令、命令和原始配置共同纳入 SHA-256，再截取摘要生成 `instructions_id`。
+resolver 会把解析器版本、Skill 名称、任务名、Profile 名称、通用指令、项目指令、命令和原始配置共同纳入 SHA-256，截取摘要生成 `instructions_id`。
 
-这带来两个重要性质：
+这使解析结果具有两个性质：
 
-- 输入不变时，ID 稳定，解析结果可以安全复用；
-- 任何会影响行为的输入发生变化时，ID 随之改变，缓存不会悄悄复用旧指令。
+- 输入不变时 ID 稳定，可以准确复用相同结果；
+- 任一有效输入改变时 ID 改变，不会悄悄读取旧缓存。
 
-因此，`instructions_id` 不是人工维护的版本号，而是本次有效行为的内容指纹。缓存路径也包含同一个摘要，使“哪份指令产生了这次行为”可以被准确追踪，同时避免把生成文件提交进仓库。
+缓存路径包含同一个摘要，所以 `instructions_id` 不是人工维护的版本号，而是“本次 Agent 到底依据哪套有效指令工作”的内容指纹。
 
-## 项目 Profile 有优先级，但没有越权能力
+## 项目规则优先，但不能越权
 
-项目指令在与通用“可配置默认值”描述同一个选择时拥有更高优先级。例如，通用指令可以建议运行默认测试命令，而项目 Profile 可以将它替换为仓库自己的验证入口。
+当项目指令与通用的可配置默认值描述同一选择时，项目指令优先。例如，通用流程可以要求“运行验证”，项目 Profile 再声明具体使用 `pnpm build`。
 
-但 Profile 不能覆盖所有内容。它始终服从更高层级的 system、developer 和 user 指令，也不能覆盖 Skill 明确声明的不可配置安全不变量、resolver 的 Schema 校验和路径边界。
+Profile 不能覆盖 system、developer 或 user 指令，也不能覆盖 Skill 明确声明的不可配置安全不变量、Schema 校验和路径边界。只有每个消费项目都必须遵守的规则，才适合被标记为不可配置不变量。
 
-resolver 还会拒绝绝对路径以及逃逸各自根目录的相对路径。解析前会调用 `resolve()` 规范化路径，再检查最终位置是否仍位于 Skill 或配置目录中，因此 `../../outside.md` 和通过符号链接绕出根目录的文件都不能被当成 Profile 载入。
+resolver 会拒绝绝对路径，以及逃逸各自根目录的相对路径。路径先经过规范化，再检查最终位置是否仍在 Skill 或配置目录中，因此 `../../outside.md` 和通过符号链接指向外部的文件都不能作为配置输入。
 
-同样，配置中的命令只会出现在解析结果中。resolver 不执行命令；Agent 是否以及何时执行，仍由 Skill 工作流和用户授权决定。配置决定行为参数，不借机获得额外权限。
+`profile` 名称本身也必须被共享代码视为不透明标识。它可以出现在 manifest 中并参与哈希，但不能触发 `if profile == "customer-a"`、字符串集合成员判断或 `match profile` 分支。具体行为必须由所选 Profile 内容和声明式命令表达。
 
-## 没有配置时仍然必须可用
+最新的 `quick_validate.py` 会分析支持配置的 Skill 中的 Python AST。一旦共享 `scripts/` 出现具体 Profile 分支，验证就会失败，并要求将行为移回 `.agents/skills-config/<skill-name>/`。这道检查防止项目差异在完成配置拆分后又悄悄回流到共享代码。
 
-项目配置是增强模式，不是使用 Skill 的前置条件。找不到 `config.yaml` 时，resolver 会直接加载 `references/<task>.md`，并返回 `profile: generic`。
+## 没有配置时仍然是完整 Skill
 
-这个 fallback 很重要。它保证 Skill 可以先作为普通通用能力安装和使用，也允许项目在确实出现稳定差异之后再引入 Profile，而不必为每个仓库创建一份空配置。
+Skill Config 是附加模式，不是 `skillcraft` 或生成 Skill 的前置条件。
 
-反过来，如果仓库已经提供了配置，却请求了其中不存在的任务，resolver 会明确报错，而不是悄悄退回 generic。显式配置意味着项目已经接管了这部分行为，拼写错误和缺失映射不应被默认值掩盖。
+如果仓库没有 `config.yaml`，resolver 会直接加载 `references/<task>.md`，并返回 `profile: generic`。这让同一 Skill 可以先以通用行为独立使用，等项目出现稳定且值得评审的差异后再增加配置，不需要为所有仓库创建空 Profile。
 
-## 测试的是“同一个 Skill，不同的行为”
+反过来，如果项目已经提供配置，却请求其中不存在的任务，resolver 会明确失败，而不是悄悄退回 generic。显式配置意味着项目已经接管这部分行为，配置错误不应被默认值掩盖。
 
-配置解析器至少需要验证以下场景：
+## 验证“同一 Skill，不同项目行为”
 
-- 无配置时可以使用 generic fallback；
+普通 Skill 需要检查 frontmatter、命名、资源和脚本；配置型 Skill 还必须验证整个解析契约：
+
+- 无配置时使用 generic fallback；
 - 通用指令与项目 Profile 按顺序组合；
-- 输入不变时 `instructions_id` 保持稳定；
-- 错误 Schema 和未配置任务被拒绝；
-- `base` 与 `profile` 不能逃逸各自根目录；
-- 同一份 Skill 放入两个不同临时仓库后，会得到不同的 Profile、命令、有效指令和 `instructions_id`；
-- resolver 测试只依赖临时 generic 与 project fixture，不依赖承载 Skill 源码的宿主仓库配置。
+- 输入不变时 `instructions_id` 稳定；
+- 错误 Schema、缺失任务和越界路径被拒绝；
+- 同一份 Skill 放入两个临时仓库后，解析出不同的 Profile、命令、指令和 ID；
+- resolver 测试只依赖临时 fixture，不依赖承载 Skill 源码的宿主仓库配置；
+- 共享脚本没有按具体 Profile 名称分支。
 
-其中，跨两个仓库的验证尤其关键。单独证明“配置文件能被读取”并不能证明共享 Skill 已经与项目事实解耦；只有相同 Skill 无需修改自身代码，就能在两个仓库中解析出不同且正确的行为，机制才真正成立。
+其中，跨两个仓库的测试最能证明所有权边界。仅仅证明 `config.yaml` 可以被读取，并不能证明 Skill 已经摆脱项目硬编码；只有共享实现完全相同，两个仓库仍能得到各自正确的行为，Skill Config 才真正成立。
 
-`skillcraft` 的 `quick_validate.py` 现在还会解析支持项目配置的 Skill 中的 Python AST。如果发现共享 `scripts/` 代码把 `profile` 或对象的 `.profile` 与具体字符串比较，例如 `profile == "customer-a"`、`profile in {"a", "b"}` 或 `match profile` 的字符串 case，校验会失败并要求把行为移回 `.agents/skills-config/<skill-name>/`。测试目录被排除在这项扫描之外，因为 fixture 本身需要构造不同 Profile；但测试仍不能依赖当前宿主项目的真实配置。
+## 用 Skillcraft 创建配置型 Skill
 
-## 从旧 Skill 迁移时删除项目分支
-
-为已有 Skill 引入配置时，可以按下面的顺序迁移：
-
-1. 找出 `SKILL.md` 和共享脚本中的项目命名条件，以及它们引用的项目事实；
-2. 将项目术语、Profile 文本和命令移入对应仓库的 `skills-config`；
-3. 将代码分支改为通用任务输入，由 resolver 统一组合；
-4. 保留不依赖任何项目配置的 generic fallback；
-5. 对比迁移前后的有效行为，再删除旧分支；
-6. 如果 Schema 或任务名发生变化，明确记录破坏性变更。
-
-迁移完成的判断标准不是“已经生成 `config.yaml`”，而是共享 Skill 不再需要知道任何具体项目名，并且同一份实现可以在独立临时仓库中解析出各自的行为。
-
-## 用 skillcraft 创建支持配置的 Skill
-
-安装 `skillcraft` 后，可以用 `--project-config` 初始化解析器、通用任务参考、配置契约和 resolver 测试：
+普通模式和配置模式使用同一个初始化器。只有确实需要项目长期拥有行为差异时，才增加 `--project-config`：
 
 ```bash
 uv run python /path/to/skillcraft/scripts/init_skill.py release-web \
@@ -225,17 +281,13 @@ uv run python /path/to/skillcraft/scripts/init_skill.py release-web \
   --interface default_prompt="Use $release-web to release this project."
 ```
 
-生成脚手架只是开始。接下来仍需根据真实任务修改通用参考、任务名、Schema 和 Profile，并运行结构校验与 resolver 测试。结构校验不仅检查 frontmatter，也会拒绝共享 Python 脚本中的具体 Profile 分支：
+这个选项会额外生成 resolver、resolver 测试、generic `default` reference，以及项目配置契约。它们是需要继续定制的脚手架，不是完成品：作者仍需根据真实任务确定 Schema、任务名、通用指令和 Profile 边界，再运行结构校验与 resolver 测试。
 
-```bash
-uv run python /path/to/skillcraft/scripts/quick_validate.py \
-  .agents/skills/release-web
+如果是从已有 Skill 迁移，应先找出所有项目命名条件和项目事实，将 Profile 文本与命令移入 `skills-config`，把代码分支改为通用任务输入，保留 generic fallback，最后对比迁移前后的有效行为。Schema 或任务名发生变化时，还要明确记录破坏性变更。
 
-uv run python \
-  .agents/skills/release-web/scripts/tests/test_resolve.py
-```
+## 安装与使用
 
-`skillcraft` 也可以像普通 Skill 一样安装：
+可以从 `wyatt_skills` 安装 `skillcraft`：
 
 ```bash
 pnpm dlx skills add Hu-Wentao/wyatt_skills \
@@ -243,13 +295,29 @@ pnpm dlx skills add Hu-Wentao/wyatt_skills \
   --yes
 ```
 
+安装后，可以直接让 Agent 创建普通 Skill：
+
+```text
+请使用 skillcraft 创建一个 release-dart-package Skill。
+先根据真实发布请求确定工作流，只创建必要的 scripts 和 references，
+生成并校验 agents/openai.yaml，最后运行结构验证。
+```
+
+也可以明确要求项目配置能力：
+
+```text
+请使用 skillcraft 创建一个支持项目配置的 release-web Skill。
+通用 Skill 只保留发布流程和安全不变量；项目命令、环境名称和产物目录
+放进 .agents/skills-config/release-web，并验证 generic fallback 和两个项目 Profile。
+```
+
 ## 结语
 
-Skill Config 的目标不是把 `SKILL.md` 变成另一种配置系统，而是建立清晰的行为所有权：通用方法属于共享 Skill，项目事实属于目标仓库，运行时合成结果属于可丢弃缓存。
+`skillcraft` 首先是 `skill-creator` 的完整替代：它负责理解使用场景、设计资源、初始化 Skill、维护 UI 元数据、验证结构，并通过隔离的前向测试检查 Skill 是否真的能解决问题。Skill Config 是建立在这套完整工作流之上的关键扩展，而不是 `skillcraft` 的全部。
 
-版本化 Schema 让配置可以演进，路径校验守住文件边界，声明式命令避免解析阶段越权，generic fallback 保留独立可用性，`instructions_id` 则把一次有效行为变成可追踪的内容指纹。对具体 Profile 分支的静态拒绝，进一步保证项目差异不会悄悄回流到共享脚本。最关键的是，`SKILL.md` 明确要求执行 resolver，让这些设计不只存在于目录结构中，而是真正进入 Agent 的执行链路。
+当一个 Skill 只需要通用行为时，保持自包含；当不同仓库必须拥有各自可评审的长期规则时，再把通用能力、项目 Profile 和运行缓存分成三个所有权层，通过 resolver 合成有效指令。
 
-当项目差异不再以条件分支回流到共享 Skill，同一个工作流才能同时保持可复用和项目感知：通用能力只维护一次，每个仓库仍然拥有、评审并验证自己的做法。
+这样，Skill 可以在不复制自身、不认识具体项目、也不绕过权限边界的前提下适应不同仓库。`skillcraft` 解决的最终问题，不只是怎样写一份 `SKILL.md`，而是怎样让一个 Skill 在持续复用和演进之后，仍然简洁、可信并且可验证。
 
 ## 相关
 
