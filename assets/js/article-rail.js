@@ -48,19 +48,14 @@
   const positionPreview = (anchor) => {
     const rect = anchor.getBoundingClientRect();
     const label = anchor.querySelector(".article-rail-label");
-    const previewHeight = preview.offsetHeight;
-    const previewWidth = preview.offsetWidth;
-    const preferredTop = rect.top + rect.height / 2 - previewHeight / 2;
-    const top = Math.min(
-      Math.max(16, preferredTop),
-      Math.max(16, window.innerHeight - previewHeight - 16),
-    );
     const maximumMarkRight = rect.left + 64;
-    const labelRight = maximumMarkRight + (label ? label.offsetWidth + 12 : 0);
-    const preferredLeft = labelRight + 20;
-    const left = Math.min(preferredLeft, window.innerWidth - previewWidth - 16);
+    const labelHeight = label ? label.offsetHeight : 0;
+    const top = rect.top + rect.height / 2 + labelHeight / 2 + 12;
+    const availableHeight = window.innerHeight - top - 16;
+
     preview.style.top = `${top}px`;
-    preview.style.left = `${Math.max(maximumMarkRight + 20, left)}px`;
+    preview.style.left = `${maximumMarkRight + 20}px`;
+    preview.style.maxHeight = `${Math.max(64, Math.min(280, availableHeight))}px`;
   };
 
   const showPreview = (anchor, heading) => {
