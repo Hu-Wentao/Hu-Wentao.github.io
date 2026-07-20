@@ -1,24 +1,31 @@
 <script>
   (() => {
-    const host = document.querySelector(".logo-switches");
-    if (!host || document.getElementById("content-width-switch")) return;
+    const host = document.body;
+    if (document.getElementById("content-width-switch")) return;
 
     const options = [
-      { value: "narrow", label: "窄", title: "窄版：780px" },
-      { value: "medium", label: "中", title: "中版：1024px" },
-      { value: "wide", label: "宽", title: "宽版：接近全屏" },
+      { value: "narrow", label: "窄", name: "窄版" },
+      { value: "medium", label: "中", name: "中版" },
+      { value: "wide", label: "宽", name: "宽版" },
     ];
     const switcher = document.createElement("div");
     switcher.id = "content-width-switch";
     switcher.className = "content-width-switch";
-    switcher.setAttribute("role", "group");
-    switcher.setAttribute("aria-label", "内容宽度");
+
+    const button = document.createElement("button");
+    button.type = "button";
+    switcher.appendChild(button);
 
     const applyWidth = (width, persist = true) => {
+      const currentIndex = Math.max(0, options.findIndex((option) => option.value === width));
+      const current = options[currentIndex];
+      const next = options[(currentIndex + 1) % options.length];
+
       document.documentElement.dataset.contentWidth = width;
-      switcher.querySelectorAll("button").forEach((button) => {
-        button.setAttribute("aria-pressed", String(button.dataset.width === width));
-      });
+      button.textContent = current.label;
+      button.dataset.width = current.value;
+      button.title = `当前：${current.name}；点击切换到${next.name}`;
+      button.setAttribute("aria-label", button.title);
 
       if (persist) {
         try {
@@ -29,17 +36,13 @@
       }
     };
 
-    options.forEach(({ value, label, title }) => {
-      const button = document.createElement("button");
-      button.type = "button";
-      button.dataset.width = value;
-      button.textContent = label;
-      button.title = title;
-      button.addEventListener("click", () => applyWidth(value));
-      switcher.appendChild(button);
+    button.addEventListener("click", () => {
+      const currentIndex = options.findIndex((option) => option.value === button.dataset.width);
+      const next = options[(currentIndex + 1) % options.length];
+      applyWidth(next.value);
     });
 
-    host.prepend(switcher);
+    host.appendChild(switcher);
     applyWidth(document.documentElement.dataset.contentWidth || "narrow", false);
   })();
 </script>
