@@ -1,0 +1,4 @@
+interface:
+  display_name: "Publish Blog Article"
+  short_description: "Publish and verify a Hugo blog article end to end"
+  default_prompt: "Use $publish-blog-article to formally publish a Hugo article and verify the live deployment."
