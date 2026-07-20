@@ -1,7 +1,7 @@
 ---
 title: "Queryable Markdown Skill：让 AI 稳定查询和维护 Markdown"
-date: 2026-07-12T00:00:00+08:00
-draft: true
+date: 2026-07-20T00:00:00+08:00
+draft: false
 aliases: ["/posts/make-markdown-queryable/"]
 summary: "queryable-markdown 让 Agent 只读查询普通 Markdown，并通过持久化 mdq 契约安全地创建、维护和编辑半结构化文档"
 tags: ["AI", "Markdown", "Skill", "VibeCoding", "文档工程"]
