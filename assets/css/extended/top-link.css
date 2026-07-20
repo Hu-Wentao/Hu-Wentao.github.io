@@ -1,0 +1,16 @@
+.top-link {
+    background: transparent;
+    border-radius: 0;
+    box-shadow: none;
+}
+
+.top-link,
+.top-link svg {
+    filter: none;
+}
+
+.top-link:focus-visible {
+    border-radius: 4px;
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+}
