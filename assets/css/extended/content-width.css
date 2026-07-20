@@ -12,12 +12,12 @@
 
 .content-width-switch {
     position: fixed;
-    bottom: 37px;
-    left: 7px;
+    bottom: 42px;
+    left: 12px;
     z-index: 99;
     display: flex;
-    width: 88px;
-    height: 88px;
+    width: 64px;
+    height: 64px;
     align-items: center;
     justify-content: center;
     opacity: 0.2;
@@ -25,19 +25,24 @@
 }
 
 .content-width-switch button {
-    width: 42px;
-    height: 42px;
+    width: 28px;
+    height: 28px;
     padding: 0;
     color: var(--secondary);
-    font-size: 13px;
-    line-height: 42px;
-    background: var(--tertiary);
-    border-radius: 50%;
+    font-size: 12px;
+    font-weight: 400;
+    line-height: 28px;
+    border-radius: 4px;
+    transition: background-color 0.15s ease;
 }
 
 .content-width-switch:hover,
 .content-width-switch:focus-within {
     opacity: 1;
+}
+
+.content-width-switch button:hover {
+    background: var(--tertiary);
 }
 
 .content-width-switch button:focus-visible {
