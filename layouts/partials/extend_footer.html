@@ -44,5 +44,18 @@
 
     host.appendChild(switcher);
     applyWidth(document.documentElement.dataset.contentWidth || "narrow", false);
+
+    const setTooltip = (element, tooltip) => {
+      if (!element) return;
+      element.title = tooltip;
+      element.setAttribute("aria-label", tooltip);
+    };
+
+    setTooltip(document.getElementById("theme-toggle"), "切换明暗主题 (Alt + T)");
+    document.addEventListener("DOMContentLoaded", () => {
+      document.querySelectorAll("button.copy-code").forEach((copyButton) => {
+        setTooltip(copyButton, "复制代码");
+      });
+    });
   })();
 </script>
