@@ -1,6 +1,6 @@
 baseURL = 'https://wyattcoder.top/'
 languageCode = 'zh-cn'
-title = 'Hu-Wentao 的个人博客'
+title = '低熵工程'
 theme = 'PaperMod'
 
 [markup.goldmark.extensions.passthrough]
@@ -20,6 +20,8 @@ theme = 'PaperMod'
     ShowToc = true
     languageName = "Chinese"
     contentLanguage = "zh"
+    [params.label]
+        text = "低熵工程 · Wyatt’s Artifacts"
     [[params.author]]
         name = "Hu Wentao"
         email = "hu.wentao@outlook.com"
