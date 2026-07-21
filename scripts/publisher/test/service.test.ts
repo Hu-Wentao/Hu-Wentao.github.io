@@ -8,14 +8,9 @@ import { FileLogger } from "../src/logger.js";
 import { PublishService } from "../src/service.js";
 import { GitSitePublisher } from "../src/site.js";
 import type {
-  Logger,
-  PostDocument,
-  PublishOptions,
-  PublishRunResult,
   ShellRunOptions,
   ShellRunResult,
   ShellRunner,
-  SocialPublisherPort,
 } from "../src/types.js";
 
 class FakeShellRunner implements ShellRunner {
@@ -27,25 +22,6 @@ class FakeShellRunner implements ShellRunner {
       throw new Error(`${command} failed`);
     }
     return result;
-  }
-}
-
-class FakeSocialPublisher implements SocialPublisherPort {
-  readonly events: string[] = [];
-
-  async assertReady(_post: PostDocument, _options: PublishOptions): Promise<void> {
-    this.events.push("ready");
-  }
-
-  async publish(_post: PostDocument, _options: PublishOptions): Promise<Pick<PublishRunResult, "juejin" | "x">> {
-    this.events.push("publish");
-    return {
-      x: {
-        status: "published",
-        text: "hello",
-        url: "https://x.com/test/status/1",
-      },
-    };
   }
 }
 
@@ -89,7 +65,7 @@ describe("publish service", () => {
     expect(readFileSync(postPath, "utf8")).toBe(original);
   });
 
-  test("publishArticle dry-run stops before social publish", async () => {
+  test("publishArticle dry-run validates the site without publishing", async () => {
     const rootDir = createTempRepo();
     const logger = new FileLogger(join(rootDir, ".publish-records/test.log"));
     const shell = new FakeShellRunner((command, args) => {
@@ -111,22 +87,19 @@ describe("publish service", () => {
       shell,
       fetchImpl: async () => new Response(null, { status: 200 }) as Response,
     });
-    const social = new FakeSocialPublisher();
     const service = new PublishService({
       rootDir,
       recordDir: join(rootDir, ".publish-records/run"),
       sitePublisher: site,
-      socialPublisher: social,
     });
 
     const result = await service.publishArticle("content/posts/demo.md", {
       command: "publish:article",
       dryRun: true,
-      platforms: ["x"],
     });
 
     expect(result.dryRun).toBe(true);
-    expect(social.events).toEqual(["ready"]);
+    expect(result.canonicalUrl).toBe("https://wyattcoder.top/posts/demo/");
   });
 });
 

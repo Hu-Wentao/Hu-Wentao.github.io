@@ -1,5 +1,3 @@
-export type Platform = "juejin" | "x";
-
 export interface PublishConfig {
   cover?: string;
   juejin?: {
@@ -36,9 +34,8 @@ export interface PostDocument {
 }
 
 export interface PublishOptions {
-  command: "publish:article" | "publish:social";
+  command: "publish:article";
   dryRun: boolean;
-  platforms: Platform[];
 }
 
 export interface SitePublishResult {
@@ -47,27 +44,12 @@ export interface SitePublishResult {
   changedFrontMatter: boolean;
 }
 
-export interface JuejinPublishResult {
-  draftId?: string;
-  articleId?: string;
-  url?: string;
-  status: "published" | "dry-run";
-}
-
-export interface XPublishResult {
-  text: string;
-  url?: string;
-  status: "published" | "dry-run";
-}
-
 export interface PublishRunResult {
   postPath: string;
   canonicalUrl: string;
   recordDir: string;
   dryRun: boolean;
   commitSha?: string;
-  juejin?: JuejinPublishResult;
-  x?: XPublishResult;
 }
 
 export interface Logger {
@@ -97,9 +79,4 @@ export interface SitePublisherPort {
   assertMainBranch(): Promise<void>;
   publishPost(post: PostDocument, publishedAt: Date, dryRun: boolean): Promise<SitePublishResult>;
   waitForUrl(url: string): Promise<void>;
-}
-
-export interface SocialPublisherPort {
-  assertReady(post: PostDocument, options: PublishOptions): Promise<void>;
-  publish(post: PostDocument, options: PublishOptions): Promise<Pick<PublishRunResult, "juejin" | "x">>;
 }

@@ -8,18 +8,8 @@
 
 1. 确保本机已安装 `nvm`、Node `v24.14.1`、`pnpm`、`hugo`。
 2. 执行 `pnpm install` 安装依赖。
-3. 执行 `pnpm publish:setup`，在打开的专用浏览器 profile 中完成:
-   - 安装 Wechatsync Chrome 扩展
-   - 在扩展设置中启用 `MCP 连接`
-   - 复制 Token 并导出环境变量 `WECHATSYNC_TOKEN`
-   - 登录掘金和 X
-4. 关闭 setup 时打开的浏览器窗口，再执行正式发布。
-
-环境变量:
-
-```bash
-export WECHATSYNC_TOKEN="你的 token"
-```
+3. 若需同步到外部平台，在主 Chrome 中安装 Wechatsync 扩展并启用 `MCP 连接`。
+4. 在主 Chrome 中登录目标平台，并把 Wechatsync MCP 配置到 Codex。
 
 新增 front matter 可选配置:
 
@@ -36,19 +26,22 @@ publish:
 完整发布指定文章:
 
 ```bash
-pnpm publish:article content/posts/my-post.md --platforms juejin,x
+pnpm publish:article content/posts/my-post.md
 ```
 
-仅重试外部同步:
+外部平台发布不能直接通过 `pnpm` 执行。请在 Codex 中明确指定平台，例如:
 
-```bash
-pnpm publish:social content/posts/my-post.md --platforms juejin,x
+```text
+正式发布 content/posts/my-post.md，并同步到掘金和 X
 ```
+
+Codex 会先使用 Wechatsync MCP 与主 Chrome 扩展创建草稿，再使用主 Chrome
+登录态完成最终发布。发布流程不会创建或使用独立浏览器 profile。
 
 预演流程但不实际发布:
 
 ```bash
-pnpm publish:article content/posts/my-post.md --dry-run --platforms juejin,x
+pnpm publish:article content/posts/my-post.md --dry-run
 ```
 
 脚本约束:
@@ -56,21 +49,20 @@ pnpm publish:article content/posts/my-post.md --dry-run --platforms juejin,x
 - 仅支持 `content/posts/*.md`
 - 仅允许在 `main` 分支执行
 - 执行前工作区必须干净
-- 检测到 Hugo shortcode 或本地图片引用会直接失败
-- `publish.juejin.category` 是掘金发布必填项
-- 当前实现复用 Wechatsync 创建掘金草稿，再通过浏览器登录态自动补元数据并发布
-- X 采用本机浏览器自动发摘要链接帖，不走官方 API
+- `pnpm publish:article` 只负责网站发布，不会向外部平台发送内容
+- 外部平台发布必须由 Codex 的 `publish-blog-article` skill 编排
+- 掘金同步先由 Wechatsync 创建草稿，再由主 Chrome 补齐元数据并发布
+- X 使用主 Chrome 发布摘要链接帖，不走官方 API
 
 运行产物:
 
-- 浏览器 profile: `.publisher-profile/`
 - 发布记录: `.publish-records/<timestamp>-<slug>/`
 
 失败恢复:
 
 - 如果失败发生在 `git commit` 之前，文章 front matter 会自动回滚
-- 如果失败发生在 `push` 或外部平台同步之后，仓库改动不会自动撤销，需要人工处理
-- 失败时会把日志和浏览器截图写入 `.publish-records/`
+- 如果失败发生在 `push` 之后，仓库改动不会自动撤销，需要人工处理
+- 失败时会把日志写入 `.publish-records/`
 
 ## 本地预览
 
