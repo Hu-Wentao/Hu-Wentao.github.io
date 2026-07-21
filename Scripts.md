@@ -68,6 +68,9 @@ pnpm publish:article content/posts/my-post.md --dry-run
 
 发布计划和运行状态统一保存在 `publishing/schedule.json`。Codex 定时任务每两天运行一次：
 
+- 自动发现 front matter `date` 严格晚于 `discovery.enabledAfter` 的新文章；启用前的历史文章永不自动导入；
+- 只在文章已被 Git 跟踪且无本地修改、`draft: false`、主站 canonical URL 可访问并包含准确标题时自动入队；
+- 自动入队使用当前最大 `queuePosition + 100`，随后立即计算是否到期；已超过间隔的文章可在同一次任务中直接分发；
 - 推进所有已经到期的历史文章后续批次；
 - 按 `queuePosition` 从小到大，最多启动一篇新文章的外部分发；
 - 第一批的 `afterDays` 从主站手动发布时间开始计算，后续批次从上一批实际完成时间开始计算；
@@ -80,7 +83,8 @@ pnpm publish:article content/posts/my-post.md --dry-run
 文章只有同时满足以下条件才能入队：
 
 - front matter 明确为 `draft: false`；
-- 用户明确确认文章已在自建博客上手动发布；
+- front matter `date` 严格晚于自动发现启用时间；
+- 文章已被 Git 跟踪且没有未提交修改；
 - canonical URL 已公开可访问，并经过标题内容验证；
 - 队列中保存了 `publicationMethod: "manual"` 的主站发布记录。
 
@@ -113,11 +117,28 @@ pnpm publish:article content/posts/my-post.md --dry-run
 pnpm publish:queue validate
 ```
 
+只读发现启用后新发布、尚未入队的文章：
+
+```bash
+pnpm publish:queue discover
+```
+
+完成主站 URL 与标题验证后入队：
+
+```bash
+pnpm publish:queue enqueue \
+  --article content/posts/my-post.md \
+  --title "文章的准确标题" \
+  --url https://wyattcoder.top/posts/my-post/
+```
+
 只读查看当前到期动作：
 
 ```bash
 pnpm publish:queue due --platforms <本次刷新得到的逗号分隔平台ID>
 ```
+
+若刷新成功但没有合格平台，使用 `--platforms=`；任务会保留队列并等待下次运行。
 
 状态必须通过命令转换，不要手工把平台标记为发布完成：
 

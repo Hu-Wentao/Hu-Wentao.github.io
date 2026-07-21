@@ -1,4 +1,4 @@
 interface:
   display_name: "Manage Blog Syndication"
-  short_description: "Queue current Wechatsync targets; link-post to X"
-  default_prompt: "Use $manage-blog-publishing to distribute manually published blog posts to current Wechatsync targets, posting only a summary and canonical link on X."
+  short_description: "Discover new posts and queue current Wechatsync targets"
+  default_prompt: "Use $manage-blog-publishing to discover newly published blog posts, enqueue them, and distribute due work to current Wechatsync targets."

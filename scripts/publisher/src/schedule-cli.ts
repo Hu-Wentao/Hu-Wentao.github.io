@@ -5,7 +5,9 @@ import {
   blockRelease,
   completeRelease,
   DEFAULT_SCHEDULE_PATH,
+  enqueueDiscoveredArticle,
   findDuePublishActions,
+  findDiscoverableArticles,
   findQueueAttention,
   loadPublishSchedule,
   startRelease,
@@ -19,6 +21,7 @@ function main(): void {
     options: {
       schedule: { type: "string", default: DEFAULT_SCHEDULE_PATH },
       article: { type: "string" },
+      title: { type: "string" },
       platform: { type: "string" },
       platforms: { type: "string" },
       at: { type: "string" },
@@ -39,6 +42,13 @@ function main(): void {
     print({ valid: true, articles: schedule.articles.length });
     return;
   }
+  if (command === "discover") {
+    print({
+      enabledAfter: schedule.discovery.enabledAfter,
+      candidates: findDiscoverableArticles(rootDir, schedule),
+    });
+    return;
+  }
   if (command === "due") {
     const runtimePlatforms = requireRuntimePlatforms(schedule, parsed.values.platforms);
     print({
@@ -50,6 +60,19 @@ function main(): void {
   }
 
   const article = requireOption(parsed.values.article, "--article");
+  if (command === "enqueue") {
+    const queued = enqueueDiscoveredArticle(
+      rootDir,
+      schedule,
+      article,
+      requireOption(parsed.values.title, "--title"),
+      requireOption(parsed.values.url, "--url"),
+      now,
+    );
+    writePublishSchedule(rootDir, schedule, parsed.values.schedule);
+    print({ article, queued });
+    return;
+  }
   const platform = requireOption(parsed.values.platform, "--platform");
   let release;
   if (command === "start") {
@@ -72,7 +95,7 @@ function main(): void {
   } else if (command === "block") {
     release = blockRelease(schedule, article, platform, requireOption(parsed.values.error, "--error"));
   } else {
-    throw new PublisherError("用法：pnpm publish:queue <validate|due|start|complete|block> [options]");
+    throw new PublisherError("用法：pnpm publish:queue <validate|discover|enqueue|due|start|complete|block> [options]");
   }
 
   writePublishSchedule(rootDir, schedule, parsed.values.schedule);
@@ -84,8 +107,11 @@ function requireRuntimePlatforms(schedule: ReturnType<typeof loadPublishSchedule
   if (!requiresRuntimePlatforms) {
     return [];
   }
-  if (!value?.trim()) {
+  if (value === undefined) {
     throw new PublisherError("动态 Wechatsync 队列必须提供 --platforms <已登录且支持草稿的平台ID，逗号分隔>");
+  }
+  if (!value.trim()) {
+    return [];
   }
   const platforms = value.split(",").map((platform) => platform.trim()).filter(Boolean);
   if (platforms.length === 0 || new Set(platforms).size !== platforms.length) {

@@ -7,7 +7,9 @@ import { afterEach, describe, expect, test } from "vitest";
 import {
   blockRelease,
   completeRelease,
+  enqueueDiscoveredArticle,
   findDuePublishActions,
+  findDiscoverableArticles,
   findQueueAttention,
   startRelease,
   validatePublishSchedule,
@@ -23,6 +25,80 @@ afterEach(() => {
 });
 
 describe("publish schedule", () => {
+  test("discovers only posts published after activation and can publish an already-due post in the same run", () => {
+    const rootDir = createRoot("old.md", "draft.md", "invalid-date.md", "new.md");
+    writePost(rootDir, "old.md", "Old", "2026-07-21T19:00:18+08:00", false);
+    writePost(rootDir, "draft.md", "Draft", "2026-07-22T09:00:00+08:00", true);
+    writePost(rootDir, "new.md", "New", "2026-07-21T19:05:00+08:00", false);
+    const schedule = createSchedule([]);
+
+    expect(findDiscoverableArticles(rootDir, schedule)).toEqual([{
+      path: "content/posts/new.md",
+      title: "New",
+      publishedAt: "2026-07-21T11:05:00.000Z",
+      canonicalUrl: "https://wyattcoder.top/posts/new/",
+    }]);
+
+    const queued = enqueueDiscoveredArticle(
+      rootDir,
+      schedule,
+      "content/posts/new.md",
+      "New",
+      "https://wyattcoder.top/posts/new/",
+      new Date("2026-07-23T19:05:00+08:00"),
+    );
+    expect(queued).toMatchObject({
+      queuePosition: 100,
+      releases: { site: { publicationMethod: "manual" } },
+    });
+    expect(findDiscoverableArticles(rootDir, schedule)).toEqual([]);
+    expect(findDuePublishActions(
+      schedule,
+      new Date("2026-07-23T19:05:00+08:00"),
+      ["juejin", "x"],
+    ).map((action) => action.platform)).toEqual(["juejin", "x"]);
+  });
+
+  test("rejects enqueue without exact canonical URL", () => {
+    const rootDir = createRoot("new.md");
+    writePost(rootDir, "new.md", "New", "2026-07-22T09:00:00+08:00", false);
+    const schedule = createSchedule([]);
+
+    expect(() => enqueueDiscoveredArticle(
+      rootDir,
+      schedule,
+      "content/posts/new.md",
+      "New",
+      "https://example.com/wrong",
+      new Date("2026-07-22T10:00:00+08:00"),
+    )).toThrow("必须等于 canonical URL");
+
+    expect(() => enqueueDiscoveredArticle(
+      rootDir,
+      schedule,
+      "content/posts/new.md",
+      "Wrong title",
+      "https://wyattcoder.top/posts/new/",
+      new Date("2026-07-22T10:00:00+08:00"),
+    )).toThrow("必须等于文章标题");
+  });
+
+  test("appends an auto-discovered post after custom queue positions", () => {
+    const rootDir = createRoot("existing.md", "new.md");
+    writePost(rootDir, "new.md", "New", "2026-07-22T09:00:00+08:00", false);
+    const schedule = createSchedule([article("content/posts/existing.md", 350)]);
+
+    const queued = enqueueDiscoveredArticle(
+      rootDir,
+      schedule,
+      "content/posts/new.md",
+      "New",
+      "https://wyattcoder.top/posts/new/",
+      new Date("2026-07-22T10:00:00+08:00"),
+    );
+    expect(queued.queuePosition).toBe(450);
+  });
+
   test("starts external distribution for at most one manually published article according to queuePosition", () => {
     const rootDir = createRoot("first.md", "second.md");
     const schedule = createSchedule([
@@ -166,6 +242,10 @@ describe("publish schedule", () => {
 
   test("rejects duplicate positions, drafts, and missing manual site evidence", () => {
     const rootDir = createRoot("first.md", "second.md");
+    const invalidDiscovery = createSchedule([]);
+    invalidDiscovery.discovery.enabledAfter = "invalid";
+    expect(() => validatePublishSchedule(rootDir, invalidDiscovery)).toThrow("discovery.enabledAfter");
+
     const duplicate = createSchedule([
       article("content/posts/first.md", 100),
       article("content/posts/second.md", 100),
@@ -228,6 +308,9 @@ function createSchedule(articles: PublishSchedule["articles"]): PublishSchedule 
     version: 1,
     timezone: "Asia/Shanghai",
     cadenceDays: 2,
+    discovery: {
+      enabledAfter: "2026-07-21T19:00:18+08:00",
+    },
     platformGroups: {
       social: ["x", "xiaohongshu"],
     },
@@ -236,6 +319,14 @@ function createSchedule(articles: PublishSchedule["articles"]): PublishSchedule 
     ],
     articles,
   };
+}
+
+function writePost(rootDir: string, file: string, title: string, date: string, draft: boolean): void {
+  writeFileSync(
+    join(rootDir, "content/posts", file),
+    `---\ntitle: ${title}\ndate: ${date}\ndraft: ${draft}\n---\n`,
+    "utf8",
+  );
 }
 
 function article(path: string, queuePosition: number): PublishSchedule["articles"][number] {

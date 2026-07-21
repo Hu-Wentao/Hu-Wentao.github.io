@@ -1,6 +1,6 @@
 ---
 name: manage-blog-publishing
-description: Manage and execute this Hugo repository's external-platform publication queue for articles already published manually on the self-hosted blog. Resolve eligible targets from the currently authenticated Wechatsync platforms at run time, with X handled as a summary-and-canonical-link post rather than a full article. Use when Codex needs to enroll or reorder eligible articles, configure platform exclusions, inspect due syndication, recover blocked releases, or run the recurring two-day external distribution workflow in publishing/schedule.json. Never use it to publish drafts or publish to the self-hosted site.
+description: Discover newly published Hugo articles, enroll them in this repository's external-platform queue, and execute due syndication. Only discover articles published after the configured activation cutoff, resolve eligible targets from the currently authenticated Wechatsync platforms at run time, and handle X as a summary-and-canonical-link post rather than a full article. Use when Codex needs to run the recurring workflow, inspect or reorder the queue, configure exclusions, or recover blocked releases. Never use it to publish drafts or publish to the self-hosted site.
 ---
 
 # Manage Blog Publishing
@@ -11,8 +11,8 @@ Use `publishing/schedule.json` as the durable external-syndication plan and stat
 
 - Enroll only an article whose front matter explicitly has `draft: false`.
 - Never publish to `site`, run `pnpm publish:article`, or change article front matter from this workflow.
-- Enroll only an article the user explicitly confirms they already published manually on the self-hosted blog. Do not infer manual publication from `draft: false` or a live URL alone.
-- Require the canonical URL to be public and verify that it contains the exact article title before enrollment.
+- Auto-enroll only an article whose front matter `date` is strictly later than `discovery.enabledAfter`.
+- Require the article to be tracked and unchanged in Git, then require its canonical URL to be public and contain the exact article title before enrollment.
 - Treat a queued platform as authorization for that article and external platform only.
 
 The queue validator enforces draft state, canonical URL equality, a verified manual site record, and the absence of `site` from the automated pipeline.
@@ -26,17 +26,19 @@ Before inspecting due work or starting a release:
 3. Keep `x` when its refreshed entry is authenticated. X uses the summary-link workflow below, not Wechatsync full-article draft synchronization.
 4. Exclude local/non-publishing targets such as `zip-download`, even if they report authenticated.
 5. Use the returned platform IDs exactly as reported. Never infer targets from Wechatsync documentation, an old run, `platformGroups`, or a handwritten supported-platform list.
-6. If the extension is disconnected or the refreshed list cannot be obtained, stop without changing queue state.
+6. If refresh succeeds but no target is eligible, pass an explicit empty set as `--platforms=`; report attention and leave queued work for a later run.
+7. If the extension is disconnected or the refreshed list cannot be obtained, stop without changing queue state.
 
 The eligible target set may change on every run. `platformGroups` is only an optional policy map for article-level class exclusions; it is not evidence that a platform is connected.
 
-## Enroll or Reorder an Article
+## Discover and Enroll New Articles
 
-1. Read the article front matter, `publishing/schedule.json`, and `Scripts.md`.
-2. Require explicit user confirmation of manual self-hosted publication. Stop and ask if it is missing.
-3. Verify the canonical URL and exact title on the live page.
-4. Add a unique positive `queuePosition`; prefer gaps of 100. A smaller value starts external distribution earlier.
-5. Record the verified site baseline under `releases.site`:
+1. Run `pnpm publish:queue validate`, then run `pnpm publish:queue discover` exactly once.
+2. Treat only the returned candidates as this run's discovery set. Never scan drafts manually or change `discovery.enabledAfter` during a scheduled run.
+3. For each candidate, require `git ls-files --error-unmatch <path>` to succeed and `git status --short -- <path>` to be empty.
+4. Fetch the exact canonical URL and verify that the public page contains the exact article title. A generic HTTP success is insufficient. If verification fails, leave it unqueued so a later run can retry.
+5. Run `pnpm publish:queue enqueue --article <path> --title <exact-title> --url <exact-canonical-url>` for each verified candidate, in the order returned by `discover`.
+6. The command appends positions in increments of 100 and records the front matter `date` as the manual site publication time:
 
 ```json
 {
@@ -49,10 +51,10 @@ The eligible target set may change on every run. `platformGroups` is only an opt
 }
 ```
 
-6. Use `exclude.groups` for a configured policy group and `exclude.platforms` for an individual Wechatsync platform ID. An exclusion may remain configured while that platform is disconnected.
-7. Preserve all release records when reordering or changing exclusions. Never fabricate a publication time, verification, or URL.
-8. Run `pnpm publish:queue validate` after every edit.
-9. Follow the repository `-c`/`-i` rule and commit only the requested paths.
+7. If any article was enrolled, validate again, commit only `publishing/schedule.json` with `chore: enqueue newly published blog posts`, and push `main` before inspecting due work.
+8. Use `exclude.groups` for a configured policy group and `exclude.platforms` for an individual Wechatsync platform ID. Preserve release records when reordering or changing exclusions.
+
+Never enqueue an article dated at or before the activation cutoff. Do not move the cutoff backward to import historical posts.
 
 ## Inspect Due Work
 
@@ -68,14 +70,15 @@ pnpm publish:queue due --platforms <refreshed-platform-ids>
 ## Run the Scheduled Workflow
 
 1. Require the local `main` checkout; external publication needs the user's main Chrome login state.
-2. Resolve the current Wechatsync targets using the required refresh procedure above.
-3. Run `pnpm publish:queue validate`, then run `pnpm publish:queue due --platforms <comma-separated-refreshed-ids>` once.
-4. Report `attention` items. If no actions are due, stop.
-5. Run `git status --short`. If any working-tree change exists, stop without changing queue state.
-6. For each returned external action, run `start --platforms <same-refreshed-platform-ids>`, stage only `publishing/schedule.json`, and commit `chore: start <platform> publication for <slug>`.
-7. Publish through Wechatsync and the user's main Chrome as described below.
-8. After verifying the exact public URL, run `complete`, commit only the schedule with `chore: record <platform> publication for <slug>`, then push `main`.
-9. On failure, first check whether a public post already exists. If it does not, run `block`, commit only the schedule with `chore: block <platform> publication for <slug>`, push `main`, and stop later actions for that article.
+2. Require `publishing/schedule.json` to be unchanged. Allow unrelated working-tree changes under the repository's `-i` rule, but never stage them.
+3. Discover, verify, enqueue, commit, and push newly published articles using the workflow above.
+4. Resolve the current Wechatsync targets using the required refresh procedure above.
+5. Run `pnpm publish:queue due --platforms <comma-separated-refreshed-ids>` exactly once after enrollment. This allows a newly enrolled article whose interval has elapsed to publish in the same run.
+6. Report `attention` items. If no actions are due, stop.
+7. For each returned external action, run `start --platforms <same-refreshed-platform-ids>`, stage only `publishing/schedule.json`, and commit `chore: start <platform> publication for <slug>`.
+8. Publish through Wechatsync and the user's main Chrome as described below.
+9. After verifying the exact public URL, run `complete`, commit only the schedule with `chore: record <platform> publication for <slug>`, then push `main`.
+10. On failure, first check whether a public post already exists. If it does not, run `block`, commit only the schedule with `chore: block <platform> publication for <slug>`, push `main`, and stop later actions for that article.
 
 Never mark a draft, editor page, generic HTTP success, or unverified post as published.
 
@@ -106,6 +109,8 @@ Never mark a draft, editor page, generic HTTP success, or unverified post as pub
 Use these commands only for external platforms; the CLI rejects `site`:
 
 ```bash
+pnpm publish:queue discover
+pnpm publish:queue enqueue --article <path> --title <exact-title> --url <canonical-url>
 pnpm publish:queue start --article <path> --platform <external-platform> --platforms <refreshed-platform-ids>
 pnpm publish:queue complete --article <path> --platform <external-platform> --url <public-url>
 pnpm publish:queue block --article <path> --platform <external-platform> --error <message>

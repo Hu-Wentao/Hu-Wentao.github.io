@@ -1,10 +1,11 @@
-import { existsSync, readFileSync, renameSync, writeFileSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync, renameSync, writeFileSync } from "node:fs";
 import { dirname, relative, resolve } from "node:path";
 
 import { PublisherError } from "./errors.js";
 import { loadBaseUrl, loadPost } from "./content.js";
 import type {
   DuePublishAction,
+  DiscoverableArticle,
   PublishPipelineStage,
   PublishSchedule,
   QueueAttentionItem,
@@ -38,6 +39,11 @@ export function validatePublishSchedule(rootDir: string, value: unknown): assert
   }
   if (!isPositiveInteger(value.cadenceDays)) {
     throw new PublisherError("cadenceDays 必须是正整数");
+  }
+  if (!isRecord(value.discovery)
+    || typeof value.discovery.enabledAfter !== "string"
+    || Number.isNaN(Date.parse(value.discovery.enabledAfter))) {
+    throw new PublisherError("discovery.enabledAfter 必须是有效时间");
   }
   if (!isRecord(value.platformGroups)) {
     throw new PublisherError("platformGroups 必须是对象");
@@ -91,6 +97,84 @@ export function validatePublishSchedule(rootDir: string, value: unknown): assert
     positions.add(article.queuePosition);
     paths.add(article.path);
   }
+}
+
+export function findDiscoverableArticles(
+  rootDir: string,
+  schedule: PublishSchedule,
+): DiscoverableArticle[] {
+  const baseUrl = loadBaseUrl(rootDir);
+  const enabledAfter = Date.parse(schedule.discovery.enabledAfter);
+  const queuedPaths = new Set(schedule.articles.map((article) => article.path));
+
+  return listMarkdownFiles(resolve(rootDir, "content/posts"))
+    .map((absolutePath) => relative(rootDir, absolutePath))
+    .filter((articlePath) => !queuedPaths.has(articlePath))
+    .map((articlePath) => loadPost(rootDir, articlePath, baseUrl))
+    .filter((post) => post.metadata.draft === false)
+    .flatMap((post) => {
+      const publishedAt = parsePostPublicationTime(post.metadata.date);
+      if (!publishedAt || Date.parse(publishedAt) <= enabledAfter) {
+        return [];
+      }
+      return [{
+        path: post.relativePath,
+        title: post.title,
+        publishedAt,
+        canonicalUrl: post.canonicalUrl,
+      }];
+    })
+    .sort((left, right) =>
+      Date.parse(left.publishedAt) - Date.parse(right.publishedAt) || left.path.localeCompare(right.path));
+}
+
+export function enqueueDiscoveredArticle(
+  rootDir: string,
+  schedule: PublishSchedule,
+  articlePath: string,
+  verifiedTitle: string,
+  verifiedUrl: string,
+  now: Date,
+): QueuedArticle {
+  if (Number.isNaN(now.getTime())) {
+    throw new PublisherError("无效的主站验证时间");
+  }
+  const candidate = findDiscoverableArticles(rootDir, schedule)
+    .find((article) => article.path === articlePath);
+  if (!candidate) {
+    throw new PublisherError(`文章不满足自动发现条件或已经入队：${articlePath}`);
+  }
+  if (verifiedTitle !== candidate.title) {
+    throw new PublisherError(`主站验证标题必须等于文章标题：${candidate.title}`);
+  }
+  if (verifiedUrl !== candidate.canonicalUrl) {
+    throw new PublisherError(`主站验证 URL 必须等于 canonical URL：${candidate.canonicalUrl}`);
+  }
+  if (now.getTime() < Date.parse(candidate.publishedAt)) {
+    throw new PublisherError("主站验证时间不能早于文章发布时间");
+  }
+
+  const nextPosition = schedule.articles.length === 0
+    ? 100
+    : Math.max(...schedule.articles.map((article) => article.queuePosition)) + 100;
+  const queued: QueuedArticle = {
+    path: candidate.path,
+    queuePosition: nextPosition,
+    exclude: { groups: [], platforms: [] },
+    releases: {
+      site: {
+        status: "published",
+        attempts: 1,
+        publicationMethod: "manual",
+        publishedAt: candidate.publishedAt,
+        verifiedAt: now.toISOString(),
+        url: candidate.canonicalUrl,
+      },
+    },
+  };
+  schedule.articles.push(queued);
+  validatePublishSchedule(rootDir, schedule);
+  return queued;
 }
 
 export function findDuePublishActions(
@@ -474,6 +558,28 @@ function requireStringArray(value: unknown, field: string): string[] {
     throw new PublisherError(`${field} 不允许重复值`);
   }
   return value;
+}
+
+function parsePostPublicationTime(value: unknown): string | undefined {
+  if (value instanceof Date && !Number.isNaN(value.getTime())) {
+    return value.toISOString();
+  }
+  if (typeof value !== "string" || Number.isNaN(Date.parse(value))) {
+    return undefined;
+  }
+  return value;
+}
+
+function listMarkdownFiles(directory: string): string[] {
+  if (!existsSync(directory)) {
+    return [];
+  }
+  return readdirSync(directory, { withFileTypes: true })
+    .flatMap((entry) => {
+      const path = resolve(directory, entry.name);
+      return entry.isDirectory() ? listMarkdownFiles(path) : path.toLowerCase().endsWith(".md") ? [path] : [];
+    })
+    .sort();
 }
 
 function addDays(date: Date, days: number): Date {

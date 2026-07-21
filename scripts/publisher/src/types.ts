@@ -11,7 +11,7 @@ export interface PublishConfig {
 
 export interface PostMetadata {
   title: string;
-  date?: string;
+  date?: string | Date;
   draft?: boolean;
   summary?: string;
   tags?: string[];
@@ -117,9 +117,19 @@ export interface PublishSchedule {
   version: 1;
   timezone: string;
   cadenceDays: number;
+  discovery: {
+    enabledAfter: string;
+  };
   platformGroups: Record<string, string[]>;
   pipeline: PublishPipelineStage[];
   articles: QueuedArticle[];
+}
+
+export interface DiscoverableArticle {
+  path: string;
+  title: string;
+  publishedAt: string;
+  canonicalUrl: string;
 }
 
 export interface DuePublishAction {
