@@ -22,6 +22,7 @@ export async function launchPublisherBrowser(rootDir: string): Promise<BrowserCo
   return chromium.launchPersistentContext(userDataDir, {
     executablePath,
     headless: process.env.PUBLISHER_BROWSER_HEADLESS === "1",
+    ignoreDefaultArgs: ["--disable-extensions"],
     viewport: { width: 1440, height: 960 },
   });
 }
