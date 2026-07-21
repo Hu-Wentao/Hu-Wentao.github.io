@@ -98,6 +98,7 @@ export interface ReleaseState {
 export interface PublishPipelineStage {
   name: string;
   afterDays: number;
+  platformSource?: "wechatsync_authenticated_drafts";
   platforms?: string[];
   groups?: string[];
 }

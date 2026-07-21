@@ -31,7 +31,11 @@ describe("publish schedule", () => {
     ]);
 
     validatePublishSchedule(rootDir, schedule);
-    const actions = findDuePublishActions(schedule, new Date("2026-07-21T09:00:00+08:00"));
+    const actions = findDuePublishActions(
+      schedule,
+      new Date("2026-07-21T09:00:00+08:00"),
+      ["zhihu", "juejin", "x"],
+    );
 
     expect(actions).toEqual([
       expect.objectContaining({
@@ -41,7 +45,7 @@ describe("publish schedule", () => {
       }),
       expect.objectContaining({
         articlePath: "content/posts/first.md",
-        platform: "wechat",
+        platform: "x",
         queuePosition: 100,
       }),
       expect.objectContaining({
@@ -57,37 +61,50 @@ describe("publish schedule", () => {
     const schedule = createSchedule([
       {
         ...article("content/posts/first.md", 100),
-        exclude: { groups: ["longtail"], platforms: ["x", "zhihu"] },
+        exclude: { groups: ["social"], platforms: ["zhihu"] },
         releases: article("content/posts/first.md", 100).releases,
       },
       article("content/posts/second.md", 200),
     ]);
 
     validatePublishSchedule(rootDir, schedule);
-    const actions = findDuePublishActions(schedule, new Date("2026-07-21T09:00:00+08:00"));
+    const actions = findDuePublishActions(
+      schedule,
+      new Date("2026-07-21T09:00:00+08:00"),
+      ["zhihu", "juejin", "x", "xiaohongshu"],
+    );
 
     expect(actions.map((action) => `${action.articlePath}:${action.platform}`)).toEqual([
       "content/posts/first.md:juejin",
-      "content/posts/first.md:wechat",
     ]);
   });
 
-  test("waits after actual completion time before advancing to the next stage", () => {
+  test("uses the refreshed runtime platform set without changing the schedule", () => {
     const rootDir = createRoot("first.md");
     const schedule = createSchedule([{
       ...article("content/posts/first.md", 100),
       releases: {
         site: manualSite("first", "2026-07-17T09:00:00+08:00"),
-        wechat: published("2026-07-19T09:10:00+08:00", "https://weixin.example/first"),
         zhihu: published("2026-07-19T09:20:00+08:00", "https://zhihu.example/first"),
-        juejin: published("2026-07-19T10:00:00+08:00", "https://juejin.example/first"),
       },
     }]);
 
     validatePublishSchedule(rootDir, schedule);
-    expect(findDuePublishActions(schedule, new Date("2026-07-21T09:59:00+08:00"))).toEqual([]);
-    expect(findDuePublishActions(schedule, new Date("2026-07-21T10:00:00+08:00"))
-      .map((action) => action.platform)).toEqual(["cnblogs", "csdn", "jianshu", "x"]);
+    expect(findDuePublishActions(
+      schedule,
+      new Date("2026-07-19T08:59:00+08:00"),
+      ["zhihu", "juejin"],
+    )).toEqual([]);
+    expect(findDuePublishActions(
+      schedule,
+      new Date("2026-07-19T09:00:00+08:00"),
+      ["zhihu", "juejin"],
+    ).map((action) => action.platform)).toEqual(["juejin"]);
+    expect(findDuePublishActions(
+      schedule,
+      new Date("2026-07-19T09:00:00+08:00"),
+      ["zhihu", "bilibili"],
+    ).map((action) => action.platform)).toEqual(["bilibili"]);
   });
 
   test("records external publishing transitions and refuses to automate the site", () => {
@@ -107,6 +124,7 @@ describe("publish schedule", () => {
       "content/posts/first.md",
       "juejin",
       new Date("2026-07-21T09:00:00+08:00"),
+      ["juejin"],
     );
     expect(started).toMatchObject({ status: "publishing", attempts: 1 });
     expect(() => startRelease(
@@ -114,6 +132,7 @@ describe("publish schedule", () => {
       "content/posts/first.md",
       "juejin",
       new Date("2026-07-21T09:01:00+08:00"),
+      ["juejin"],
     )).toThrow("正在发布");
 
     const blocked = blockRelease(schedule, "content/posts/first.md", "juejin", "platform failed");
@@ -131,6 +150,7 @@ describe("publish schedule", () => {
       "content/posts/first.md",
       "juejin",
       new Date("2026-07-21T10:00:00+08:00"),
+      ["juejin"],
     );
     expect(retried.attempts).toBe(2);
     const completed = completeRelease(
@@ -209,13 +229,10 @@ function createSchedule(articles: PublishSchedule["articles"]): PublishSchedule 
     timezone: "Asia/Shanghai",
     cadenceDays: 2,
     platformGroups: {
-      core: ["wechat", "zhihu", "juejin"],
-      longtail: ["csdn", "cnblogs", "jianshu"],
-      social: ["x"],
+      social: ["x", "xiaohongshu"],
     },
     pipeline: [
-      { name: "core", afterDays: 2, groups: ["core"] },
-      { name: "longtail", afterDays: 2, groups: ["longtail", "social"] },
+      { name: "wechatsync-connected", afterDays: 2, platformSource: "wechatsync_authenticated_drafts" },
     ],
     articles,
   };

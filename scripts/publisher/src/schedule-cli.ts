@@ -20,6 +20,7 @@ function main(): void {
       schedule: { type: "string", default: DEFAULT_SCHEDULE_PATH },
       article: { type: "string" },
       platform: { type: "string" },
+      platforms: { type: "string" },
       at: { type: "string" },
       url: { type: "string" },
       "commit-sha": { type: "string" },
@@ -39,10 +40,11 @@ function main(): void {
     return;
   }
   if (command === "due") {
+    const runtimePlatforms = requireRuntimePlatforms(schedule, parsed.values.platforms);
     print({
       checkedAt: now.toISOString(),
       attention: findQueueAttention(schedule),
-      actions: findDuePublishActions(schedule, now),
+      actions: findDuePublishActions(schedule, now, runtimePlatforms),
     });
     return;
   }
@@ -51,7 +53,13 @@ function main(): void {
   const platform = requireOption(parsed.values.platform, "--platform");
   let release;
   if (command === "start") {
-    release = startRelease(schedule, article, platform, now);
+    release = startRelease(
+      schedule,
+      article,
+      platform,
+      now,
+      requireRuntimePlatforms(schedule, parsed.values.platforms),
+    );
   } else if (command === "complete") {
     release = completeRelease(
       schedule,
@@ -69,6 +77,24 @@ function main(): void {
 
   writePublishSchedule(rootDir, schedule, parsed.values.schedule);
   print({ article, platform, release });
+}
+
+function requireRuntimePlatforms(schedule: ReturnType<typeof loadPublishSchedule>, value: string | undefined): string[] {
+  const requiresRuntimePlatforms = schedule.pipeline.some((stage) => stage.platformSource !== undefined);
+  if (!requiresRuntimePlatforms) {
+    return [];
+  }
+  if (!value?.trim()) {
+    throw new PublisherError("动态 Wechatsync 队列必须提供 --platforms <已登录且支持草稿的平台ID，逗号分隔>");
+  }
+  const platforms = value.split(",").map((platform) => platform.trim()).filter(Boolean);
+  if (platforms.length === 0 || new Set(platforms).size !== platforms.length) {
+    throw new PublisherError("--platforms 必须是无重复的平台 ID，使用逗号分隔");
+  }
+  if (platforms.includes("site")) {
+    throw new PublisherError("--platforms 不允许包含 site");
+  }
+  return platforms;
 }
 
 function requireOption(value: string | undefined, name: string): string {

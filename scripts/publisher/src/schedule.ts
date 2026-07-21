@@ -60,7 +60,7 @@ export function validatePublishSchedule(rootDir: string, value: unknown): assert
     }
     stageNames.add(stage.name);
     const platforms = resolveStagePlatforms(stage, platformGroups);
-    if (platforms.length === 0) {
+    if (platforms.length === 0 && stage.platformSource === undefined) {
       throw new PublisherError(`pipeline 阶段没有平台：${stage.name}`);
     }
     for (const platform of platforms) {
@@ -79,11 +79,9 @@ export function validatePublishSchedule(rootDir: string, value: unknown): assert
   }
   const positions = new Set<number>();
   const paths = new Set<string>();
-  const knownPlatforms = new Set(["site", ...pipeline.flatMap((stage) =>
-    resolveStagePlatforms(stage, platformGroups))]);
   const baseUrl = value.articles.length > 0 ? loadBaseUrl(rootDir) : "";
   for (const article of value.articles) {
-    validateArticle(rootDir, article, platformGroups, knownPlatforms, baseUrl);
+    validateArticle(rootDir, article, platformGroups, baseUrl);
     if (positions.has(article.queuePosition)) {
       throw new PublisherError(`queuePosition 重复：${article.queuePosition}`);
     }
@@ -95,7 +93,11 @@ export function validatePublishSchedule(rootDir: string, value: unknown): assert
   }
 }
 
-export function findDuePublishActions(schedule: PublishSchedule, now: Date): DuePublishAction[] {
+export function findDuePublishActions(
+  schedule: PublishSchedule,
+  now: Date,
+  runtimePlatforms: string[] = [],
+): DuePublishAction[] {
   if (Number.isNaN(now.getTime())) {
     throw new PublisherError("无效的调度时间");
   }
@@ -104,12 +106,12 @@ export function findDuePublishActions(schedule: PublishSchedule, now: Date): Due
   const sortedArticles = [...schedule.articles].sort((left, right) => left.queuePosition - right.queuePosition);
   const startedArticles = sortedArticles.filter((article) => hasStartedDistribution(article));
   for (const article of startedArticles) {
-    actions.push(...findDueContinuationActions(schedule, article, now));
+    actions.push(...findDueContinuationActions(schedule, article, now, runtimePlatforms));
   }
 
   const nextArticle = sortedArticles.find((article) => !hasStartedDistribution(article));
   if (nextArticle) {
-    actions.push(...findDueContinuationActions(schedule, nextArticle, now));
+    actions.push(...findDueContinuationActions(schedule, nextArticle, now, runtimePlatforms));
   }
 
   return actions.sort((left, right) => {
@@ -136,12 +138,13 @@ export function startRelease(
   articlePath: string,
   platform: string,
   now: Date,
+  runtimePlatforms: string[] = [],
 ): ReleaseState {
   const article = findArticle(schedule, articlePath);
   if (platform === "site") {
     throw new PublisherError("site 只允许手动发布，不能由自动队列执行");
   }
-  assertPlatformAllowed(schedule, article, platform);
+  assertPlatformAllowed(schedule, article, platform, runtimePlatforms);
   const existing = article.releases?.[platform];
   if (existing?.status === "published") {
     throw new PublisherError(`${articlePath} 已发布到 ${platform}`);
@@ -218,6 +221,7 @@ function findDueContinuationActions(
   schedule: PublishSchedule,
   article: QueuedArticle,
   now: Date,
+  runtimePlatforms: string[],
 ): DuePublishAction[] {
   const site = article.releases?.site;
   if (site?.status !== "published" || !site.publishedAt) {
@@ -232,7 +236,7 @@ function findDueContinuationActions(
   const actions: DuePublishAction[] = [];
   for (const stage of schedule.pipeline) {
     const dueAt = addDays(previousStageCompletedAt, stage.afterDays);
-    const allowedPlatforms = allowedStagePlatforms(schedule, article, stage);
+    const allowedPlatforms = allowedStagePlatforms(schedule, article, stage, runtimePlatforms);
     const incomplete = allowedPlatforms.filter((platform) => article.releases?.[platform]?.status !== "published");
     const activelyPublishing = incomplete.some((platform) => article.releases?.[platform]?.status === "publishing");
     const blocked = incomplete.some((platform) => article.releases?.[platform]?.status === "blocked");
@@ -285,22 +289,27 @@ function validateStage(
   const groups = value.groups === undefined
     ? undefined
     : requireStringArray(value.groups, `pipeline[${index}].groups`);
-  if ((platforms?.length ?? 0) + (groups?.length ?? 0) === 0) {
-    throw new PublisherError(`pipeline[${index}] 至少需要 platforms 或 groups`);
+  const platformSource = value.platformSource === undefined
+    ? undefined
+    : value.platformSource;
+  if (platformSource !== undefined && platformSource !== "wechatsync_authenticated_drafts") {
+    throw new PublisherError(`pipeline[${index}].platformSource 无效`);
+  }
+  if ((platforms?.length ?? 0) + (groups?.length ?? 0) === 0 && platformSource === undefined) {
+    throw new PublisherError(`pipeline[${index}] 至少需要 platforms、groups 或 platformSource`);
   }
   for (const group of groups ?? []) {
     if (!(group in platformGroups)) {
       throw new PublisherError(`pipeline[${index}] 引用了未知平台组：${group}`);
     }
   }
-  return { name: value.name, afterDays: value.afterDays as number, platforms, groups };
+  return { name: value.name, afterDays: value.afterDays as number, platformSource, platforms, groups };
 }
 
 function validateArticle(
   rootDir: string,
   value: unknown,
   platformGroups: Record<string, string[]>,
-  knownPlatforms: Set<string>,
   baseUrl: string,
 ): asserts value is QueuedArticle {
   if (!isRecord(value)) {
@@ -335,11 +344,6 @@ function validateArticle(
         throw new PublisherError(`${value.path} 排除了未知平台组：${group}`);
       }
     }
-    for (const platform of platforms) {
-      if (!knownPlatforms.has(platform)) {
-        throw new PublisherError(`${value.path} 排除了未知平台：${platform}`);
-      }
-    }
     if (platforms.includes("site") || groups.some((group) => platformGroups[group].includes("site"))) {
       throw new PublisherError(`${value.path} 不允许排除 site`);
     }
@@ -349,8 +353,8 @@ function validateArticle(
       throw new PublisherError(`${value.path} 的 releases 必须是对象`);
     }
     for (const [platform, release] of Object.entries(value.releases)) {
-      if (!knownPlatforms.has(platform)) {
-        throw new PublisherError(`${value.path} 包含未知发布状态：${platform}`);
+      if (!platform.trim()) {
+        throw new PublisherError(`${value.path} 包含空发布平台`);
       }
       validateRelease(value.path, platform, release);
     }
@@ -393,13 +397,22 @@ function allowedStagePlatforms(
   schedule: PublishSchedule,
   article: QueuedArticle,
   stage: PublishPipelineStage,
+  runtimePlatforms: string[],
 ): string[] {
   const excludedGroups = new Set(article.exclude?.groups ?? []);
   const excludedPlatforms = new Set(article.exclude?.platforms ?? []);
+  const excludedGroupPlatforms = new Set(
+    [...excludedGroups].flatMap((group) => schedule.platformGroups[group] ?? []),
+  );
   const groupPlatforms = (stage.groups ?? [])
     .filter((group) => !excludedGroups.has(group))
     .flatMap((group) => schedule.platformGroups[group]);
-  return [...new Set([...(stage.platforms ?? []), ...groupPlatforms])]
+  const sourcedPlatforms = stage.platformSource === "wechatsync_authenticated_drafts"
+    ? runtimePlatforms
+    : [];
+  return [...new Set([...(stage.platforms ?? []), ...groupPlatforms, ...sourcedPlatforms])]
+    .filter((platform) => platform !== "site")
+    .filter((platform) => !excludedGroupPlatforms.has(platform))
     .filter((platform) => !excludedPlatforms.has(platform));
 }
 
@@ -410,14 +423,16 @@ function resolveStagePlatforms(stage: PublishPipelineStage, groups: Record<strin
   ])];
 }
 
-function assertPlatformAllowed(schedule: PublishSchedule, article: QueuedArticle, platform: string): void {
+function assertPlatformAllowed(
+  schedule: PublishSchedule,
+  article: QueuedArticle,
+  platform: string,
+  runtimePlatforms: string[],
+): void {
   const stage = schedule.pipeline.find((candidate) =>
-    resolveStagePlatforms(candidate, schedule.platformGroups).includes(platform));
+    allowedStagePlatforms(schedule, article, candidate, runtimePlatforms).includes(platform));
   if (!stage) {
-    throw new PublisherError(`未知发布平台：${platform}`);
-  }
-  if (!allowedStagePlatforms(schedule, article, stage).includes(platform)) {
-    throw new PublisherError(`${article.path} 的策略禁止发布到 ${platform}`);
+    throw new PublisherError(`${article.path} 当前不允许发布到 ${platform}`);
   }
 }
 

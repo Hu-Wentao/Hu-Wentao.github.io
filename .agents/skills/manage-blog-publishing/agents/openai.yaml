@@ -1,4 +1,4 @@
 interface:
   display_name: "Manage Blog Syndication"
-  short_description: "Queue external distribution for manually published posts"
-  default_prompt: "Use $manage-blog-publishing to manage external syndication for posts already published manually on the blog."
+  short_description: "Queue to current authenticated Wechatsync targets"
+  default_prompt: "Use $manage-blog-publishing to distribute manually published blog posts only to the currently authenticated Wechatsync draft targets."

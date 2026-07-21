@@ -71,6 +71,8 @@ pnpm publish:article content/posts/my-post.md --dry-run
 - 推进所有已经到期的历史文章后续批次；
 - 按 `queuePosition` 从小到大，最多启动一篇新文章的外部分发；
 - 第一批的 `afterDays` 从主站手动发布时间开始计算，后续批次从上一批实际完成时间开始计算；
+- 每次运行都从 Wechatsync 强制刷新平台状态，只选择 `isAuthenticated: true` 且同时支持 `article`、`draft` 的外部平台；
+- 平台文档、历史列表和 `platformGroups` 都不能代替本次运行的连接状态；
 - 文章可以通过 `exclude.groups` 禁止一类平台，通过 `exclude.platforms` 禁止单个平台；
 - 自动队列永远不会发布主站，也不会修改文章的 `draft` 或 `date`。
 
@@ -88,7 +90,7 @@ pnpm publish:article content/posts/my-post.md --dry-run
   "path": "content/posts/my-post.md",
   "queuePosition": 200,
   "exclude": {
-    "groups": ["longtail"],
+    "groups": [],
     "platforms": ["x"]
   },
   "releases": {
@@ -113,7 +115,7 @@ pnpm publish:queue validate
 只读查看当前到期动作：
 
 ```bash
-pnpm publish:queue due
+pnpm publish:queue due --platforms <本次刷新得到的逗号分隔平台ID>
 ```
 
 状态必须通过命令转换，不要手工把平台标记为发布完成：
@@ -121,7 +123,8 @@ pnpm publish:queue due
 ```bash
 pnpm publish:queue start \
   --article content/posts/my-post.md \
-  --platform juejin
+  --platform juejin \
+  --platforms <本次刷新得到的逗号分隔平台ID>
 
 pnpm publish:queue complete \
   --article content/posts/my-post.md \
