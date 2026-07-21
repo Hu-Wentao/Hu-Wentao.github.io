@@ -64,6 +64,63 @@ pnpm publish:article content/posts/my-post.md --dry-run
 - 如果失败发生在 `push` 之后，仓库改动不会自动撤销，需要人工处理
 - 失败时会把日志写入 `.publish-records/`
 
+## 分批发布队列
+
+发布计划和运行状态统一保存在 `publishing/schedule.json`。Codex 定时任务每两天运行一次：
+
+- 推进所有已经到期的历史文章后续批次；
+- 按 `queuePosition` 从小到大，最多选择一篇新文章发布到主站；
+- 后续批次的 `afterDays` 从上一批实际完成时间开始计算；
+- 文章可以通过 `exclude.groups` 禁止一类平台，通过 `exclude.platforms` 禁止单个平台；
+- `site` 是 canonical 来源，不允许排除。
+
+建议以 `100` 为间隔设置队列位置，方便在已有文章之间插入新文章：
+
+```json
+{
+  "path": "content/posts/my-post.md",
+  "queuePosition": 200,
+  "exclude": {
+    "groups": ["longtail"],
+    "platforms": ["x"]
+  },
+  "releases": {}
+}
+```
+
+修改计划后执行校验：
+
+```bash
+pnpm publish:queue validate
+```
+
+只读查看当前到期动作：
+
+```bash
+pnpm publish:queue due
+```
+
+状态必须通过命令转换，不要手工把平台标记为发布完成：
+
+```bash
+pnpm publish:queue start \
+  --article content/posts/my-post.md \
+  --platform site
+
+pnpm publish:queue complete \
+  --article content/posts/my-post.md \
+  --platform site \
+  --url https://wyattcoder.top/posts/my-post/ \
+  --commit-sha <commit-sha>
+
+pnpm publish:queue block \
+  --article content/posts/my-post.md \
+  --platform juejin \
+  --error "需要重新登录"
+```
+
+`publishing` 状态用于阻止任务异常中断后的重复发布。`blocked` 状态需要人工确认后，才能再次执行 `start` 重试。队列的管理和定时执行流程由项目 Skill `$manage-blog-publishing` 约束。
+
 ## 本地预览
 
 启动本地开发服务器:

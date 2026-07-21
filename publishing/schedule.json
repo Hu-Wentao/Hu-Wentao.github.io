@@ -1,0 +1,45 @@
+{
+  "version": 1,
+  "timezone": "Asia/Shanghai",
+  "cadenceDays": 2,
+  "platformGroups": {
+    "core": [
+      "wechat",
+      "zhihu",
+      "juejin"
+    ],
+    "longtail": [
+      "csdn",
+      "cnblogs",
+      "jianshu"
+    ],
+    "social": [
+      "x"
+    ]
+  },
+  "pipeline": [
+    {
+      "name": "site",
+      "afterDays": 0,
+      "platforms": [
+        "site"
+      ]
+    },
+    {
+      "name": "core",
+      "afterDays": 2,
+      "groups": [
+        "core"
+      ]
+    },
+    {
+      "name": "longtail",
+      "afterDays": 2,
+      "groups": [
+        "longtail",
+        "social"
+      ]
+    }
+  ],
+  "articles": []
+}

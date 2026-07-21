@@ -5,6 +5,7 @@
   "packageManager": "pnpm@10.33.2",
   "scripts": {
     "publish:article": "tsx scripts/publisher/src/cli.ts publish:article",
+    "publish:queue": "tsx scripts/publisher/src/schedule-cli.ts",
     "test": "vitest run",
     "typecheck": "tsc --noEmit"
   },

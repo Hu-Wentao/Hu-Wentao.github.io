@@ -80,3 +80,57 @@ export interface SitePublisherPort {
   publishPost(post: PostDocument, publishedAt: Date, dryRun: boolean): Promise<SitePublishResult>;
   waitForUrl(url: string): Promise<void>;
 }
+
+export type ReleaseStatus = "publishing" | "published" | "blocked";
+
+export interface ReleaseState {
+  status: ReleaseStatus;
+  attempts: number;
+  startedAt?: string;
+  publishedAt?: string;
+  url?: string;
+  commitSha?: string;
+  lastError?: string;
+}
+
+export interface PublishPipelineStage {
+  name: string;
+  afterDays: number;
+  platforms?: string[];
+  groups?: string[];
+}
+
+export interface QueuedArticle {
+  path: string;
+  queuePosition: number;
+  exclude?: {
+    groups?: string[];
+    platforms?: string[];
+  };
+  releases?: Record<string, ReleaseState>;
+}
+
+export interface PublishSchedule {
+  version: 1;
+  timezone: string;
+  cadenceDays: number;
+  platformGroups: Record<string, string[]>;
+  pipeline: PublishPipelineStage[];
+  articles: QueuedArticle[];
+}
+
+export interface DuePublishAction {
+  articlePath: string;
+  platform: string;
+  stage: string;
+  queuePosition: number;
+  dueAt: string;
+}
+
+export interface QueueAttentionItem {
+  articlePath: string;
+  platform: string;
+  status: "publishing" | "blocked";
+  startedAt?: string;
+  lastError?: string;
+}
