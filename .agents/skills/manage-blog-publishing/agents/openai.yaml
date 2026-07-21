@@ -1,4 +1,4 @@
 interface:
-  display_name: "Manage Blog Publishing"
-  short_description: "Manage the staged blog publication queue safely"
-  default_prompt: "Use $manage-blog-publishing to inspect and process the due blog publication queue."
+  display_name: "Manage Blog Syndication"
+  short_description: "Queue external distribution for manually published posts"
+  default_prompt: "Use $manage-blog-publishing to manage external syndication for posts already published manually on the blog."

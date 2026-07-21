@@ -2,6 +2,7 @@ import { existsSync, readFileSync, renameSync, writeFileSync } from "node:fs";
 import { dirname, relative, resolve } from "node:path";
 
 import { PublisherError } from "./errors.js";
+import { loadBaseUrl, loadPost } from "./content.js";
 import type {
   DuePublishAction,
   PublishPipelineStage,
@@ -69,14 +70,8 @@ export function validatePublishSchedule(rootDir: string, value: unknown): assert
       stagedPlatforms.add(platform);
     }
   }
-  const firstPlatforms = resolveStagePlatforms(pipeline[0], platformGroups);
-  if (pipeline[0].afterDays !== 0 || firstPlatforms.length !== 1 || firstPlatforms[0] !== "site") {
-    throw new PublisherError("pipeline 第一阶段必须只包含 site，且 afterDays 为 0");
-  }
-  for (const stage of pipeline.slice(1)) {
-    if (resolveStagePlatforms(stage, platformGroups).includes("site")) {
-      throw new PublisherError("site 只能出现在 pipeline 第一阶段");
-    }
+  if (stagedPlatforms.has("site")) {
+    throw new PublisherError("pipeline 不允许包含 site；主站只能手动发布");
   }
 
   if (!Array.isArray(value.articles)) {
@@ -84,9 +79,11 @@ export function validatePublishSchedule(rootDir: string, value: unknown): assert
   }
   const positions = new Set<number>();
   const paths = new Set<string>();
-  const knownPlatforms = new Set(pipeline.flatMap((stage) => resolveStagePlatforms(stage, platformGroups)));
+  const knownPlatforms = new Set(["site", ...pipeline.flatMap((stage) =>
+    resolveStagePlatforms(stage, platformGroups))]);
+  const baseUrl = value.articles.length > 0 ? loadBaseUrl(rootDir) : "";
   for (const article of value.articles) {
-    validateArticle(rootDir, article, platformGroups, knownPlatforms);
+    validateArticle(rootDir, article, platformGroups, knownPlatforms, baseUrl);
     if (positions.has(article.queuePosition)) {
       throw new PublisherError(`queuePosition 重复：${article.queuePosition}`);
     }
@@ -105,25 +102,14 @@ export function findDuePublishActions(schedule: PublishSchedule, now: Date): Due
 
   const actions: DuePublishAction[] = [];
   const sortedArticles = [...schedule.articles].sort((left, right) => left.queuePosition - right.queuePosition);
-  for (const article of sortedArticles) {
+  const startedArticles = sortedArticles.filter((article) => hasStartedDistribution(article));
+  for (const article of startedArticles) {
     actions.push(...findDueContinuationActions(schedule, article, now));
   }
 
-  const siteIsUnresolved = sortedArticles.some((article) => {
-    const status = article.releases?.site?.status;
-    return status === "publishing" || status === "blocked";
-  });
-  if (!siteIsUnresolved) {
-    const nextArticle = sortedArticles.find((article) => article.releases?.site === undefined);
-    if (nextArticle) {
-      actions.push({
-        articlePath: nextArticle.path,
-        platform: "site",
-        stage: schedule.pipeline[0].name,
-        queuePosition: nextArticle.queuePosition,
-        dueAt: now.toISOString(),
-      });
-    }
+  const nextArticle = sortedArticles.find((article) => !hasStartedDistribution(article));
+  if (nextArticle) {
+    actions.push(...findDueContinuationActions(schedule, nextArticle, now));
   }
 
   return actions.sort((left, right) => {
@@ -152,6 +138,9 @@ export function startRelease(
   now: Date,
 ): ReleaseState {
   const article = findArticle(schedule, articlePath);
+  if (platform === "site") {
+    throw new PublisherError("site 只允许手动发布，不能由自动队列执行");
+  }
   assertPlatformAllowed(schedule, article, platform);
   const existing = article.releases?.[platform];
   if (existing?.status === "published") {
@@ -241,7 +230,7 @@ function findDueContinuationActions(
   }
 
   const actions: DuePublishAction[] = [];
-  for (const stage of schedule.pipeline.slice(1)) {
+  for (const stage of schedule.pipeline) {
     const dueAt = addDays(previousStageCompletedAt, stage.afterDays);
     const allowedPlatforms = allowedStagePlatforms(schedule, article, stage);
     const incomplete = allowedPlatforms.filter((platform) => article.releases?.[platform]?.status !== "published");
@@ -312,6 +301,7 @@ function validateArticle(
   value: unknown,
   platformGroups: Record<string, string[]>,
   knownPlatforms: Set<string>,
+  baseUrl: string,
 ): asserts value is QueuedArticle {
   if (!isRecord(value)) {
     throw new PublisherError("articles 中的每一项都必须是对象");
@@ -322,6 +312,10 @@ function validateArticle(
   const articlePath = resolveInsideRoot(rootDir, value.path);
   if (!existsSync(articlePath)) {
     throw new PublisherError(`队列文章不存在：${value.path}`);
+  }
+  const post = loadPost(rootDir, value.path, baseUrl);
+  if (post.metadata.draft !== false) {
+    throw new PublisherError(`只有 draft: false 的文章才能进入自动发布队列：${value.path}`);
   }
   if (!isPositiveInteger(value.queuePosition)) {
     throw new PublisherError(`${value.path} 的 queuePosition 必须是正整数`);
@@ -360,6 +354,21 @@ function validateArticle(
       }
       validateRelease(value.path, platform, release);
     }
+  }
+  const siteRelease = isRecord(value.releases) ? value.releases.site : undefined;
+  if (!isRecord(siteRelease)
+    || siteRelease.status !== "published"
+    || siteRelease.publicationMethod !== "manual") {
+    throw new PublisherError(`${value.path} 缺少主站手动发布记录`);
+  }
+  if (siteRelease.url !== post.canonicalUrl) {
+    throw new PublisherError(`${value.path} 的主站发布 URL 必须等于 canonical URL：${post.canonicalUrl}`);
+  }
+  if (typeof siteRelease.verifiedAt !== "string" || Number.isNaN(Date.parse(siteRelease.verifiedAt))) {
+    throw new PublisherError(`${value.path} 的 site.verifiedAt 无效`);
+  }
+  if (Date.parse(siteRelease.verifiedAt) < Date.parse(String(siteRelease.publishedAt))) {
+    throw new PublisherError(`${value.path} 的主站验证时间不能早于手动发布时间`);
   }
 }
 
@@ -410,6 +419,10 @@ function assertPlatformAllowed(schedule: PublishSchedule, article: QueuedArticle
   if (!allowedStagePlatforms(schedule, article, stage).includes(platform)) {
     throw new PublisherError(`${article.path} 的策略禁止发布到 ${platform}`);
   }
+}
+
+function hasStartedDistribution(article: QueuedArticle): boolean {
+  return Object.keys(article.releases ?? {}).some((platform) => platform !== "site");
 }
 
 function findArticle(schedule: PublishSchedule, articlePath: string): QueuedArticle {

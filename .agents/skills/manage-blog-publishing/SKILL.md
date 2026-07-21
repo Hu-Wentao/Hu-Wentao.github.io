@@ -1,21 +1,45 @@
 ---
 name: manage-blog-publishing
-description: Manage and execute this Hugo repository's staged article publication queue. Use when Codex needs to add or reorder queued articles, configure per-article platform or platform-group exclusions, inspect due releases, recover blocked releases, or run the recurring two-day publication workflow in publishing/schedule.json.
+description: Manage and execute this Hugo repository's external-platform publication queue for articles already published manually on the self-hosted blog. Use when Codex needs to enroll or reorder eligible articles, configure platform exclusions, inspect due syndication, recover blocked releases, or run the recurring two-day external distribution workflow in publishing/schedule.json. Never use it to publish drafts or publish to the self-hosted site.
 ---
 
 # Manage Blog Publishing
 
-Use `publishing/schedule.json` as the durable plan and state record. Use the TypeScript queue commands for validation and state transitions; orchestrate external publication through the user's main Chrome session.
+Use `publishing/schedule.json` as the durable external-syndication plan and state record. Keep self-hosted blog publication entirely outside this automation.
 
-## Manage the Queue
+## Enforce Hard Boundaries
 
-1. Read `publishing/schedule.json` and `Scripts.md` before changing the queue.
-2. Add articles only from `content/posts/*.md`.
-3. Assign unique positive `queuePosition` values. Prefer gaps of 100; a smaller value enters the site queue earlier.
-4. Use `exclude.groups` for a whole configured platform group and `exclude.platforms` for individual platforms. Never exclude `site`.
-5. Preserve `releases` when reordering or changing exclusions. Do not fabricate publication state or URLs.
-6. Run `pnpm publish:queue validate` after every queue edit.
-7. Follow the repository `-c`/`-i` rule for interactive queue edits and commit only the requested paths.
+- Enroll only an article whose front matter explicitly has `draft: false`.
+- Never publish to `site`, run `pnpm publish:article`, or change article front matter from this workflow.
+- Enroll only an article the user explicitly confirms they already published manually on the self-hosted blog. Do not infer manual publication from `draft: false` or a live URL alone.
+- Require the canonical URL to be public and verify that it contains the exact article title before enrollment.
+- Treat a queued platform as authorization for that article and external platform only.
+
+The queue validator enforces draft state, canonical URL equality, a verified manual site record, and the absence of `site` from the automated pipeline.
+
+## Enroll or Reorder an Article
+
+1. Read the article front matter, `publishing/schedule.json`, and `Scripts.md`.
+2. Require explicit user confirmation of manual self-hosted publication. Stop and ask if it is missing.
+3. Verify the canonical URL and exact title on the live page.
+4. Add a unique positive `queuePosition`; prefer gaps of 100. A smaller value starts external distribution earlier.
+5. Record the verified site baseline under `releases.site`:
+
+```json
+{
+  "status": "published",
+  "attempts": 1,
+  "publicationMethod": "manual",
+  "publishedAt": "<actual-manual-publication-time>",
+  "verifiedAt": "<verification-time>",
+  "url": "<canonical-url>"
+}
+```
+
+6. Use `exclude.groups` for a configured platform group and `exclude.platforms` for an individual external platform.
+7. Preserve all release records when reordering or changing exclusions. Never fabricate a publication time, verification, or URL.
+8. Run `pnpm publish:queue validate` after every edit.
+9. Follow the repository `-c`/`-i` rule and commit only the requested paths.
 
 ## Inspect Due Work
 
@@ -26,57 +50,43 @@ pnpm publish:queue validate
 pnpm publish:queue due
 ```
 
-`due` is read-only. Report every `attention` item; `publishing` may indicate an interrupted run and `blocked` needs recovery. Treat returned actions as one run's immutable work list: process those actions only. Do not rerun `due` after completing a site action and start another queued site article in the same scheduled run.
+`due` is read-only. Report every `attention` item. Treat returned actions as one run's immutable work list and process those actions only. The queue starts external distribution for at most one previously unstarted article per run while also advancing due stages for articles already in progress.
 
 ## Run the Scheduled Workflow
 
-Run unattended only in the local `main` checkout because website publication pushes `main` and external publication requires the user's main Chrome login state.
+1. Require the local `main` checkout; external publication needs the user's main Chrome login state.
+2. Run `pnpm publish:queue validate`, then run `pnpm publish:queue due` once.
+3. Report `attention` items. If no actions are due, stop.
+4. Run `git status --short`. If any working-tree change exists, stop without changing queue state.
+5. For each returned external action, run `start`, stage only `publishing/schedule.json`, and commit `chore: start <platform> publication for <slug>`.
+6. Publish through Wechatsync and the user's main Chrome as described below.
+7. After verifying the exact public URL, run `complete`, commit only the schedule with `chore: record <platform> publication for <slug>`, then push `main`.
+8. On failure, first check whether a public post already exists. If it does not, run `block`, commit only the schedule with `chore: block <platform> publication for <slug>`, push `main`, and stop later actions for that article.
 
-1. Run `git branch --show-current`. If the branch is not `main`, stop without changing queue state and report the blocker.
-2. Run `pnpm publish:queue validate`, then run `pnpm publish:queue due` once and retain its action list.
-3. Report `attention` items. If there are no actions, report that nothing is due and stop.
-4. Run `git status --short`. If any working-tree change exists, stop without changing queue state and report the blocker.
-5. Process continuation actions before the single site action. Preserve the order returned for actions in the same category.
-6. For each action, run `start`, stage only `publishing/schedule.json`, and commit `chore: start <platform> publication for <slug>`. This clean committed `publishing` state prevents duplicate retries after interruption.
-7. Complete the platform workflow below.
-8. After verifying a public URL, run `complete`, stage only the schedule, commit `chore: record <platform> publication for <slug>`, then push `main`.
-9. On a real failure, reconcile first: check whether a public post or site commit already exists. If publication did not complete, run `block`, commit only the schedule with `chore: block <platform> publication for <slug>`, push `main`, and stop processing later actions for that article.
-
-Never mark a draft, editor page, generic HTTP 200 response, or unverified post as `published`.
-
-## Publish the Site Target
-
-For `site`:
-
-1. Run `pnpm publish:article <article-path>` after committing the `publishing` queue state.
-2. Follow the verification requirements in `../publish-blog-article/SKILL.md`: verify the exact GitHub Pages deployment and confirm that the canonical URL contains the article title.
-3. Read the site publication commit with `git rev-parse HEAD` and pass it to `complete --commit-sha`.
-
-The site publisher pushes all current local `main` commits. Report any pre-existing commits included in that push.
+Never mark a draft, editor page, generic HTTP success, or unverified post as published.
 
 ## Publish an External Target
 
-The queued platform is explicit authorization for that article and platform only.
-
-1. Read and follow the main-Chrome syndication constraints in `../publish-blog-article/SKILL.md`.
+1. Read the main-Chrome syndication constraints in `../publish-blog-article/SKILL.md`.
 2. Use Wechatsync with the main Chrome extension to create the target draft. Upload local images first when required.
-3. Use the user's main Chrome session to complete platform metadata and final publication. Never launch a separate browser profile or fall back to an isolated browser.
+3. Use the user's main Chrome session to complete metadata and final publication. Never use a separate browser profile or isolated browser.
 4. Verify the exact final public URL before calling `complete`.
-5. If the platform lacks a defined final-publication path, authentication is missing, or CAPTCHA/account confirmation is required, leave the relevant main Chrome tab open when possible and record `blocked`. Do not treat a Wechatsync draft as completion.
+5. If authentication, CAPTCHA, account confirmation, or an undefined platform workflow blocks final publication, record `blocked`. A Wechatsync draft is not completion.
 
 ## Recover a Blocked Release
 
-1. Read `lastError` and inspect the platform or deployment state before retrying.
-2. If the public post already exists, verify its URL, run `start`, then immediately run `complete` with the verified URL; do not republish.
-3. Otherwise resolve the blocker and run `start` again. This increments `attempts`.
-4. Follow the normal platform workflow and record the result.
+1. Inspect `lastError` and the external platform before retrying.
+2. If the public post already exists, verify it, run `start`, then `complete`; do not republish.
+3. Otherwise resolve the blocker, run `start` to increment `attempts`, and follow the normal external workflow.
 
-## State Command Reference
+## State Commands
+
+Use these commands only for external platforms; the CLI rejects `site`:
 
 ```bash
-pnpm publish:queue start --article <path> --platform <platform>
-pnpm publish:queue complete --article <path> --platform <platform> --url <public-url> [--commit-sha <sha>]
-pnpm publish:queue block --article <path> --platform <platform> --error <message>
+pnpm publish:queue start --article <path> --platform <external-platform>
+pnpm publish:queue complete --article <path> --platform <external-platform> --url <public-url>
+pnpm publish:queue block --article <path> --platform <external-platform> --error <message>
 ```
 
-Do not edit `releases` manually during normal operation. The commands enforce platform exclusions, valid transitions, attempt counts, and public URL shape.
+Do not edit external release states manually during normal operation.

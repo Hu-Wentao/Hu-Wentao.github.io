@@ -19,13 +19,6 @@
   },
   "pipeline": [
     {
-      "name": "site",
-      "afterDays": 0,
-      "platforms": [
-        "site"
-      ]
-    },
-    {
       "name": "core",
       "afterDays": 2,
       "groups": [
@@ -41,44 +34,5 @@
       ]
     }
   ],
-  "articles": [
-    {
-      "path": "content/posts/vibe-coding-document-collaboration.md",
-      "queuePosition": 100,
-      "exclude": {
-        "groups": [
-          "longtail"
-        ],
-        "platforms": []
-      },
-      "releases": {}
-    },
-    {
-      "path": "content/posts/project-governance.md",
-      "queuePosition": 200,
-      "exclude": {
-        "groups": [],
-        "platforms": []
-      },
-      "releases": {}
-    },
-    {
-      "path": "content/posts/skill-config.md",
-      "queuePosition": 300,
-      "exclude": {
-        "groups": [],
-        "platforms": []
-      },
-      "releases": {}
-    },
-    {
-      "path": "content/posts/sync-skill-repo.md",
-      "queuePosition": 400,
-      "exclude": {
-        "groups": [],
-        "platforms": []
-      },
-      "releases": {}
-    }
-  ]
+  "articles": []
 }

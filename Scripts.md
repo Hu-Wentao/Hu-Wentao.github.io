@@ -69,10 +69,17 @@ pnpm publish:article content/posts/my-post.md --dry-run
 发布计划和运行状态统一保存在 `publishing/schedule.json`。Codex 定时任务每两天运行一次：
 
 - 推进所有已经到期的历史文章后续批次；
-- 按 `queuePosition` 从小到大，最多选择一篇新文章发布到主站；
-- 后续批次的 `afterDays` 从上一批实际完成时间开始计算；
+- 按 `queuePosition` 从小到大，最多启动一篇新文章的外部分发；
+- 第一批的 `afterDays` 从主站手动发布时间开始计算，后续批次从上一批实际完成时间开始计算；
 - 文章可以通过 `exclude.groups` 禁止一类平台，通过 `exclude.platforms` 禁止单个平台；
-- `site` 是 canonical 来源，不允许排除。
+- 自动队列永远不会发布主站，也不会修改文章的 `draft` 或 `date`。
+
+文章只有同时满足以下条件才能入队：
+
+- front matter 明确为 `draft: false`；
+- 用户明确确认文章已在自建博客上手动发布；
+- canonical URL 已公开可访问，并经过标题内容验证；
+- 队列中保存了 `publicationMethod: "manual"` 的主站发布记录。
 
 建议以 `100` 为间隔设置队列位置，方便在已有文章之间插入新文章：
 
@@ -84,7 +91,16 @@ pnpm publish:article content/posts/my-post.md --dry-run
     "groups": ["longtail"],
     "platforms": ["x"]
   },
-  "releases": {}
+  "releases": {
+    "site": {
+      "status": "published",
+      "attempts": 1,
+      "publicationMethod": "manual",
+      "publishedAt": "2026-07-21T09:00:00+08:00",
+      "verifiedAt": "2026-07-21T10:00:00+08:00",
+      "url": "https://wyattcoder.top/posts/my-post/"
+    }
+  }
 }
 ```
 
@@ -105,13 +121,12 @@ pnpm publish:queue due
 ```bash
 pnpm publish:queue start \
   --article content/posts/my-post.md \
-  --platform site
+  --platform juejin
 
 pnpm publish:queue complete \
   --article content/posts/my-post.md \
-  --platform site \
-  --url https://wyattcoder.top/posts/my-post/ \
-  --commit-sha <commit-sha>
+  --platform juejin \
+  --url https://juejin.cn/post/example
 
 pnpm publish:queue block \
   --article content/posts/my-post.md \

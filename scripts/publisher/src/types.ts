@@ -86,8 +86,10 @@ export type ReleaseStatus = "publishing" | "published" | "blocked";
 export interface ReleaseState {
   status: ReleaseStatus;
   attempts: number;
+  publicationMethod?: "manual";
   startedAt?: string;
   publishedAt?: string;
+  verifiedAt?: string;
   url?: string;
   commitSha?: string;
   lastError?: string;
