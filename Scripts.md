@@ -72,6 +72,7 @@ pnpm publish:article content/posts/my-post.md --dry-run
 - 按 `queuePosition` 从小到大，最多启动一篇新文章的外部分发；
 - 第一批的 `afterDays` 从主站手动发布时间开始计算，后续批次从上一批实际完成时间开始计算；
 - 每次运行都从 Wechatsync 强制刷新平台状态，只选择 `isAuthenticated: true` 且同时支持 `article`、`draft` 的外部平台；
+- X 是例外：登录状态仍由 Wechatsync 的本次刷新结果确认，但只通过主 Chrome 发布“摘要 + 主站 canonical URL”的普通帖子，不同步完整文章，也不创建 X Article；
 - 平台文档、历史列表和 `platformGroups` 都不能代替本次运行的连接状态；
 - 文章可以通过 `exclude.groups` 禁止一类平台，通过 `exclude.platforms` 禁止单个平台；
 - 自动队列永远不会发布主站，也不会修改文章的 `draft` 或 `date`。

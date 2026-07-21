@@ -97,9 +97,11 @@ Run this section only for platforms the user explicitly named.
    draft by title, set its category, tags, and optional cover, and publish it.
    Verify the resulting article URL.
 4. For X, build a post from `publish.x.text` when present; otherwise use the
-   article title, summary, and canonical URL, staying within X's limit. Use the
-   Chrome control skill against the user's main Chrome to submit the post and
-   verify its resulting URL.
+   article title and summary, then append the exact canonical blog URL, staying
+   within the limit shown by X's composer. Publish one standard X post, not an
+   X Article. Never send the full article body to X and never call Wechatsync
+   `sync_article` for X. Use the Chrome control skill against the user's main
+   Chrome to submit the post and verify its resulting URL.
 5. Treat a Wechatsync draft as incomplete. Report a platform as published only
    after the platform exposes the final public URL.
 

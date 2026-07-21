@@ -1,6 +1,6 @@
 ---
 name: manage-blog-publishing
-description: Manage and execute this Hugo repository's external-platform publication queue for articles already published manually on the self-hosted blog. Resolve eligible targets from the currently authenticated Wechatsync platforms at run time. Use when Codex needs to enroll or reorder eligible articles, configure platform exclusions, inspect due syndication, recover blocked releases, or run the recurring two-day external distribution workflow in publishing/schedule.json. Never use it to publish drafts or publish to the self-hosted site.
+description: Manage and execute this Hugo repository's external-platform publication queue for articles already published manually on the self-hosted blog. Resolve eligible targets from the currently authenticated Wechatsync platforms at run time, with X handled as a summary-and-canonical-link post rather than a full article. Use when Codex needs to enroll or reorder eligible articles, configure platform exclusions, inspect due syndication, recover blocked releases, or run the recurring two-day external distribution workflow in publishing/schedule.json. Never use it to publish drafts or publish to the self-hosted site.
 ---
 
 # Manage Blog Publishing
@@ -22,10 +22,11 @@ The queue validator enforces draft state, canonical URL equality, a verified man
 Before inspecting due work or starting a release:
 
 1. Call Wechatsync `list_platforms` with `forceRefresh: true`.
-2. Keep only entries where `isAuthenticated` is `true` and `capabilities` contains both `article` and `draft`.
-3. Exclude local/non-publishing targets such as `zip-download`, even if they report authenticated.
-4. Use the returned platform IDs exactly as reported. Never infer targets from Wechatsync documentation, an old run, `platformGroups`, or a handwritten supported-platform list.
-5. If the extension is disconnected or the refreshed list cannot be obtained, stop without changing queue state.
+2. For platforms other than `x`, keep only entries where `isAuthenticated` is `true` and `capabilities` contains both `article` and `draft`.
+3. Keep `x` when its refreshed entry is authenticated. X uses the summary-link workflow below, not Wechatsync full-article draft synchronization.
+4. Exclude local/non-publishing targets such as `zip-download`, even if they report authenticated.
+5. Use the returned platform IDs exactly as reported. Never infer targets from Wechatsync documentation, an old run, `platformGroups`, or a handwritten supported-platform list.
+6. If the extension is disconnected or the refreshed list cannot be obtained, stop without changing queue state.
 
 The eligible target set may change on every run. `platformGroups` is only an optional policy map for article-level class exclusions; it is not evidence that a platform is connected.
 
@@ -81,10 +82,18 @@ Never mark a draft, editor page, generic HTTP success, or unverified post as pub
 ## Publish an External Target
 
 1. Read the main-Chrome syndication constraints in `../publish-blog-article/SKILL.md`.
-2. Use Wechatsync with the main Chrome extension to create the target draft. Upload local images first when required.
-3. Use the user's main Chrome session to complete metadata and final publication. Never use a separate browser profile or isolated browser.
-4. Verify the exact final public URL before calling `complete`.
-5. If authentication, CAPTCHA, account confirmation, or an undefined platform workflow blocks final publication, record `blocked`. A Wechatsync draft is not completion.
+2. If the target is `x`, follow **Publish X Summary Link** below and do not run the full-article draft workflow.
+3. For every other target, use Wechatsync with the main Chrome extension to create the full-article draft. Upload local images first when required.
+4. Use the user's main Chrome session to complete metadata and final publication. Never use a separate browser profile or isolated browser.
+5. Verify the exact final public URL before calling `complete`.
+6. If authentication, CAPTCHA, account confirmation, or an undefined platform workflow blocks final publication, record `blocked`. A Wechatsync draft is not completion.
+
+## Publish X Summary Link
+
+1. Never send the full article body to X and never call Wechatsync `sync_article` for X.
+2. Build one standard X post, not an X Article. Use front matter `publish.x.text` when present; otherwise compose a concise summary from the article title and summary.
+3. Append the exact `releases.site.url` canonical blog URL. Preserve the URL verbatim and keep the complete post within the limit shown by X's composer.
+4. Publish through the user's main Chrome X composer and verify the resulting public post URL before calling `complete`.
 
 ## Recover a Blocked Release
 
