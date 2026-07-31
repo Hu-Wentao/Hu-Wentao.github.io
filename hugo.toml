@@ -1,7 +1,34 @@
 baseURL = 'https://wyattcoder.top/'
-languageCode = 'zh-cn'
+defaultContentLanguage = 'zh'
+defaultContentLanguageInSubdir = false
 title = '低熵工程'
 theme = 'PaperMod'
+
+[languages]
+    [languages.zh]
+        label = '中文'
+        locale = 'zh-CN'
+        weight = 1
+    [languages.en]
+        label = 'English'
+        locale = 'en-US'
+        title = 'Low-Entropy Engineering'
+        weight = 2
+        [languages.en.params]
+            contentLanguage = 'en'
+            languageName = 'English'
+            [languages.en.params.label]
+                text = "Low-Entropy Engineering · Wyatt's Artifacts"
+        [[languages.en.menus.main]]
+            identifier = 'posts'
+            name = 'Posts'
+            url = '/en/posts/'
+            weight = 10
+        [[languages.en.menus.main]]
+            identifier = 'tags'
+            name = 'Tags'
+            url = '/en/tags/'
+            weight = 20
 
 [markup.goldmark.extensions.passthrough]
     enable = true

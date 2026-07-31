@@ -2,6 +2,7 @@ import { parseArgs } from "node:util";
 
 import { PublisherError } from "./errors.js";
 import {
+  assertAutomatablePlatformIds,
   blockRelease,
   completeRelease,
   DEFAULT_SCHEDULE_PATH,
@@ -120,6 +121,7 @@ function requireRuntimePlatforms(schedule: ReturnType<typeof loadPublishSchedule
   if (platforms.includes("site")) {
     throw new PublisherError("--platforms 不允许包含 site");
   }
+  assertAutomatablePlatformIds(platforms, "--platforms");
   return platforms;
 }
 

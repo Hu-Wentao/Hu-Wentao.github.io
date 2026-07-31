@@ -14,6 +14,9 @@ A local `draft: false`, build, or commit alone is not a completed publication.
 1. Resolve the requested file under `content/posts/` and read its frontmatter.
 2. Treat an unqualified request such as “正式发布文章” as website publication
    only. Do not post to Juejin or X without explicit authorization.
+   For translation and Hacker News submission, use
+   `../publish-hacker-news/SKILL.md`; never route Hacker News through
+   Wechatsync or the scheduled queue.
 3. Use `scripts/publisher/` only for website publication. Orchestrate explicitly
    authorized external syndication with Wechatsync MCP and the user's main
    Chrome browser.

@@ -12,6 +12,8 @@ Use `publishing/schedule.json` as the durable external-syndication plan and stat
 - Enroll only an article whose front matter explicitly has `draft: false`.
 - Never publish to `site`, run `pnpm publish:article`, or change article front matter from this workflow.
 - Auto-enroll only an article whose front matter `date` is strictly later than `discovery.enabledAfter`.
+- Never discover or enqueue an article whose front matter sets `publish.autoSyndication: false`.
+- Treat `hacker-news` as manual-only. Never include it in `platformGroups`, `pipeline`, `--platforms`, or queue release records; use `../publish-hacker-news/SKILL.md` only after explicit user authorization.
 - Require the article to be tracked and unchanged in Git, then require its canonical URL to be public and contain the exact article title before enrollment.
 - Treat a queued platform as authorization for that article and external platform only.
 
@@ -24,7 +26,7 @@ Before inspecting due work or starting a release:
 1. Call Wechatsync `list_platforms` with `forceRefresh: true`.
 2. For platforms other than `x`, keep only entries where `isAuthenticated` is `true` and `capabilities` contains both `article` and `draft`.
 3. Keep `x` when its refreshed entry is authenticated. X uses the summary-link workflow below, not Wechatsync full-article draft synchronization.
-4. Exclude local/non-publishing targets such as `zip-download`, even if they report authenticated.
+4. Exclude local/non-publishing targets such as `zip-download` and manual-only targets such as `hacker-news`, even if they report authenticated.
 5. Use the returned platform IDs exactly as reported. Never infer targets from Wechatsync documentation, an old run, `platformGroups`, or a handwritten supported-platform list.
 6. If refresh succeeds but no target is eligible, pass an explicit empty set as `--platforms=`; report attention and leave queued work for a later run.
 7. If the extension is disconnected or the refreshed list cannot be obtained, stop without changing queue state.
@@ -55,6 +57,7 @@ The eligible target set may change on every run. `platformGroups` is only an opt
 8. Use `exclude.groups` for a configured policy group and `exclude.platforms` for an individual Wechatsync platform ID. Preserve release records when reordering or changing exclusions.
 
 Never enqueue an article dated at or before the activation cutoff. Do not move the cutoff backward to import historical posts.
+An English Hacker News translation with `publish.autoSyndication: false` is intentionally absent from discovery and must stay outside this schedule.
 
 ## Inspect Due Work
 

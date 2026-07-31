@@ -21,4 +21,13 @@ describe("content helpers", () => {
     });
     expect(url).toBe("https://custom.example/post");
   });
+
+  test("buildCanonicalUrl preserves an explicit English site-root url", () => {
+    const url = buildCanonicalUrl("https://wyattcoder.top/", "content/posts/demo.en.md", {
+      title: "Demo",
+      slug: "demo",
+      url: "/en/posts/demo/",
+    });
+    expect(url).toBe("https://wyattcoder.top/en/posts/demo/");
+  });
 });

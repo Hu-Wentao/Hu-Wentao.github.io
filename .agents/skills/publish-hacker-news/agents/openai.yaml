@@ -1,0 +1,4 @@
+interface:
+  display_name: "Publish to Hacker News"
+  short_description: "Translate a blog post and submit it to Hacker News"
+  default_prompt: "Use $publish-hacker-news to translate a published blog post into English and submit its verified URL to Hacker News."

@@ -1,5 +1,11 @@
 export interface PublishConfig {
+  autoSyndication?: boolean;
   cover?: string;
+  hackerNews?: {
+    title?: string;
+    itemUrl?: string;
+    submittedAt?: string;
+  };
   juejin?: {
     category?: string;
     tags?: string[];

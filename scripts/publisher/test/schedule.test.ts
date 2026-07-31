@@ -5,6 +5,7 @@ import { join } from "node:path";
 import { afterEach, describe, expect, test } from "vitest";
 
 import {
+  assertAutomatablePlatformIds,
   blockRelease,
   completeRelease,
   enqueueDiscoveredArticle,
@@ -26,9 +27,10 @@ afterEach(() => {
 
 describe("publish schedule", () => {
   test("discovers only posts published after activation and can publish an already-due post in the same run", () => {
-    const rootDir = createRoot("old.md", "draft.md", "invalid-date.md", "new.md");
+    const rootDir = createRoot("old.md", "draft.md", "invalid-date.md", "manual.md", "new.md");
     writePost(rootDir, "old.md", "Old", "2026-07-21T19:00:18+08:00", false);
     writePost(rootDir, "draft.md", "Draft", "2026-07-22T09:00:00+08:00", true);
+    writePost(rootDir, "manual.md", "Manual", "2026-07-22T08:00:00+08:00", false, false);
     writePost(rootDir, "new.md", "New", "2026-07-21T19:05:00+08:00", false);
     const schedule = createSchedule([]);
 
@@ -240,6 +242,47 @@ describe("publish schedule", () => {
     expect(completed).toMatchObject({ status: "published", attempts: 2, commitSha: "abc123" });
   });
 
+  test("keeps Hacker News outside every automated queue entry point", () => {
+    const rootDir = createRoot("first.md");
+    const schedule = createSchedule([article("content/posts/first.md", 100)]);
+    validatePublishSchedule(rootDir, schedule);
+
+    expect(findDuePublishActions(
+      schedule,
+      new Date("2026-07-21T09:00:00+08:00"),
+      ["hacker-news", "juejin"],
+    ).map((action) => action.platform)).toEqual(["juejin"]);
+    expect(() => startRelease(
+      schedule,
+      "content/posts/first.md",
+      "hacker-news",
+      new Date("2026-07-21T09:00:00+08:00"),
+      ["hacker-news"],
+    )).toThrow("不允许包含手动发布平台：hacker-news");
+    expect(() => assertAutomatablePlatformIds(["juejin", "hacker-news"], "--platforms"))
+      .toThrow("--platforms 不允许包含手动发布平台：hacker-news");
+
+    const staticPipeline = createSchedule([]);
+    staticPipeline.pipeline.unshift({ name: "hacker-news", afterDays: 0, platforms: ["hacker-news"] });
+    expect(() => validatePublishSchedule(rootDir, staticPipeline))
+      .toThrow("pipeline 不允许包含手动发布平台：hacker-news");
+
+    const groupedPlatform = createSchedule([]);
+    groupedPlatform.platformGroups.social.push("hacker-news");
+    expect(() => validatePublishSchedule(rootDir, groupedPlatform))
+      .toThrow("platformGroups.social 不允许包含手动发布平台：hacker-news");
+
+    const recordedRelease = createSchedule([{
+      ...article("content/posts/first.md", 100),
+      releases: {
+        ...article("content/posts/first.md", 100).releases,
+        "hacker-news": published("2026-07-21T09:00:00+08:00", "https://news.ycombinator.com/item?id=1"),
+      },
+    }]);
+    expect(() => validatePublishSchedule(rootDir, recordedRelease))
+      .toThrow("releases 不允许包含手动发布平台：hacker-news");
+  });
+
   test("rejects duplicate positions, drafts, and missing manual site evidence", () => {
     const rootDir = createRoot("first.md", "second.md");
     const invalidDiscovery = createSchedule([]);
@@ -289,6 +332,11 @@ describe("publish schedule", () => {
     const siteInPipeline = createSchedule([]);
     siteInPipeline.pipeline.unshift({ name: "site", afterDays: 0, platforms: ["site"] });
     expect(() => validatePublishSchedule(rootDir, siteInPipeline)).toThrow("主站只能手动发布");
+
+    writePost(rootDir, "first.md", "Test", "2026-07-22T09:00:00+08:00", false, false);
+    expect(() => validatePublishSchedule(rootDir, createSchedule([
+      article("content/posts/first.md", 100),
+    ]))).toThrow("publish.autoSyndication: false 禁用自动分发");
   });
 });
 
@@ -321,10 +369,17 @@ function createSchedule(articles: PublishSchedule["articles"]): PublishSchedule 
   };
 }
 
-function writePost(rootDir: string, file: string, title: string, date: string, draft: boolean): void {
+function writePost(
+  rootDir: string,
+  file: string,
+  title: string,
+  date: string,
+  draft: boolean,
+  autoSyndication = true,
+): void {
   writeFileSync(
     join(rootDir, "content/posts", file),
-    `---\ntitle: ${title}\ndate: ${date}\ndraft: ${draft}\n---\n`,
+    `---\ntitle: ${title}\ndate: ${date}\ndraft: ${draft}\n${autoSyndication ? "" : "publish:\n  autoSyndication: false\n"}---\n`,
     "utf8",
   );
 }

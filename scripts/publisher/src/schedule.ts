@@ -14,6 +14,16 @@ import type {
 } from "./types.js";
 
 export const DEFAULT_SCHEDULE_PATH = "publishing/schedule.json";
+export const MANUAL_ONLY_PLATFORM_IDS = ["hacker-news"] as const;
+
+const manualOnlyPlatforms = new Set<string>(MANUAL_ONLY_PLATFORM_IDS);
+
+export function assertAutomatablePlatformIds(platforms: string[], field: string): void {
+  const manualOnlyPlatform = platforms.find((platform) => manualOnlyPlatforms.has(platform));
+  if (manualOnlyPlatform) {
+    throw new PublisherError(`${field} 不允许包含手动发布平台：${manualOnlyPlatform}`);
+  }
+}
 
 export function loadPublishSchedule(rootDir: string, inputPath = DEFAULT_SCHEDULE_PATH): PublishSchedule {
   const schedulePath = resolveInsideRoot(rootDir, inputPath);
@@ -52,6 +62,7 @@ export function validatePublishSchedule(rootDir: string, value: unknown): assert
   const platformGroups: Record<string, string[]> = {};
   for (const [group, platforms] of Object.entries(value.platformGroups)) {
     platformGroups[group] = requireStringArray(platforms, `platformGroups.${group}`);
+    assertAutomatablePlatformIds(platformGroups[group], `platformGroups.${group}`);
   }
 
   if (!Array.isArray(value.pipeline) || value.pipeline.length === 0) {
@@ -79,6 +90,7 @@ export function validatePublishSchedule(rootDir: string, value: unknown): assert
   if (stagedPlatforms.has("site")) {
     throw new PublisherError("pipeline 不允许包含 site；主站只能手动发布");
   }
+  assertAutomatablePlatformIds([...stagedPlatforms], "pipeline");
 
   if (!Array.isArray(value.articles)) {
     throw new PublisherError("articles 必须是数组");
@@ -112,6 +124,7 @@ export function findDiscoverableArticles(
     .filter((articlePath) => !queuedPaths.has(articlePath))
     .map((articlePath) => loadPost(rootDir, articlePath, baseUrl))
     .filter((post) => post.metadata.draft === false)
+    .filter((post) => post.metadata.publish?.autoSyndication !== false)
     .flatMap((post) => {
       const publishedAt = parsePostPublicationTime(post.metadata.date);
       if (!publishedAt || Date.parse(publishedAt) <= enabledAfter) {
@@ -228,6 +241,7 @@ export function startRelease(
   if (platform === "site") {
     throw new PublisherError("site 只允许手动发布，不能由自动队列执行");
   }
+  assertAutomatablePlatformIds([platform], "自动发布平台");
   assertPlatformAllowed(schedule, article, platform, runtimePlatforms);
   const existing = article.releases?.[platform];
   if (existing?.status === "published") {
@@ -410,6 +424,9 @@ function validateArticle(
   if (post.metadata.draft !== false) {
     throw new PublisherError(`只有 draft: false 的文章才能进入自动发布队列：${value.path}`);
   }
+  if (post.metadata.publish?.autoSyndication === false) {
+    throw new PublisherError(`${value.path} 已通过 publish.autoSyndication: false 禁用自动分发`);
+  }
   if (!isPositiveInteger(value.queuePosition)) {
     throw new PublisherError(`${value.path} 的 queuePosition 必须是正整数`);
   }
@@ -423,6 +440,7 @@ function validateArticle(
     const platforms = value.exclude.platforms === undefined
       ? []
       : requireStringArray(value.exclude.platforms, `${value.path}.exclude.platforms`);
+    assertAutomatablePlatformIds(platforms, `${value.path}.exclude.platforms`);
     for (const group of groups) {
       if (!(group in platformGroups)) {
         throw new PublisherError(`${value.path} 排除了未知平台组：${group}`);
@@ -440,6 +458,7 @@ function validateArticle(
       if (!platform.trim()) {
         throw new PublisherError(`${value.path} 包含空发布平台`);
       }
+      assertAutomatablePlatformIds([platform], `${value.path}.releases`);
       validateRelease(value.path, platform, release);
     }
   }
@@ -496,6 +515,7 @@ function allowedStagePlatforms(
     : [];
   return [...new Set([...(stage.platforms ?? []), ...groupPlatforms, ...sourcedPlatforms])]
     .filter((platform) => platform !== "site")
+    .filter((platform) => !manualOnlyPlatforms.has(platform))
     .filter((platform) => !excludedGroupPlatforms.has(platform))
     .filter((platform) => !excludedPlatforms.has(platform));
 }
