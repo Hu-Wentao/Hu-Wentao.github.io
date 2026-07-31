@@ -1,6 +1,6 @@
 ---
 title: "Queryable Markdown Skill：让 AI 稳定查询和维护 Markdown"
-date: 2026-07-20T17:25:42+08:00
+date: 2026-07-31T18:58:51+08:00
 draft: false
 aliases: ["/posts/make-markdown-queryable/"]
 summary: "queryable-markdown 让 Agent 只读查询单篇 Markdown 或批量扫描 Markdown 集合，并通过持久化 mdq 契约安全地创建、维护和编辑半结构化文档"
