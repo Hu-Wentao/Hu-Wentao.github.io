@@ -3,7 +3,7 @@ title: "Queryable Markdown Skill：让 AI 稳定查询和维护 Markdown"
 date: 2026-07-20T17:25:42+08:00
 draft: false
 aliases: ["/posts/make-markdown-queryable/"]
-summary: "queryable-markdown 让 Agent 只读查询普通 Markdown，并通过持久化 mdq 契约安全地创建、维护和编辑半结构化文档"
+summary: "queryable-markdown 让 Agent 只读查询单篇 Markdown 或批量扫描 Markdown 集合，并通过持久化 mdq 契约安全地创建、维护和编辑半结构化文档"
 tags: ["AI", "Markdown", "Skill", "VibeCoding", "文档工程"]
 categories: ["Artifacts"]
 publish:
@@ -11,7 +11,7 @@ publish:
     category: "人工智能"
 ---
 
-> 本文介绍一种帮助AI Agent准确查询&编辑半结构化MD文档的skill，安装使用参见 [快速体验](#快速体验)
+> 本文介绍一种帮助 AI Agent 准确查询、批量检索和编辑半结构化 Markdown 文档的 Skill，安装使用参见 [快速体验](#快速体验)
 
 存储结构化数据，`csv`/`jsonl`/`sqlite` 等数据格式都已经十分成熟且方便。在AI时代，半结构化/无固定结构的Markdown文件往往更实用。例如需求文档可以混合标题、列表、长段落、代码示例和临时备注；尚未写完的需求可以缺少状态或详情；开发者也可以随手调整标题层级，而不必先通过 Schema 校验。
 
@@ -35,30 +35,34 @@ rg -n 'REQ-102' requirements.md
 
 ## 一个技能解决MD读写问题：queryable-markdown
 
-为此，我实现了 [queryable-markdown](https://github.com/Hu-Wentao/skills/tree/main/skills/queryable-markdown) Skill。它不要求文档先拥有特殊头部：面对普通 Markdown，Skill 可以临时解析结构、定位候选范围并保持只读；只有当用户明确要求创建或转换“带查询契约的 Markdown”时，才把 AI 对业务结构的理解写成一份很小的声明式查询协议。
+为此，我实现了 [queryable-markdown](https://github.com/Hu-Wentao/skills/tree/main/skills/queryable-markdown) Skill。它不要求文档先拥有特殊头部：面对单篇普通 Markdown 或目录下的一组文档，Skill 可以临时解析结构、定位候选范围并保持只读；当用户明确要求创建、转换“带查询契约的 Markdown”，或适用的治理工作流要求为已授权的文档写入建立契约时，才把 AI 对业务结构的理解写成一份很小的声明式查询协议。
 
 它的核心可以概括成一句话：
 
-> 普通 Markdown 保持只读也能查询；需要长期维护时，再用可验证的契约获得稳定身份、字段和安全编辑边界。
+> 单篇或一组普通 Markdown 保持只读也能查询；需要长期稳定查询和维护时，再用可验证的契约获得稳定身份、字段和安全编辑边界。
 
 ## Markdown 不是数据库，但可以暴露查询契约
 
 这个方案有两条查询路径：
 
 ~~~text
-                         ┌─ 无 profile：临时分析 ─→ 有证据的候选范围
-人工维护的 Markdown ─→ 容错解析器 ─┤
-                         └─ 有 profile：声明规则 ─→ 字段化 JSON 结果
-                                      ↑
-                                可选 sidecar 索引
+                        ┌─ 无 profile：临时分析 ─→ 有证据的候选范围
+单篇 Markdown ─→ 容错解析器 ─┤
+                        └─ 有 profile：声明规则 ─→ 字段化 JSON 结果
+                                     ↑
+                         可选的逐文档 sidecar 索引
+
+目录 / Glob ─→ scan ─→ 对每篇 Markdown 应用上面的只读查询
+                 └─→ 聚合路径、记录、候选与诊断
 ~~~
 
 - **Markdown 正文**仍然是唯一事实源，人可以继续直接编辑。
 - **容错解析器**可以在没有 profile 时临时识别标题、ID、标签和代码区域，只读地返回候选。
+- **集合扫描（collection scan）** 可以用目录和 Glob 批量选择文档，统一保留文件路径、原文范围和逐文档诊断。
 - **mdq profile** 是可选的持久化查询契约，描述记录边界、唯一键和字段来源。
 - **sidecar 索引**只是可丢弃的缓存，不能覆盖当前文档。
 
-如果用户选择持久化，文档控制区里保存的不是 Shell 或 Python 脚本，而是 YAML 声明式数据。它可以合并进现有 YAML frontmatter，也可以放在文件开头的 `<!-- mdq ... -->` 注释块中。文档不能要求 Agent 执行任意代码，只能告诉受信任的查询引擎“如何识别记录”。这既便于审查，也避免文档变成代码执行入口。
+如果选择持久化，文档控制区里保存的不是 Shell 或 Python 脚本，而是 YAML 声明式数据。`profile` 放在从文件第一个字节开始的 YAML Front Matter 中，并嵌套在顶层 `mdq` key 下；已有完整 YAML Front Matter 时就合并这个命名空间。文档不能要求 Agent 执行任意代码，只能告诉受信任的查询引擎“如何识别记录”。这既便于审查，也避免文档变成代码执行入口。
 
 ## 一份不完整的需求文档
 
@@ -120,37 +124,40 @@ rg -n 'REQ-102' requirements.md
 
 这种查询不会写入 profile、marker 或索引。代价是，每次查询都要重新推断一部分结构，而且无法保证“状态”“详情”等业务字段始终按照同一规则被解释。它适合一次性问题，不等价于持久化契约。
 
-## 用户要求持久化时，AI 写入什么
+## 需要持久化时，AI 写入什么
 
-只有当用户明确要求“转换为带 mdq 契约的文档”“保存查询规则”或“修复已有查询契约”时，Skill 才会修改控制区。它先执行 `inspect`，观察标题层级、常见 ID 形态、重复标签、代码围栏和已有 frontmatter，再由 AI 根据多条真实记录生成一个尽可能小的 YAML profile：
+通常只有当用户明确要求“转换为带 mdq 契约的文档”“保存查询规则”或“修复已有查询契约”时，Skill 才会修改控制区。另一个例外是：适用的上游治理工作流可能规定，已授权创建或编辑的受治理文档必须带持久契约。这个例外只授权当前文档所需的最小契约，不会顺带授权修改其他内容、批量迁移、创建索引或修复无关契约。
+
+Skill 会先执行 `inspect`，观察标题层级、常见 ID 形态、重复标签、代码围栏和已有 Front Matter，再由 AI 根据多条真实记录生成一个尽可能小的 YAML profile：
 
 ```yaml
-<!-- mdq
-version: 1
-dialect: commonmark
-records:
-  boundary:
-    source: heading
-    levels: [2]
-    level_tolerance: 1
-  key:
-    source: heading
-    pattern: '^(?P<id>REQ-[0-9]+)(?:[ ：:-]+(?P<title>.*))?$'
-    group: id
-fields:
-  title:
-    source: heading
-    pattern: '^(?:REQ-[0-9]+[ ：:-]+)?(?P<title>.+)$'
-    group: title
-  status:
-    source: label
-    labels: [状态, Status]
-  detail:
-    source: section
-    headings: [详情, 描述, Description]
-tolerance:
-  incomplete: true
--->
+---
+mdq:
+  version: 1
+  dialect: commonmark
+  records:
+    boundary:
+      source: heading
+      levels: [2]
+      level_tolerance: 1
+    key:
+      source: heading
+      pattern: '^(?P<id>REQ-[0-9]+)(?:[ ：:-]+(?P<title>.*))?$'
+      group: id
+  fields:
+    title:
+      source: heading
+      pattern: '^(?:REQ-[0-9]+[ ：:-]+)?(?P<title>.+)$'
+      group: title
+    status:
+      source: label
+      labels: [状态, Status]
+    detail:
+      source: section
+      headings: [详情, 描述, Description]
+  tolerance:
+    incomplete: true
+---
 ```
 
 这段 profile 表示：
@@ -167,7 +174,7 @@ tolerance:
 ## Password reset
 ```
 
-这是一种显式的例外处理：大部分记录继续使用作者原有结构，只有无法可靠识别的少数记录获得 marker。删除 profile 和 marker 后，原始业务正文保持不变。
+这是一种显式的例外处理：大部分记录继续使用作者原有结构，只有无法可靠识别的少数记录获得 marker。删除 Front Matter 中的 `mdq` key 和 marker 后，原始业务正文保持不变。
 
 ## 查询结果不是“猜一个答案”
 
@@ -217,6 +224,34 @@ uv run "$SKILL_DIR/scripts/mdq.py" query requirements.md --id REQ-102
 
 因此，查询结果表达的是“根据当前协议，可以从哪些原文证据中恢复出什么”，而不是“模型认为最可能是什么”。
 
+## 批量查询一个 Markdown 集合
+
+当需求、计划或知识条目拆在多个文件里时，逐个调用 `query` / `search` 会让调用方重复处理文件选择和诊断。`scan` 可以把一个 Markdown 文件或目录作为集合，在一次只读操作中应用确定性选择器：
+
+```bash
+uv run "$SKILL_DIR/scripts/mdq.py" scan docs/requirements \
+  --glob '**/*.md' \
+  --field status \
+  --text planned \
+  --require-contract
+```
+
+目录扫描默认使用 `**/*.md`，也可以重复 `--glob` 合并多个受限模式。Glob 必须相对于集合根目录，不能是绝对路径或包含 `..`。结果按根目录相对路径稳定排序，重叠模式不会让同一文件被重复处理，软链接也不会被跟随。
+
+`scan` 支持以下选择方式：
+
+- 不提供选择器时，返回所有结构化记录。
+- `--id` 跨文档查找区分大小写的精确 key。
+- `--text` 执行不区分大小写的字面量搜索，而不是正则搜索。
+- `--field` 将搜索限制在某个声明字段；没有 `--text` 时则只投影这个字段。
+- `--limit` 只限制返回记录数，不会跳过其余文档的验证和诊断。
+
+默认情况下，无契约文档仍可使用内存中的临时选择器。对于必须遵循统一契约的受治理文档集合，可以添加 `--require-contract`：没有 `profile` 或 `profile` 无效的文件会被报告为错误，但其他有效文档的匹配仍然保留。当请求命名字段时，每份生效的契约都必须声明该字段，工具不会从任意正文中猜测 `status` 之类的业务含义。
+
+集合结果使用 `mdq.collection.v1` 信封。除了扁平化的 `records` 和 `candidates`，结果还保留绝对路径、根目录相对路径、原文范围、逐文档摘要与带来源位置的诊断。有效匹配与无效文档同时存在时，顶层状态是 `partial`，调用方不必在“得到有效结果”和“看见坏文档”之间二选一。
+
+集合扫描始终只读：它不会给普通文档添加契约，不会修复漂移，也不会创建记录、逐文档索引或目录级索引。Markdown 源码仍然是唯一事实源。
+
 ## 控制面严格，数据面容错
 
 手工文档可以残缺，但查询规则不能含糊。这是整个设计中最重要的边界。
@@ -227,7 +262,7 @@ uv run "$SKILL_DIR/scripts/mdq.py" query requirements.md --id REQ-102
 - 不允许未知的非扩展字段。
 - 正则捕获组必须真实存在，并设置单次匹配超时。
 - index 必须位于文档目录内，不能覆盖、软链接或别名指向源文档。
-- profile 只能位于文件起始位置，或完整 YAML、TOML、JSON frontmatter 之后；代码块里的示例 profile 永远不会生效。
+- profile 必须是 byte 0 开始的唯一 YAML Front Matter，并位于顶层 `mdq` key 下；代码块中的示例 profile 不会生效。
 
 Markdown 正文属于数据面，查询时尽可能恢复：
 
@@ -246,10 +281,12 @@ Markdown 正文属于数据面，查询时尽可能恢复：
 | 文档状态 | 用户操作 | Skill 的行为 |
 | --- | --- | --- |
 | 没有有效契约 | 查询、查找、总结 | 临时推断选择器，只读，不添加 profile、marker 或索引 |
-| 没有有效契约 | 创建或转换为契约文档 | 先检查现有结构，再写入最小契约和必要 marker |
+| 没有有效契约 | 普通内容编辑 | 交给通用编辑流程；仅当适用治理工作流要求时，才随已授权写入添加最小契约 |
+| 没有有效契约 | 创建或转换为契约文档 | 用户明确要求或治理工作流要求时，先检查现有结构，再写入最小契约和必要 marker |
 | 有效契约 | 查询 | 按契约只读提取，不因存在契约而擅自修改 |
 | 有效契约 | 新增、更新、删除或重命名记录 | 先精确解析目标，再在记录边界内做最小源码补丁 |
-| 契约漂移或失效 | 查询、修复 | 返回恢复诊断；只有用户明确授权时才修复 |
+| 契约有效但发生漂移 | 查询或编辑 | 返回恢复诊断；漂移影响目标身份或边界时停止编辑 |
+| 契约已声明但无效 | 查询或修复 | 报告契约错误，只做有边界的一次性检查；只有明确授权时才修复 |
 
 这个状态矩阵解决了一个容易被忽略的问题：**文档可编辑，不等于当前请求授权了编辑**。普通的“帮我查一下”永远不应顺手改造文档；“更新 `REQ-102` 的状态”也不自动授权修改身份规则、marker 或索引策略。
 
@@ -278,6 +315,12 @@ uv run "$SKILL_DIR/scripts/mdq.py" diagnose requirements.md
 # 精确查询和文字搜索
 uv run "$SKILL_DIR/scripts/mdq.py" query requirements.md --id REQ-102
 uv run "$SKILL_DIR/scripts/mdq.py" search requirements.md --field status --text planned
+
+# 批量扫描目录中的 Markdown
+uv run "$SKILL_DIR/scripts/mdq.py" scan docs/requirements \
+  --glob '**/*.md' \
+  --field status \
+  --require-contract
 
 # 可选：生成 sidecar
 uv run "$SKILL_DIR/scripts/mdq.py" index requirements.md
@@ -322,19 +365,28 @@ codex "请使用 queryable-markdown skill，从 docs/requirements.md 查询 REQ-
 
 即使文档没有 mdq profile，Skill 也会做临时结构推断，但不会写入任何元数据。
 
+如果记录分散在目录下，可以发起批量只读查询：
+
+```bash
+codex "请使用 queryable-markdown skill，扫描 docs/requirements 下的 Markdown，从声明的 status 字段查找 planned；要求每份文档都有有效契约，同时保留有效匹配、逐文档摘要和无效文档诊断。保持全部文件只读。"
+```
+
+这类扫描不会创建目录索引，也不会为了满足 `--require-contract` 自动改造普通文档。
+
 如果这份文档之后会被反复按 ID 和字段查询，再明确要求 Codex 持久化查询契约：
 
 ```bash
 codex "请使用 queryable-markdown skill，将 docs/requirements.md 转换为带持久化 mdq 契约的文档。先展示识别出的记录边界、key 和字段映射；只添加最小 profile/marker；验证后分别查询一条正常记录、一条残缺记录和一个代码块中的伪 ID。"
 ```
 
-只有第二个请求会授权 Agent 最小化修改文档控制区，然后执行验证和代表性查询。它不会为了获得漂亮的结构而重排整篇 Markdown。
+前两个请求都只授权查询；只有最后一个请求会授权 Agent 最小化修改文档控制区，然后执行验证和代表性查询。它不会为了获得漂亮的结构而重排整篇 Markdown。
 
 ## 仍然存在的边界
 
 这个方案并不能自动理解任意文档。
 
 - 无 profile 查询仍需扫描当前文档，而且临时推断的结构可信度低于已验证的持久化契约。
+- 集合扫描会按 Glob 读取所有匹配文档；`--limit` 只限制返回记录，不会减少其余文档的验证成本，v1 也不创建目录级索引。
 - 首次持久化准备仍需扫描全文，并让 AI 阅读足够有代表性的片段；结构高度不规则时，可能需要完整理解一次。
 - 如果记录没有任何可恢复的身份信息，它只能作为候选片段，不能被精确查询。
 - v1 主要支持 CommonMark/GFM；部分 MDX 和 Hugo `highlight` 代码块可以隔离，但复杂扩展语法仍需要在 `inspect` 阶段声明兼容性限制。
@@ -347,7 +399,7 @@ codex "请使用 queryable-markdown skill，将 docs/requirements.md 转换为�
 
 文档协作让 Markdown 成为人与 AI 共享的事实源，但“能一起编辑”不等于“能稳定查询”。如果 AI 每次查一个需求都要重新全文搜索、读取上下文并猜测边界，文档规模越大，相同的理解成本就会被重复支付越多次。
 
-Queryable Markdown 的思路，是在不牺牲 Markdown 写作自由的前提下，先为任意文档提供只读、有证据的临时查询；当用户确实需要稳定的重复查询和安全维护时，再为文档增加一个小型、版本化、可验证的 YAML 契约。人继续维护不完美的文档，确定性程序负责身份、边界与字段提取，Agent 只在需要语义判断和受控修改时介入。
+Queryable Markdown 的思路，是在不牺牲 Markdown 写作自由的前提下，先为单篇文档或一个 Markdown 集合提供只读、有证据的临时查询；当用户确实需要稳定的重复查询和安全维护时，再为文档增加一个小型、版本化、可验证的 YAML 契约。人继续维护不完美的文档，确定性程序负责文件选择、身份、边界与字段提取，Agent 只在需要语义判断和受控修改时介入。
 
 Markdown 不需要变成数据库，但它可以学会向 Agent 清楚地说明自己。
 
