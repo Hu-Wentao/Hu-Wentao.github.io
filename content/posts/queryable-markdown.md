@@ -170,6 +170,7 @@ uv run "$SKILL_DIR/scripts/mdq.py" scan docs/requirements \
 ```bash
 pnpm dlx skills add Hu-Wentao/skills \
   --skill queryable-markdown \
+  --codex \
   --global \
   --yes
 ```
