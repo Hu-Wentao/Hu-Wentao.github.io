@@ -1,0 +1,37 @@
+{{- define "main" }}
+
+<header class="page-header artifact-index-header">
+  {{- partial "breadcrumbs.html" . }}
+  <h1>{{ .Title }}</h1>
+  {{- with .Description }}
+  <div class="post-description">{{ . | markdownify }}</div>
+  {{- end }}
+</header>
+
+{{- with .Content }}
+<div class="post-content artifact-index-intro">
+  {{- . }}
+</div>
+{{- end }}
+
+<section class="artifact-grid" aria-label="制品列表">
+  {{- range .Data.Terms.ByCount }}
+  {{- $count := .Count }}
+  {{- with .Page }}
+  <article class="artifact-card">
+    <a href="{{ .RelPermalink }}" aria-label="打开制品：{{ .LinkTitle | plainify }}">
+      <span class="artifact-card-kind">Artifact</span>
+      <h2>{{ .LinkTitle }}</h2>
+      {{- with .Description }}
+      <p>{{ . | plainify }}</p>
+      {{- else }}
+      <p>{{ .Summary | plainify }}</p>
+      {{- end }}
+      <span class="artifact-card-count">{{ $count }} 篇文章</span>
+    </a>
+  </article>
+  {{- end }}
+  {{- end }}
+</section>
+
+{{- end }}

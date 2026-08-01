@@ -1,0 +1,42 @@
+{{- define "main" }}
+
+<header class="page-header artifact-header">
+  {{- partial "breadcrumbs.html" . }}
+  <span class="artifact-kind">Artifact</span>
+  <h1>{{ .Title }}</h1>
+  {{- with .Description }}
+  <div class="post-description">{{ . | markdownify }}</div>
+  {{- end }}
+</header>
+
+{{- with .Content }}
+<div class="post-content artifact-intro">
+  {{- . }}
+</div>
+{{- end }}
+
+{{- $pages := .Pages.ByDate.Reverse }}
+<section class="artifact-articles" aria-labelledby="artifact-articles-title">
+  <div class="artifact-articles-heading">
+    <h2 id="artifact-articles-title">收录文章</h2>
+    <span>{{ len $pages }} 篇</span>
+  </div>
+  {{- range $pages }}
+  <article class="post-entry artifact-article-entry">
+    <header class="entry-header">
+      <h2>{{ .Title }}</h2>
+    </header>
+    {{- if ne (.Param "hideSummary") true }}
+    <div class="entry-content">
+      <p>{{ .Summary | plainify | htmlUnescape }}{{ if .Truncated }}…{{ end }}</p>
+    </div>
+    {{- end }}
+    <footer class="entry-footer">
+      {{- partial "post_meta.html" . -}}
+    </footer>
+    <a class="entry-link" aria-label="阅读文章：{{ .Title | plainify }}" href="{{ .RelPermalink }}"></a>
+  </article>
+  {{- end }}
+</section>
+
+{{- end }}

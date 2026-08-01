@@ -4,6 +4,11 @@ defaultContentLanguageInSubdir = false
 title = '低熵工程'
 theme = 'PaperMod'
 
+[taxonomies]
+    category = 'categories'
+    tag = 'tags'
+    artifact = 'artifacts'
+
 [languages]
     [languages.zh]
         label = '中文'
@@ -59,6 +64,11 @@ theme = 'PaperMod'
         name = "文章"
         url = "/posts"
         weight = 10
+    [[menu.main]]
+        identifier = "artifacts"
+        name = "制品"
+        url = "/artifacts"
+        weight = 15
     [[menu.main]]
         identifier = "tags"
         name = "标签"
