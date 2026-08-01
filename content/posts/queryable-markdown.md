@@ -6,7 +6,7 @@ aliases: ["/posts/make-markdown-queryable/"]
 summary: "用可验证的 mdq 契约查询和安全编辑单篇或一组 Markdown 文档"
 tags: ["AI", "Markdown", "Skill", "VibeCoding", "文档工程"]
 categories: ["Artifacts"]
-artifacts: ["mdq-skill"]
+artifacts: ["queryable-markdown"]
 publish:
   juejin:
     category: "人工智能"
