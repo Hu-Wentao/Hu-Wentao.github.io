@@ -13,5 +13,24 @@
       "platformSource": "wechatsync_authenticated_drafts"
     }
   ],
-  "articles": []
+  "articles": [
+    {
+      "path": "content/posts/queryable-markdown.md",
+      "queuePosition": 100,
+      "exclude": {
+        "groups": [],
+        "platforms": []
+      },
+      "releases": {
+        "site": {
+          "status": "published",
+          "attempts": 1,
+          "publicationMethod": "manual",
+          "publishedAt": "2026-07-31T11:18:21.000Z",
+          "verifiedAt": "2026-08-02T09:02:11.937Z",
+          "url": "https://wyattcoder.top/posts/queryable-markdown/"
+        }
+      }
+    }
+  ]
 }
