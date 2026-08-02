@@ -1,5 +1,5 @@
 ---
-title: "Queryable Markdown Skill：让 AI 稳定查询和维护 Markdown"
+title: "Queryable Markdown Skill：让 AI 稳定查询和维护文档"
 date: 2026-07-31T19:18:21+08:00
 draft: false
 aliases: ["/posts/make-markdown-queryable/"]
