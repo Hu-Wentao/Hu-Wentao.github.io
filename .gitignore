@@ -6,3 +6,4 @@ DEV.md
 MEMO.md
 node_modules/
 .publish-records/
+.agents/.cache/

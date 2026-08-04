@@ -1,0 +1,7 @@
+schema = "project-seo.profile.v1"
+project_id = "personal-site"
+site_url = "https://wyattcoder.top/"
+language = "zh-CN"
+content_roots = ["content"]
+include = ["**/*.md"]
+exclude = []

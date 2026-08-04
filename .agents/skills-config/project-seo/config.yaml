@@ -1,0 +1,9 @@
+schema: project-seo.config.v1
+profile: personal-site
+tasks:
+  workflow:
+    base: references/default.md
+    profile: profile.md
+    commands:
+      validate: pnpm test && pnpm typecheck
+      build: hugo --minify
