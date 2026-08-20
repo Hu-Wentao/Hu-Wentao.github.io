@@ -44,7 +44,7 @@ categories: ["Artifacts"]
 
 Skill 没有把全部写作规则塞进一份很长的主说明。它将详细规范拆成四份 reference，并根据当前任务按需加载：
 
-| Reference | 处理的问题 |
+| 参考文件 | 处理的问题 |
 | --- | --- |
 | `voice-and-language.md` | 语气、句子清晰度、包容性、国际化和可访问性 |
 | `structure-and-formatting.md` | 页面结构、标题、段落、列表、步骤、表格和提示信息 |
