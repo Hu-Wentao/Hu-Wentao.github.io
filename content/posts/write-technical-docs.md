@@ -1,7 +1,7 @@
 ---
 title: "让技术文档既准确又可用：write-technical-docs Skill"
-date: 2026-07-21T00:00:00+08:00
-draft: true
+date: 2026-08-20T14:43:20+08:00
+draft: false
 summary: "用规则优先级、按需加载的写作规范和分层审校流程，把技术事实整理成清晰、可扫描、可执行的开发者文档"
 tags: ["AI", "VibeCoding", "Skill", "技术写作", "文档工程"]
 categories: ["Artifacts"]
