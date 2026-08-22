@@ -1,4 +1,4 @@
 interface:
-  display_name: "Prepare & Publish Blog Article"
-  short_description: "Prepare, publish, and verify Hugo blog articles"
-  default_prompt: "Use $publish-blog-article to prepare or publish a Hugo article and verify its structure and deployment."
+  display_name: "Draft & Publish Blog Article"
+  short_description: "Draft, publish, and verify Hugo blog articles"
+  default_prompt: "Use $publish-blog-article to draft or publish a Hugo article and verify its structure and deployment."

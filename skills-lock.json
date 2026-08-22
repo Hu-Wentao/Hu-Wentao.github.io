@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "skills": {
+    "publish-blog-article": {
+      "source": "Hu-Wentao/Hu-Wentao.github.io",
+      "sourceType": "github",
+      "skillPath": ".agents/skills/publish-blog-article/SKILL.md",
+      "computedHash": "57377acbf6432ad2789e4484802d5a4ff2f626f9a87b1d56a93f4d4bc07dd1e0"
+    }
+  }
+}
