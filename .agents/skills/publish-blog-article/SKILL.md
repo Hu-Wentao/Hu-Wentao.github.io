@@ -1,6 +1,6 @@
 ---
 name: publish-blog-article
-description: Formally publish and verify a Hugo article in this blog repository. Use when the user asks to publish, formally publish, make live, deploy, or 上线/正式发布 an article under content/posts/. Covers publication preflight, frontmatter publication date and draft state, Hugo validation, a scoped Git commit, pushing main, waiting for the matching GitHub Pages deployment, live URL verification, and optional explicitly authorized syndication to Juejin or X.
+description: Prepare, formally publish, and verify a Hugo article in this blog repository. Use when the user asks to prepare or review a product-introduction article, or to publish, formally publish, make live, deploy, or 上线/正式发布 an article under content/posts/. Covers product-article structure, publication preflight, frontmatter publication date and draft state, Hugo validation, a scoped Git commit, pushing main, waiting for the matching GitHub Pages deployment, live URL verification, and optional explicitly authorized syndication to Juejin or X.
 ---
 
 # Publish Blog Article
@@ -25,6 +25,21 @@ A local `draft: false`, build, or commit alone is not a completed publication.
    profile for syndication. If main-Chrome control is unavailable, stop and ask
    the user to reconnect it; do not fall back to an isolated browser.
 
+## Enforce Product Article Structure
+
+When an article introduces a product, require its first level-two section to be
+exactly `## 快速开始`. Introductory paragraphs may appear before it, but no other
+section may precede it.
+
+Make this section a concise shortest path to using the product. Prefer one
+fenced `bash` or `sh` block with only the comments needed to explain a
+prerequisite or effect. The commands must work when copied and pasted as
+written: do not use pseudocode, ellipses, unresolved placeholders, or fragments
+that the reader must assemble. Include required setup in the block or in a
+single adjacent sentence, and verify the commands before publication. If the
+product has no command-line interface, provide the shortest equally immediate
+usable interaction under the same heading.
+
 ## Run Preflight
 
 Before changing or publishing anything:
@@ -37,7 +52,10 @@ Before changing or publishing anything:
 3. If unrelated working-tree changes exist, follow the repository's `-c` / `-i`
    rule. Never include unrelated paths in the publication commit.
 4. Confirm the post has a title, YAML frontmatter, and a stable canonical URL.
-5. Run a site-only dry run when the worktree is clean:
+5. Apply **Enforce Product Article Structure** when the post introduces a
+   product. Stop before publication if its quick start is missing, misplaced,
+   or not immediately usable.
+6. Run a site-only dry run when the worktree is clean:
 
 ```bash
 pnpm publish:article <post-path> --dry-run
