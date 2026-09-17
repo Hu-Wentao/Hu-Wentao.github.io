@@ -1,5 +1,5 @@
 ---
-title: "如何拯救被降智的ChatGPT账号?"
+title: "让网页版ChatGPT读写本地文件"
 date: 2026-09-17T23:31:59+08:00
 draft: false
 ---
@@ -11,15 +11,13 @@ draft: false
 
 ## 3步搞定, 让网页ChatGPT变成 ‘网页Codex’
 
-### 1.安装本地cli, 登录后获取mcp链接
-
-一行命令安装
+### 1.安装CLI并获取MCP链接
 
 ```bash
 npm install --global --ignore-scripts frely-cli@latest
 ```
 
-安装完成后就登录, 此时会打开浏览器. 没有账号的直接邮箱注册一个
+安装后登录, 会打开浏览器登录. 没有账号就用邮箱注册.
 
 ```bash
 frely login
@@ -27,12 +25,12 @@ frely login
 
 ![install-and-login](/posts/use-frely-mcp/PixPin_2026-09-17_22-49-37.png)
 
-已登录状态下在授权页面点击‘approve’, 即可完成本地登录.
-> 如果没有账号就用邮箱注册一个, 注册成功后还会自动回到授权页面.
+确认登录的是目标Frely账号, 在授权页点击‘Approve’.
+> 若注册后没回到授权页, 重跑 `frely login`, 使用新链接.
 
 ![approve](/posts/use-frely-mcp/PixPin_2026-09-17_22-49-55.png)
 
-此时再输入frely mcp url, 就能获得本机的mcp地址, 复制备用.
+完成后获取MCP地址, 复制备用:
 
 ```bash
 frely mcp url
@@ -40,37 +38,41 @@ frely mcp url
 
 ![get-frely-mcp-url](/posts/use-frely-mcp/PixPin_2026-09-17_22-52-00.png)
 
-### 2.打开ChatGPT-web的开发者模式(Developer Mode)
+### 2.开启开发者模式
 
 点击头像,打开设置 'Settings'
 
 ![go-chatgpt-settings](/posts/use-frely-mcp/PixPin_2026-09-17_22-41-47.png)
 
-选择安全与登录 'Security and login', 打开 'Developer Mode'
+选择 'Security and login', 打开 'Developer Mode'. 界面以截图为例, 位置可能随版本变化.
 
 ![enable-developer-mode](/posts/use-frely-mcp/PixPin_2026-09-17_22-46-21.png)
 
-### 3.在ChatGPT-web添加自定义插件(需要已经开启 Developer Mode)
+### 3.添加自定义插件
 
-点击插件’Plugins', 如果已经开启开发者模式,则搜索框右侧会出现‘+’, 点击即可添加自定义插件.
+点击插件 'Plugins', 再点击搜索框右侧的‘+’, 添加自定义插件.(开启 Developer Mode后出现)
 
 ![add-custom-plugin](/posts/use-frely-mcp/PixPin_2026-09-17_22-47-40.png)
 
-在对话框配置插件的名称, 连接地址(就是通过`frely mcp url`获取到的url).
-勾选复选框后点击创建‘create'
+填写插件名称、`frely mcp url` 返回的完整地址, 认证方式选择OAuth.
+阅读权限提示, 勾选确认框后点击‘Create'.
 
 ![create-custom-plugin](/posts/use-frely-mcp/PixPin_2026-09-17_22-53-23.png)
 
-此时弹出登录到插件的对话框, 点击‘sign in with ...‘会短暂跳转到frely网站然后再返回.
+点击‘Sign in with ...’, 跳转到Frely网站完成OAuth授权后返回.
 
 ![sign-in-with-plugin](/posts/use-frely-mcp/PixPin_2026-09-17_22-54-41.png)
 
-此时就添加成功了, 快去体验一下网页版Codex吧!
+在新对话中选中FrelyMCP.
 
-![alt text](/posts/use-frely-mcp/PixPin_2026-09-17_22-56-12.png)
+![connection-ready](/posts/use-frely-mcp/PixPin_2026-09-17_22-56-12.png)
 
 ## 效果展示
 
-直接访问到本地代码仓库,并执行命令
+返回结果与本地文件夹一致后, 再让它读代码、修改文件或执行命令.
 
 ![preview](/posts/use-frely-mcp/PixPin_2026-09-17_22-36-37.png)
+
+使用时保持电脑运行和联网. 命令以当前系统用户权限执行, 请只授权可信客户端.
+
+连接失败运行 `frely doctor --mcp`; 授权到期运行 `frely mcp renew` 并重新批准.
