@@ -27,7 +27,8 @@ frely login
 
 ![install-and-login](/posts/use-frely-mcp/PixPin_2026-09-17_22-49-37.png)
 
-如果没有账号就用邮箱注册一个, 已登录状态下在授权页面点击‘approve’, 即可完成本地登录.
+已登录状态下在授权页面点击‘approve’, 即可完成本地登录.
+> 如果没有账号就用邮箱注册一个, 注册成功后还会自动回到授权页面.
 
 ![approve](/posts/use-frely-mcp/PixPin_2026-09-17_22-49-55.png)
 
