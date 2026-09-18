@@ -69,10 +69,10 @@ frely mcp url
 
 ## 效果展示
 
-返回结果与本地文件夹一致后, 再让它读代码、修改文件或执行命令.
+快来体验网页Codex吧
 
 ![preview](/posts/use-frely-mcp/PixPin_2026-09-17_22-36-37.png)
 
-使用时保持电脑运行和联网. 命令以当前系统用户权限执行, 请只授权可信客户端.
 
-连接失败运行 `frely doctor --mcp`; 授权到期运行 `frely mcp renew` 并重新批准.
+连接失败运行 `frely doctor --mcp`; 
+授权到期(默认90天授权一次, 最长180天)运行 `frely mcp renew` 并重新批准.
